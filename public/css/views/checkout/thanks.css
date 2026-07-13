@@ -1,0 +1,245 @@
+﻿/* Source: views\checkout\thanks.php block 1 */
+.thank-page-wrapper {
+    min-height: 100vh;
+    background-color: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.thank-container {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.thank-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    max-width: 600px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.thank-header {
+    background-color: #111827;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.success-icon-wrapper {
+    width: 4rem;
+    height: 4rem;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+.checkmark-svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    stroke: #ffffff;
+    stroke-width: 3;
+    fill: none;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: drawCheckmark 0.6s ease-out 0.3s forwards;
+}
+
+@keyframes drawCheckmark {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.thank-title {
+    color: #ffffff;
+    font-size: 1.475rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.2;
+}
+
+.thank-subtitle {
+    color: #d1d5db;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin: 0;
+    font-weight: 400;
+}
+
+.thank-body {
+    padding: 2rem;
+}
+
+.thank-info {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.info-row:first-child {
+    padding-top: 0;
+}
+
+.info-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.info-value {
+    color: #111827;
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.thank-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.thank-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s;
+    border: 1px solid;
+    cursor: pointer;
+}
+
+.thank-btn-primary {
+    background-color: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+
+.thank-btn-primary:hover {
+    background-color: #1f2937;
+    border-color: #1f2937;
+    color: #ffffff;
+}
+
+.thank-btn-secondary {
+    background-color: #ffffff;
+    border-color: #e5e7eb;
+    color: #374151;
+}
+
+.thank-btn-secondary:hover {
+    background-color: #f9fafb;
+    color: #111827;
+}
+
+.thank-footer {
+    background-color: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    padding: 1.5rem 2rem;
+    text-align: center;
+}
+
+.thank-footer-text {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+    .thank-page-wrapper {
+        padding: 2rem 1rem;
+    }
+
+    .thank-header {
+        padding: 2.5rem 1.5rem;
+    }
+
+    .thank-body {
+        padding: 1.5rem;
+    }
+
+    .thank-title {
+        font-size: 1.5rem;
+    }
+
+    .thank-subtitle {
+        font-size: 0.875rem;
+    }
+
+    .success-icon-wrapper {
+        width: 4rem;
+        height: 4rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .checkmark-svg {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .thank-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .thank-footer {
+        padding: 1.25rem 1.5rem;
+    }
+}

@@ -1,0 +1,332 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <title>@yield('title', 'Admin') - {{ config('app.name') }}</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <link href="{{ asset('admin_assets/img/favicon.ico') }}" rel="icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('admin_assets/lib/owlcarousel/assets/owl.carousel.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin_assets/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin_assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin_assets/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin_assets/css/custom.css') }}" rel="stylesheet">
+    @stack('styles')
+    <style>
+        .container-xxl { max-width: none; }
+        .fa-bars { color: #1a73e8; }
+        .sidebar { width: 280px; background: #1a070b !important; }
+        .content { margin-left: 280px; background: #f3f6fa; }
+        .sidebar, .sidebar .navbar { background: #1a070b !important; }
+        .sidebar .navbar { align-items: flex-start; padding: 18px 0 24px; }
+        .sidebar .navbar-brand { margin-left: 26px !important; margin-bottom: 22px !important; }
+        .sidebar .navbar-brand h3 { color: #fff !important; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin: 0; }
+        .sidebar .navbar .navbar-nav .nav-link {
+            align-items: center;
+            border-left: 0 !important;
+            border-radius: 0 28px 28px 0;
+            color: #ffe0e6 !important;
+            display: flex;
+            font-size: 16px;
+            font-weight: 700;
+            gap: 12px;
+            margin: 3px 26px 3px 0;
+            min-height: 54px;
+            padding: 0 22px 0 34px;
+            position: relative;
+        }
+        .sidebar .navbar .navbar-nav .nav-link i {
+            background: transparent !important;
+            border-radius: 0 !important;
+            color: inherit;
+            display: inline-block;
+            flex: 0 0 20px;
+            height: auto;
+            line-height: 1;
+            margin: 0 !important;
+            text-align: center;
+            width: 20px;
+        }
+        .sidebar .navbar .navbar-nav .dropdown-toggle { color: #ffe0e6 !important; }
+        .sidebar .navbar .navbar-nav .nav-link:hover,
+        .sidebar .navbar .navbar-nav .nav-link.active,
+        .sidebar .dropdown-item.active { color: #fff !important; background: #2477e8 !important; border-left: 0 !important; }
+        .sidebar .navbar .nav-link:hover i,
+        .sidebar .navbar .nav-link.active i { background: transparent !important; }
+        .sidebar .navbar .dropdown-toggle::after { top: 19px; right: 16px; }
+        .sidebar .dropdown-menu { background: #2d0a12 !important; }
+        .sidebar .dropdown-item { color: #ffc8d4 !important; font-weight: 700; padding: 9px 24px 9px 68px; }
+        .sidebar .dropdown-item:hover { color: #fff !important; background: #1a73e8 !important; }
+        .content .navbar { min-height: 80px; background: #f3f6fa !important; box-shadow: none; }
+        .content .navbar .form-control { min-height: 42px; min-width: 230px; border-radius: 6px; }
+        .content .navbar .sidebar-toggler { width: 46px; height: 46px; }
+        .admin-user-box { align-items: center; display: flex; gap: 10px; }
+        .admin-user-box img { width: 40px; height: 40px; }
+        .admin-logout-btn {
+            align-items: center;
+            background: #fff;
+            border: 1px solid #d0d5dd;
+            border-radius: 7px;
+            color: #111827;
+            display: inline-flex;
+            font-size: 13px;
+            font-weight: 800;
+            gap: 7px;
+            min-height: 36px;
+            padding: 0 12px;
+            white-space: nowrap;
+        }
+        .admin-logout-btn:hover { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+        .admin-title { padding: 0 0 18px; }
+        .admin-title .eyebrow { margin: 0 0 8px; color: #1a73e8; font-size: 13px; font-weight: 700; text-transform: uppercase; }
+        .admin-title h1 { margin: 0; color: #111827; font-size: 30px; font-weight: 800; }
+        .section { margin-bottom: 24px; padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,.03); }
+        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 24px; margin-bottom: 24px; }
+        .metric { display: grid; gap: 10px; padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,.03); }
+        .metric span { color: #757575; font-size: 14px; font-weight: 600; }
+        .metric strong { color: #111827; font-size: 26px; line-height: 1.2; }
+        .admin-table { overflow-x: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
+        .admin-row { display: grid; grid-template-columns: repeat(5, minmax(140px, 1fr)); gap: 12px; min-width: 760px; padding: 14px 16px; align-items: center; }
+        .admin-row + .admin-row { border-top: 1px solid #eef0f3; }
+        .admin-row.head { color: #fff; background: #1a0a0d; font-weight: 700; }
+        .inline-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .inline-filter input, .inline-filter select { min-height: 42px; padding: 8px 12px; border: 1px solid #d9dee3; border-radius: 6px; background: #fff; }
+        .btn.primary, .btn-primary { color: #fff; background: #1a73e8; border-color: #1a73e8; }
+        .flash { margin-bottom: 18px; padding: 12px 16px; color: #0f5132; background: #d1e7dd; border: 1px solid #badbcc; border-radius: 8px; }
+        .form-shell { max-width: 760px; margin: 0 auto 24px; }
+        .panel-form { display: grid; gap: 14px; padding: 24px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
+        .panel-form.compact { padding: 0; border: 0; }
+        .panel-form label, .checkout-panel label { display: grid; gap: 7px; color: #111827; font-weight: 700; }
+        .panel-form input, .panel-form select, .panel-form textarea, .checkout-panel input, .checkout-panel select, .checkout-panel textarea { min-height: 42px; padding: 9px 12px; border: 1px solid #d9dee3; border-radius: 6px; color: #111827; background: #fff; font-size: 14px; font-weight: 600; }
+        .checkout-shell { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; margin-bottom: 24px; }
+        .checkout-panel { padding: 24px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
+        .summary-line, .summary-total { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid #eef0f3; }
+        .summary-total { border-bottom: 0; color: #111827; font-size: 18px; font-weight: 800; }
+        .pagination { margin-top: 18px; }
+        .ck-editor__editable[role="textbox"] { min-height: 280px; }
+        .ck-content .image { max-width: 80%; margin: 20px auto; }
+        @media (min-width: 992px) {
+            .sidebar.open { margin-left: -280px; }
+            .content { width: calc(100% - 280px); }
+            .content.open { width: 100%; margin-left: 0; }
+        }
+        @media (max-width: 991px) {
+            .sidebar { margin-left: -280px; }
+            .sidebar.open { margin-left: 0; }
+            .content { width: 100%; margin-left: 0; }
+            .admin-row { grid-template-columns: 1fr; min-width: 0; }
+            .checkout-shell { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+@php
+    $isRoute = fn (...$patterns) => request()->routeIs(...$patterns);
+    $adminRoleCodes = auth()->check()
+        ? \Illuminate\Support\Facades\DB::table('user_roles')
+            ->join('roles', 'roles.id', '=', 'user_roles.role_id')
+            ->where('user_roles.user_id', auth()->id())
+            ->pluck('roles.code')
+            ->all()
+        : [];
+    $isAdminUser = in_array('ADMIN', $adminRoleCodes, true);
+@endphp
+
+<div class="container-xxl position-relative bg-white d-flex p-0">
+    <div class="sidebar pe-4 pb-3">
+        <nav class="navbar bg-light navbar-light">
+            <a href="{{ route('admin.dashboard') }}" class="navbar-brand mx-4 mb-3"><h3>ADMIN PANEL</h3></a>
+            <div class="navbar-nav w-100">
+                <a href="{{ route('admin.dashboard') }}" class="nav-item nav-link {{ $isRoute('admin.dashboard') ? 'active' : '' }}"><i class="fa fa-tachometer-alt me-2"></i>Tổng quan</a>
+
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.orders.*', 'admin.returns.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fa fa-shopping-basket me-2"></i>Đơn hàng</a>
+                    <div class="dropdown-menu bg-transparent border-0">
+                        <a href="{{ route('admin.orders.index') }}" class="dropdown-item {{ $isRoute('admin.orders.index', 'admin.orders.show') ? 'active' : '' }}">Tất cả đơn</a>
+                        <a href="{{ route('admin.orders.unconfirmed') }}" class="dropdown-item {{ $isRoute('admin.orders.unconfirmed') ? 'active' : '' }}">Đơn chờ xác nhận</a>
+                        <a href="{{ route('admin.returns.index') }}" class="dropdown-item {{ $isRoute('admin.returns.*') ? 'active' : '' }}">Hoàn/Đổi hàng</a>
+                    </div>
+                </div>
+
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.categories.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fa fa-th me-2"></i>Danh mục</a>
+                    <div class="dropdown-menu bg-transparent border-0">
+                        <a href="{{ route('admin.categories.create') }}" class="dropdown-item {{ $isRoute('admin.categories.create') ? 'active' : '' }}">Thêm mới</a>
+                        <a href="{{ route('admin.categories.index') }}" class="dropdown-item {{ $isRoute('admin.categories.index', 'admin.categories.edit') ? 'active' : '' }}">Tất cả</a>
+                    </div>
+                </div>
+
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.products.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fas fa-box me-2"></i>Sản phẩm</a>
+                    <div class="dropdown-menu bg-transparent border-0">
+                        <a href="{{ route('admin.products.create') }}" class="dropdown-item {{ $isRoute('admin.products.create') ? 'active' : '' }}">Thêm mới</a>
+                        <a href="{{ route('admin.products.index') }}" class="dropdown-item {{ $isRoute('admin.products.index', 'admin.products.edit') ? 'active' : '' }}">Tất cả</a>
+                        <a href="{{ route('admin.products.recycle') }}" class="dropdown-item {{ $isRoute('admin.products.recycle') ? 'active' : '' }}">Thùng rác</a>
+                    </div>
+                </div>
+
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.posts.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fas fa-book me-2"></i>Bài viết</a>
+                    <div class="dropdown-menu bg-transparent border-0">
+                        <a href="{{ route('admin.posts.index') }}" class="dropdown-item {{ $isRoute('admin.posts.index', 'admin.posts.edit') ? 'active' : '' }}">Tất cả</a>
+                        <a href="{{ route('admin.posts.create') }}" class="dropdown-item {{ $isRoute('admin.posts.create') ? 'active' : '' }}">Thêm bài viết</a>
+                        <a href="{{ route('admin.posts.categories') }}" class="dropdown-item {{ $isRoute('admin.posts.categories', 'admin.posts.categories.edit') ? 'active' : '' }}">Chuyên mục</a>
+                    </div>
+                </div>
+
+                @if ($isAdminUser)
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.reports.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fas fa-chart-bar me-2"></i>Báo cáo</a>
+                    <div class="dropdown-menu bg-transparent border-0">
+                        <a href="{{ route('admin.reports.products') }}" class="dropdown-item {{ $isRoute('admin.reports.products') ? 'active' : '' }}">Sản phẩm - danh mục</a>
+                        <a href="{{ route('admin.reports.orders') }}" class="dropdown-item {{ $isRoute('admin.reports.orders') ? 'active' : '' }}">Đơn hàng</a>
+                        <a href="{{ route('admin.reports.sales-chart') }}" class="dropdown-item {{ $isRoute('admin.reports.sales-chart') ? 'active' : '' }}">Biểu đồ lượt bán</a>
+                        <a href="{{ route('admin.reports.top-sales') }}" class="dropdown-item {{ $isRoute('admin.reports.top-sales') ? 'active' : '' }}">Top lượt bán</a>
+                        <a href="{{ route('admin.reports.daily-sales') }}" class="dropdown-item {{ $isRoute('admin.reports.daily-sales') ? 'active' : '' }}">Lượt bán theo ngày</a>
+                    </div>
+                </div>
+
+                @endif
+                <a href="{{ route('admin.warehouses.index') }}" class="nav-item nav-link {{ $isRoute('admin.warehouses.*') ? 'active' : '' }}"><i class="fas fa-warehouse me-2"></i>Quản lý kho</a>
+                @if ($isAdminUser)
+                <a href="{{ route('admin.business.index') }}" class="nav-item nav-link {{ $isRoute('admin.business.*') ? 'active' : '' }}"><i class="fas fa-briefcase me-2"></i>Nghiệp vụ</a>
+                <a href="{{ route('admin.customers.index') }}" class="nav-item nav-link {{ $isRoute('admin.customers.*') ? 'active' : '' }}"><i class="fas fa-users me-2"></i>Thành viên</a>
+                @endif
+                <a href="{{ route('admin.reviews.index') }}" class="nav-item nav-link {{ $isRoute('admin.reviews.*') ? 'active' : '' }}"><i class="fas fa-comment me-2"></i>Bình luận</a>
+
+                @if ($isAdminUser)
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.banners.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fa fa-image me-2"></i>Banner</a>
+                    <div class="dropdown-menu bg-transparent border-0">
+                        <a href="{{ route('admin.banners.create') }}" class="dropdown-item {{ $isRoute('admin.banners.create') ? 'active' : '' }}">Thêm mới</a>
+                        <a href="{{ route('admin.banners.index') }}" class="dropdown-item {{ $isRoute('admin.banners.index', 'admin.banners.edit') ? 'active' : '' }}">Tất cả</a>
+                    </div>
+                </div>
+
+                <a href="{{ route('admin.home-layout.index') }}" class="nav-item nav-link {{ $isRoute('admin.home-layout.*') ? 'active' : '' }}"><i class="fa fa-th me-2"></i>Bố cục trang</a>
+                @endif
+                <a href="{{ route('home') }}" class="nav-item nav-link"><i class="fa fa-home me-2"></i>Về website</a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="content">
+        <nav class="navbar navbar-expand bg-light navbar-light sticky-top px-4 py-0">
+            <a href="{{ route('admin.dashboard') }}" class="navbar-brand d-flex d-lg-none me-4"><h2 class="text-primary mb-0"><i class="fa fa-hashtag"></i></h2></a>
+            <a href="#" class="sidebar-toggler flex-shrink-0"><i class="fa fa-bars"></i></a>
+            <form class="d-none d-md-flex ms-4" method="get" action="{{ route('admin.products.index') }}">
+                <input class="form-control border-0" name="q" type="search" placeholder="Tìm kiếm">
+            </form>
+            <div class="navbar-nav align-items-center ms-auto">
+                <div class="nav-item"><a href="{{ route('home') }}" class="nav-link"><i class="fa fa-globe me-lg-2"></i><span class="d-none d-lg-inline-flex">Website</span></a></div>
+                <div class="nav-item admin-user-box">
+                    <a href="#" class="nav-link d-flex align-items-center">
+                        <img class="rounded-circle me-lg-2" src="{{ asset('admin_assets/img/user-default.png') }}" alt="">
+                        <span class="d-none d-lg-inline-flex">{{ auth()->user()->full_name ?? 'ADMIN' }}</span>
+                    </a>
+                    <form method="post" action="{{ route('admin.logout') }}" class="m-0" onsubmit="return confirm('Đăng xuất khỏi admin?')">
+                        @csrf
+                        <button class="admin-logout-btn" type="submit"><i class="fa fa-sign-out-alt"></i><span class="d-none d-md-inline">Đăng xuất</span></button>
+                    </form>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid pt-4 px-4">
+            @if (session('success'))
+                <div class="flash">{{ session('success') }}</div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
+            @yield('content')
+        </div>
+
+        <div class="container-fluid pt-4 px-4">
+            <div class="bg-light rounded-top p-4">
+                <div class="row align-items-center">
+                    <div class="col-12 text-center"><i class="fa fa-shield-alt text-primary me-2"></i><span class="text-muted">&copy; 2026 Admin Dashboard</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="#" class="btn btn-lg btn-danger btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('admin_assets/lib/chart/chart.min.js') }}"></script>
+<script src="{{ asset('admin_assets/lib/easing/easing.min.js') }}"></script>
+<script src="{{ asset('admin_assets/lib/waypoints/waypoints.min.js') }}"></script>
+<script src="{{ asset('admin_assets/lib/owlcarousel/owl.carousel.min.js') }}"></script>
+<script src="{{ asset('admin_assets/lib/tempusdominus/js/moment.min.js') }}"></script>
+<script src="{{ asset('admin_assets/lib/tempusdominus/js/moment-timezone.min.js') }}"></script>
+<script src="{{ asset('admin_assets/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js') }}"></script>
+<script src="{{ asset('admin_assets/js/main.js') }}"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
+<script>
+class LaravelUploadAdapter {
+    constructor(loader, uploadUrl) {
+        this.loader = loader;
+        this.uploadUrl = uploadUrl;
+    }
+
+    upload() {
+        return this.loader.file.then(file => new Promise((resolve, reject) => {
+            const data = new FormData();
+            data.append('upload', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', this.uploadUrl, true);
+            xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').content);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.onload = () => {
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    reject('Upload failed');
+                    return;
+                }
+
+                const response = JSON.parse(xhr.responseText);
+                response.url ? resolve({ default: response.url }) : reject('Upload failed');
+            };
+
+            xhr.onerror = () => reject('Upload failed');
+            xhr.send(data);
+        }));
+    }
+
+    abort() {}
+}
+
+function editorUploadPlugin(uploadUrl) {
+    return function(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = loader => new LaravelUploadAdapter(loader, uploadUrl);
+    };
+}
+
+function bootClassicEditor(selector, uploadUrl) {
+    const element = document.querySelector(selector);
+    if (!element || typeof ClassicEditor === 'undefined') {
+        return;
+    }
+
+    ClassicEditor
+        .create(element, { extraPlugins: [editorUploadPlugin(uploadUrl)] })
+        .catch(error => console.error(error));
+}
+
+bootClassicEditor('#short_description', @json(route('admin.posts.upload-editor')));
+bootClassicEditor('#product_details', @json(route('admin.products.upload-editor')));
+</script>
+@stack('scripts')
+</body>
+</html>

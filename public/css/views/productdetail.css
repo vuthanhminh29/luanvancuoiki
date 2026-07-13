@@ -1,0 +1,1364 @@
+﻿/* Source: views\productdetail.php block 1 */
+.vto-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+.vto-modal-content {
+    position: relative;
+    width: min(92vw, 760px);
+    max-height: 92vh;
+    background: #111827;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+.vto-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: white;
+    font-size: 30px;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 10000;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.vto-modal-overlay.active {
+    display: flex;
+}
+.vto-modal-content .tryon-ai-page {
+    background: transparent;
+    padding: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.vto-modal-content .tryon-ai-viewer {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    max-height: calc(92vh - 118px);
+    border-radius: 0 0 12px 12px;
+    flex: 0 1 auto;
+    height: auto;
+    min-height: 0;
+}
+.vto-modal-content #JeelizVTOWidget {
+    height: 100%;
+    min-height: 0;
+}
+.tryon-modal-header {
+    flex: 0 0 auto;
+    min-height: 72px;
+    padding: 14px 64px 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    color: #fff;
+    background: #111827;
+}
+.tryon-modal-header span,
+.tryon-modal-header small {
+    display: block;
+    color: #a7f3d0;
+    font-size: 12px;
+}
+.tryon-modal-header strong {
+    display: block;
+    font-size: 18px;
+    line-height: 1.3;
+}
+.vto-modal-content .tryon-ai-status {
+    flex: 0 0 auto;
+    margin: 0;
+    min-height: 22px;
+    padding: 0 18px;
+    color: #e5e7eb;
+    background: #111827;
+}
+
+.vto-modal-content:has(.tryon-ai-modal--rayban) {
+    width: min(92vw, 680px, calc(92vh - 98px));
+    height: min(92vh, 778px);
+    max-height: none;
+    background: #8f8f8f;
+    border-radius: 12px;
+}
+
+.tryon-ai-modal--rayban {
+    position: relative;
+    display: block !important;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #8f8f8f !important;
+}
+
+.tryon-ai-modal--rayban .tryon-modal-header {
+    display: none;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-viewer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 98px;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
+    background: #8f8f8f;
+}
+
+.tryon-ai-modal--rayban #JeelizVTOWidget {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.tryon-ai-modal--rayban #JeelizVTOWidgetCanvas {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+}
+
+.tryon-ai-modal--rayban::before,
+.tryon-ai-modal--rayban::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.tryon-ai-modal--rayban::before {
+    top: 0;
+    height: 100px;
+    background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,0));
+}
+
+.tryon-ai-modal--rayban::after {
+    bottom: 98px;
+    height: 130px;
+    background: linear-gradient(0deg, rgba(0,0,0,.25), rgba(0,0,0,0));
+}
+
+.vto-close-btn,
+.vto-heart-btn {
+    position: absolute;
+    z-index: 10000;
+    right: 28px;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.08);
+    color: #fff;
+    font-size: 32px;
+    line-height: 1;
+    text-shadow: 0 1px 4px rgba(0,0,0,.45);
+    cursor: pointer;
+}
+
+.vto-close-btn {
+    top: 22px;
+}
+
+.vto-heart-btn {
+    top: 82px;
+    font-size: 30px;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-dots {
+    position: absolute;
+    z-index: 9;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 7px;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.9);
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+}
+
+.tryon-ai-modal--rayban .tryon-ai-products {
+    position: absolute;
+    z-index: 9;
+    left: 50%;
+    bottom: 110px;
+    transform: translateX(-50%);
+    width: min(760px, calc(100% - 32px));
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    padding: 12px 10px 8px;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-product {
+    flex: 0 0 auto;
+    width: 72px;
+    height: 72px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,.82);
+    box-shadow: 0 8px 26px rgba(0,0,0,.18);
+    display: grid;
+    place-items: center;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-product.is-active {
+    border: 5px solid #fff;
+    box-shadow: 0 0 0 5px rgba(255,255,255,.54), 0 10px 30px rgba(0,0,0,.22);
+}
+
+.tryon-ai-modal--rayban .tryon-ai-product img {
+    width: 74%;
+    height: 74%;
+    object-fit: contain;
+    background: transparent;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-bottom-bar {
+    position: absolute;
+    z-index: 10;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-height: 98px;
+    padding: 14px clamp(20px, 7vw, 90px);
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr) 180px;
+    align-items: center;
+    gap: 18px;
+    background: #fff;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-camera-btn {
+    width: 58px;
+    height: 58px;
+    border: 0;
+    border-radius: 50%;
+    justify-self: center;
+    background: #000;
+    color: #fff;
+    font-size: 23px;
+    cursor: pointer;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-selected {
+    display: grid;
+    grid-template-columns: 0 minmax(0, 1fr);
+    gap: 0;
+    padding: 0;
+    border: 0;
+    text-align: center;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-selected img,
+.tryon-ai-modal--rayban .tryon-ai-selected small,
+.tryon-ai-modal--rayban .tryon-ai-selected a {
+    display: none;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-selected strong {
+    color: #050505;
+    font-size: 17px;
+    line-height: 1.1;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-selected span {
+    color: #050505;
+    font-size: 18px;
+    font-weight: 500;
+    margin: 4px 0 0;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-cart-form {
+    margin: 0;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-bag-btn {
+    min-height: 58px;
+    width: 100%;
+    border: 0;
+    border-radius: 999px;
+    background: #000;
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-status {
+    position: absolute;
+    z-index: 9;
+    left: 20px;
+    right: 20px;
+    bottom: 208px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    color: rgba(255,255,255,.92);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 1px 4px rgba(0,0,0,.5);
+}
+
+@media (max-width: 767px) {
+    .vto-modal-content:has(.tryon-ai-modal--rayban) {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .tryon-ai-modal--rayban .tryon-ai-viewer {
+        bottom: 132px;
+    }
+
+    .tryon-ai-modal--rayban .tryon-ai-products {
+        bottom: 144px;
+    }
+
+    .tryon-ai-modal--rayban .tryon-ai-bottom-bar {
+        min-height: 132px;
+        padding: 14px 18px 18px;
+        grid-template-columns: 64px minmax(0, 1fr);
+        grid-template-areas:
+            "camera info"
+            "bag bag";
+    }
+
+    .tryon-ai-modal--rayban .tryon-ai-camera-btn {
+        grid-area: camera;
+        width: 52px;
+        height: 52px;
+    }
+
+    .tryon-ai-modal--rayban .tryon-ai-selected {
+        grid-area: info;
+        text-align: left;
+    }
+
+    .tryon-ai-modal--rayban .tryon-ai-cart-form,
+    .tryon-ai-modal--rayban .tryon-ai-bag-btn {
+        grid-area: bag;
+    }
+}
+
+.vto-modal-content {
+    width: min(94vw, 620px) !important;
+    height: min(88vh, 760px) !important;
+    max-height: none !important;
+    border-radius: 18px !important;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .28) !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-viewer {
+    inset: 0 0 136px !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-products {
+    bottom: 126px !important;
+    width: min(470px, calc(100% - 32px)) !important;
+    gap: 12px !important;
+    padding: 12px 14px 14px !important;
+    border-radius: 999px !important;
+    background: rgba(255,255,255,.18) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-product {
+    width: 54px !important;
+    height: 54px !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-product.is-active {
+    border-width: 3px !important;
+    box-shadow: 0 0 0 4px rgba(255,255,255,.46), 0 10px 26px rgba(0,0,0,.22) !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-bottom-bar {
+    min-height: 136px !important;
+    padding: 18px 24px 20px !important;
+    grid-template-columns: 58px minmax(0, 1fr) 146px !important;
+    gap: 18px !important;
+    border-radius: 18px 18px 0 0 !important;
+    box-shadow: 0 -12px 34px rgba(15, 23, 42, .14) !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-camera-btn {
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 20px !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-selected {
+    text-align: left !important;
+    min-width: 0 !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-selected strong {
+    font-size: 15px !important;
+    line-height: 1.22 !important;
+    text-transform: none !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-selected span {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    margin-top: 6px !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-bag-btn {
+    min-height: 52px !important;
+    padding: 0 18px !important;
+    font-size: 14px !important;
+    white-space: nowrap !important;
+}
+
+.vto-close-btn,
+.vto-heart-btn {
+    width: 42px !important;
+    height: 42px !important;
+    right: 18px !important;
+    font-size: 24px !important;
+    background: rgba(15, 23, 42, .28) !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+.vto-close-btn {
+    top: 18px !important;
+}
+
+.vto-heart-btn {
+    top: 74px !important;
+}
+
+.tryon-ai-modal--rayban .tryon-ai-status {
+    bottom: 198px !important;
+    font-size: 12px !important;
+}
+
+@media (max-width: 767px) {
+    .vto-modal-content {
+        width: min(94vw, 430px) !important;
+        height: min(86vh, 620px) !important;
+        border-radius: 12px !important;
+    }
+
+    .tryon-ai-modal--rayban .tryon-ai-viewer {
+        inset: 0 0 148px !important;
+    }
+
+    .tryon-ai-modal--rayban .tryon-ai-bottom-bar {
+        min-height: 148px !important;
+        padding: 16px 18px 18px !important;
+        grid-template-columns: 54px minmax(0, 1fr) !important;
+        grid-template-areas: "camera info" "bag bag" !important;
+    }
+
+    .tryon-ai-modal--rayban .tryon-ai-products {
+        bottom: 138px !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+    }
+}
+
+body.vto-modal-lock {
+    overflow: hidden;
+}
+
+.vto-modal-overlay {
+    background: rgba(0, 0, 0, .52);
+    padding: 14px;
+}
+
+.vto-modal-overlay.active {
+    display: flex;
+}
+
+.vto-modal-overlay .vto-modal-content.vto-eyebuy-shell {
+    width: min(1240px, calc(100vw - 28px)) !important;
+    height: min(710px, calc(100vh - 28px)) !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .28) !important;
+    overflow: visible !important;
+}
+
+.tryon-ai-modal--eyebuy {
+    position: relative;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 328px;
+    width: 100%;
+    height: 100%;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #070707;
+    overflow: hidden;
+}
+
+.tryon-eyebuy-viewer {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: #d7d6d1;
+}
+
+.vto-modal-content .tryon-ai-modal--eyebuy .tryon-ai-viewer {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    background: #d7d6d1 !important;
+}
+
+.tryon-ai-modal--eyebuy #JeelizVTOWidget,
+.vto-modal-content .tryon-ai-modal--eyebuy #JeelizVTOWidget {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.tryon-ai-modal--eyebuy #JeelizVTOWidgetCanvas {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+}
+
+.tryon-uploaded-preview {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #111;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tryon-image-mode .tryon-uploaded-preview {
+    opacity: 1;
+}
+
+.tryon-ai-modal--eyebuy .JeelizVTOWidgetControls {
+    display: none;
+}
+
+.tryon-expand-fab,
+.tryon-framefit-pill,
+.tryon-close-fab,
+.tryon-round-control,
+.tryon-heart-outline,
+.tryon-pd-control button {
+    appearance: none;
+    cursor: pointer;
+}
+
+.tryon-expand-fab {
+    position: absolute;
+    z-index: 12;
+    top: 26px;
+    left: 26px;
+    width: 50px;
+    height: 50px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,.88);
+    color: #050505;
+    font-size: 23px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 18px rgba(0,0,0,.08);
+}
+
+.tryon-framefit-pill {
+    position: absolute;
+    z-index: 12;
+    top: 32px;
+    right: 32px;
+    min-height: 45px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255,255,255,.92);
+    color: #171717;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 17px;
+    font-weight: 900;
+    box-shadow: 0 8px 18px rgba(0,0,0,.08);
+}
+
+.tryon-framefit-pill i {
+    color: #d79a36;
+    font-size: 20px;
+}
+
+.tryon-ai-modal--eyebuy .tryon-ai-status {
+    position: absolute;
+    z-index: 13;
+    left: 50%;
+    bottom: 100px;
+    min-height: 32px;
+    margin: 0;
+    padding: 7px 20px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.96);
+    color: #111;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+    transform: translateX(-50%);
+    box-shadow: 0 10px 26px rgba(0,0,0,.12);
+    white-space: nowrap;
+    display: none;
+}
+
+.tryon-ai-modal--eyebuy .tryon-ai-products {
+    display: none !important;
+}
+
+.tryon-ai-modal--eyebuy #JeelizVTOWidgetLoading {
+    z-index: 10;
+    background: transparent;
+}
+
+.tryon-ai-modal--eyebuy .JeelizVTOWidgetLoadingText {
+    min-height: 32px;
+    padding: 7px 20px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.96);
+    color: #111;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 10px 26px rgba(0,0,0,.12);
+}
+
+.tryon-ai-modal--eyebuy .tryon-no-model {
+    z-index: 11;
+    inset: 0;
+    background: rgba(20, 20, 20, .72);
+    color: #fff;
+}
+
+.tryon-upload-panel {
+    position: absolute;
+    z-index: 16;
+    inset: 0;
+    display: none;
+    place-items: center;
+    align-content: center;
+    gap: 36px;
+    padding: 44px 24px;
+    background: #000;
+    color: #fff;
+}
+
+.tryon-upload-active .tryon-upload-panel {
+    display: grid;
+}
+
+.tryon-upload-active #JeelizVTOWidget,
+.tryon-upload-active .tryon-expand-fab,
+.tryon-upload-active .tryon-framefit-pill,
+.tryon-upload-active .tryon-ai-status {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tryon-upload-panel h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 900;
+}
+
+.tryon-upload-card {
+    width: min(407px, calc(100vw - 80px));
+    min-height: 475px;
+    padding: 46px 32px 34px;
+    border-radius: 7px;
+    background: #fff;
+    color: #080808;
+    text-align: center;
+    cursor: pointer;
+}
+
+.tryon-upload-card.is-dragover {
+    box-shadow: 0 0 0 4px rgba(220, 160, 71, .35);
+}
+
+.tryon-upload-card input {
+    display: none;
+}
+
+.tryon-upload-card h3 {
+    margin: 0 0 26px;
+    font-size: 20px;
+    line-height: 1.1;
+    font-weight: 900;
+}
+
+.tryon-upload-plus {
+    width: 39px;
+    height: 39px;
+    margin-bottom: 17px;
+    border: 0;
+    border-radius: 8px;
+    background: #ececf0;
+    color: #8b929c;
+    font-size: 16px;
+}
+
+.tryon-upload-card p {
+    margin: 0;
+    color: #030303;
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+
+.tryon-upload-card p span {
+    color: #d39135;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.tryon-upload-card small {
+    display: block;
+    color: #57606c;
+    font-size: 16px;
+    line-height: 1.3;
+}
+
+.tryon-upload-guide {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 34px 0 24px;
+}
+
+.tryon-upload-guide figure {
+    margin: 0;
+}
+
+.tryon-upload-guide img {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+}
+
+.tryon-upload-guide figcaption {
+    color: #050505;
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 900;
+}
+
+.tryon-upload-guide figcaption b {
+    color: #0aaa62;
+    font-size: 16px;
+}
+
+.tryon-upload-guide figure + figure figcaption b {
+    color: #ff1c1c;
+}
+
+.tryon-upload-card .tryon-upload-note {
+    color: #5c6370;
+    font-size: 16px;
+    line-height: 1.55;
+    font-weight: 600;
+}
+
+.tryon-upload-error {
+    min-height: 20px;
+    margin-top: 12px;
+    color: #c0392b;
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 800;
+}
+
+.tryon-capture-bar {
+    position: absolute;
+    z-index: 13;
+    left: 50%;
+    bottom: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transform: translateX(-50%);
+}
+
+.tryon-round-control {
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,.92);
+    color: #111;
+    font-size: 21px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 18px rgba(0,0,0,.14);
+}
+
+.tryon-round-control.is-active:not(.tryon-round-control--image) {
+    width: 86px;
+    height: 86px;
+    font-size: 34px;
+    background: #fff;
+}
+
+.tryon-round-control--image.is-active {
+    color: #d39135;
+    box-shadow: 0 0 0 3px rgba(211, 145, 53, .38), 0 8px 18px rgba(0,0,0,.14);
+}
+
+.tryon-eyebuy-side {
+    position: relative;
+    min-width: 0;
+    height: 100%;
+    background: #fff;
+    border-left: 1px solid #ececec;
+}
+
+.tryon-close-fab {
+    position: absolute;
+    z-index: 20;
+    top: 14px;
+    right: 14px;
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: #050505;
+    color: #fff;
+    font-size: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tryon-side-panel {
+    height: 100%;
+    padding: 40px 24px 24px;
+    display: none;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tryon-side-panel--product {
+    display: flex;
+}
+
+.tryon-side-panel--upload {
+    display: none;
+}
+
+.tryon-upload-active .tryon-side-panel--product {
+    display: none;
+}
+
+.tryon-upload-active .tryon-side-panel--upload {
+    display: flex;
+}
+
+.tryon-ai-modal--eyebuy .tryon-ai-selected {
+    display: block;
+    padding: 0;
+    border: 0;
+}
+
+.tryon-ai-modal--eyebuy .tryon-ai-selected img {
+    display: none;
+}
+
+.tryon-ai-modal--eyebuy .tryon-ai-selected h2 {
+    margin: 0 0 18px;
+    color: #030303;
+    font-size: 28px;
+    line-height: 1.14;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.tryon-selected-pricebox {
+    margin-bottom: 18px;
+    padding: 15px 16px;
+    border: 1px solid #f0dfc4;
+    border-radius: 8px;
+    background: #fff8ed;
+}
+
+.tryon-selected-pricebox span {
+    display: block;
+    margin: 0 0 6px;
+    color: #9a6a28;
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 900;
+}
+
+.tryon-ai-modal--eyebuy #tryonSelectedPrice {
+    display: block;
+    color: #c9852c;
+    font-size: 25px;
+    line-height: 1;
+    font-weight: 900;
+}
+
+.tryon-selected-desc {
+    margin: 0 0 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #eeeeee;
+    color: #343a46;
+    font-size: 14px;
+    line-height: 1.55;
+    font-weight: 600;
+}
+
+.tryon-selected-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.tryon-selected-meta div {
+    min-height: 78px;
+    padding: 13px 12px;
+    border: 1px solid #ededed;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+.tryon-selected-meta span {
+    display: block;
+    margin: 0 0 8px;
+    color: #8a9099;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 800;
+}
+
+.tryon-selected-meta strong {
+    color: #111;
+    font-size: 14px;
+    line-height: 1.35;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.tryon-ai-modal--eyebuy #tryonDetailLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 13px;
+    border-radius: 999px;
+    background: #f4f4f4;
+    color: #111;
+    font-size: 13px;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.tryon-option-card {
+    width: 100%;
+    min-height: 83px;
+    margin-bottom: 13px;
+    padding: 16px 18px;
+    border: 0;
+    border-radius: 6px;
+    background: #f4f4f4;
+    color: #394253;
+    text-align: left;
+}
+
+.tryon-option-card span {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 500;
+}
+
+.tryon-swatch-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tryon-swatch {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--swatch);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.45), 0 0 0 1px rgba(0,0,0,.12);
+}
+
+.tryon-swatch.is-active {
+    box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px #050505;
+}
+
+.tryon-size-chip {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #c9852c;
+    color: #fff;
+    font-size: 15px;
+    line-height: 28px;
+    text-align: center;
+    display: inline-block;
+}
+
+.tryon-option-card--button {
+    position: relative;
+    cursor: pointer;
+}
+
+.tryon-option-card--button strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #111;
+    font-size: 16px;
+}
+
+.tryon-option-card--button strong i {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #24303b, #d8dde4);
+    display: inline-block;
+}
+
+.tryon-option-card--button b {
+    position: absolute;
+    right: 24px;
+    top: 44px;
+    color: #777;
+    font-size: 23px;
+}
+
+.tryon-side-actions {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.tryon-similar-btn,
+.tryon-ai-modal--eyebuy .tryon-ai-bag-btn,
+.tryon-fit-cancel,
+.tryon-fit-confirm {
+    width: 100%;
+    min-height: 49px;
+    border: 0;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.tryon-similar-btn {
+    margin-bottom: 13px;
+    background: #f2e7d5;
+    color: #d39135;
+}
+
+.tryon-buy-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 52px;
+    gap: 10px;
+    align-items: center;
+}
+
+.tryon-ai-modal--eyebuy .tryon-ai-cart-form {
+    width: 100%;
+    margin: 0;
+}
+
+.tryon-ai-modal--eyebuy .tryon-ai-bag-btn {
+    border-radius: 6px;
+    background: #dca047;
+    color: #fff;
+    cursor: pointer;
+}
+
+.tryon-heart-outline {
+    width: 52px;
+    height: 52px;
+    border: 1px solid #050505;
+    border-radius: 6px;
+    background: #fff;
+    color: #050505;
+    font-size: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tryon-fit-back {
+    align-self: flex-start;
+    min-height: 28px;
+    margin: 0 0 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #d39135;
+    font-size: 16px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.tryon-side-panel--fit h2 {
+    margin: 0 0 22px;
+    color: #030303;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 900;
+}
+
+.tryon-side-panel--fit p {
+    margin: 0 0 24px;
+    color: #5f6570;
+    font-size: 20px;
+    line-height: 1.25;
+    font-weight: 500;
+}
+
+.tryon-pd-control {
+    margin-top: 12px;
+}
+
+.tryon-pd-control label {
+    display: block;
+    margin-bottom: 9px;
+    color: #5f6570;
+    font-size: 15px;
+    line-height: 1.3;
+}
+
+.tryon-pd-control div {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.tryon-pd-control button {
+    width: 39px;
+    height: 39px;
+    border: 1px solid #050505;
+    border-radius: 7px;
+    background: #fff;
+    color: #050505;
+    font-size: 16px;
+}
+
+.tryon-pd-control strong {
+    min-width: 54px;
+    color: #050505;
+    font-size: 17px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.tryon-fit-actions {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 13px;
+}
+
+.tryon-fit-cancel {
+    border: 1px solid #050505;
+    border-radius: 6px;
+    background: #fff;
+    color: #050505;
+}
+
+.tryon-fit-confirm {
+    border-radius: 6px;
+    background: #dca047;
+    color: #fff;
+}
+
+@media (max-width: 991px) {
+    .vto-modal-overlay .vto-modal-content.vto-eyebuy-shell {
+        width: min(100vw - 20px, 760px) !important;
+        height: min(100vh - 20px, 920px) !important;
+        overflow: hidden !important;
+    }
+
+    .tryon-ai-modal--eyebuy {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(390px, 1fr) auto;
+    }
+
+    .tryon-eyebuy-side {
+        height: auto;
+        max-height: 43vh;
+        border-left: 0;
+        border-top: 1px solid #ececec;
+        overflow-y: auto;
+    }
+
+    .tryon-side-panel {
+        min-height: 320px;
+        padding: 24px 20px 20px;
+    }
+
+    .tryon-close-fab {
+        top: 12px;
+        right: 12px;
+    }
+
+    .tryon-ai-modal--eyebuy .tryon-ai-selected h2 {
+        margin-bottom: 18px;
+        font-size: 25px;
+    }
+
+    .tryon-side-panel--fit p {
+        font-size: 17px;
+    }
+}
+
+@media (max-width: 575px) {
+    .vto-modal-overlay .vto-modal-content.vto-eyebuy-shell {
+        width: 100vw !important;
+        height: 100vh !important;
+    }
+
+    .tryon-ai-modal--eyebuy {
+        grid-template-rows: minmax(360px, 56vh) minmax(0, 1fr);
+    }
+
+    .tryon-expand-fab {
+        top: 16px;
+        left: 16px;
+        width: 44px;
+        height: 44px;
+        font-size: 19px;
+    }
+
+    .tryon-framefit-pill {
+        top: 18px;
+        right: 18px;
+        min-height: 40px;
+        padding: 0 14px;
+        font-size: 14px;
+    }
+
+    .tryon-framefit-pill i {
+        font-size: 20px;
+    }
+
+    .tryon-ai-modal--eyebuy .tryon-ai-status {
+        bottom: 88px;
+        max-width: calc(100% - 32px);
+        white-space: normal;
+    }
+
+    .tryon-capture-bar {
+        bottom: 18px;
+        gap: 9px;
+    }
+
+    .tryon-round-control {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+
+    .tryon-round-control.is-active {
+        width: 72px;
+        height: 72px;
+        font-size: 28px;
+    }
+
+    .tryon-eyebuy-side {
+        max-height: none;
+    }
+
+    .tryon-side-panel {
+        min-height: 0;
+        padding: 20px 16px 18px;
+    }
+
+    .tryon-option-card {
+        min-height: 70px;
+        padding: 13px 16px;
+    }
+
+    .tryon-buy-row,
+    .tryon-fit-actions {
+        grid-template-columns: 1fr 50px;
+    }
+
+    .tryon-fit-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+}

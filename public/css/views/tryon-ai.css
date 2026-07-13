@@ -1,0 +1,798 @@
+/* Source: views\tryon-ai.php block 1 */
+/* ── Compact Try-On App ────────────────────────────────── */
+#vtoApp {
+    position: relative;
+    width: min(96vw, 600px);
+    height: min(94vh, 820px);
+    margin: 28px auto 40px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #111;
+    box-shadow: 0 32px 80px rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.06);
+    display: flex;
+    flex-direction: column;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* ── Camera / canvas area ── */
+#vtoApp .vto-viewer {
+    position: absolute;
+    inset: 0 0 260px 0;
+    background: #1a1a1a;
+    overflow: hidden;
+}
+#vtoApp #JeelizVTOWidget {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+#vtoApp #JeelizVTOWidgetCanvas {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100%;
+    width: auto;
+}
+
+/* Camera-off / no-model placeholder */
+#vtoApp .vto-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: rgba(255,255,255,.4);
+    font-size: 14px;
+    letter-spacing: .02em;
+}
+#vtoApp .vto-placeholder i {
+    font-size: 52px;
+    opacity: .25;
+}
+
+/* ── Top bar: close + favourite ── */
+#vtoApp .vto-topbar {
+    position: absolute;
+    z-index: 20;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#vtoApp .vto-icon-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 17px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background .18s;
+}
+#vtoApp .vto-icon-btn:hover { background: rgba(0,0,0,.7); }
+
+/* Jeeliz built-in adjust button */
+#vtoApp .JeelizVTOWidgetControls {
+    position: absolute;
+    z-index: 15;
+    top: 16px;
+    left: 16px;
+}
+#vtoApp #JeelizVTOWidgetAdjust {
+    width: 40px;
+    height: 40px;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: none;
+    border-radius: 12px;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .18s;
+}
+#vtoApp #JeelizVTOWidgetAdjust:hover { background: rgba(0,0,0,.7); }
+
+#vtoApp #JeelizVTOWidgetAdjustNotice {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.65);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    white-space: nowrap;
+    display: none;
+}
+#vtoApp #JeelizVTOWidgetAdjustNotice button {
+    margin-left: 10px;
+    background: none;
+    border: none;
+    color: #facc15;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* Loading overlay */
+#vtoApp #JeelizVTOWidgetLoading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(17,17,17,.82);
+    z-index: 5;
+}
+#vtoApp .JeelizVTOWidgetLoadingText {
+    color: rgba(255,255,255,.7);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .12em;
+}
+
+/* ── Status text ── */
+#vtoApp .vto-status {
+    position: absolute;
+    z-index: 12;
+    left: 0;
+    right: 0;
+    bottom: 276px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,.88);
+    text-shadow: 0 1px 6px rgba(0,0,0,.5);
+    pointer-events: none;
+    letter-spacing: .02em;
+}
+
+/* ── Product carousel (pill strip) ── */
+#vtoApp .vto-products {
+    position: absolute;
+    z-index: 18;
+    left: 0;
+    right: 0;
+    bottom: 140px;
+    transform: none;
+    width: 100%;
+    height: 120px;
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 18px;
+    border-top: 1px solid #eef0f3;
+    border-radius: 0;
+    background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+    box-shadow: 0 -12px 28px rgba(0,0,0,.12);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-snap-type: x mandatory;
+    box-sizing: border-box;
+}
+#vtoApp .vto-products::-webkit-scrollbar { display: none; }
+
+#vtoApp .vto-product,
+#vtoApp .tryon-ai-product {
+    flex: 0 0 auto;
+    width: 154px;
+    height: 92px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    overflow: hidden;
+    cursor: pointer;
+    scroll-snap-align: start;
+    transition: border-color .18s, transform .15s, box-shadow .15s, background .18s;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 4px 8px;
+    text-align: left;
+    box-sizing: border-box;
+}
+#vtoApp .vto-product img,
+#vtoApp .tryon-ai-product img {
+    grid-row: 1 / span 2;
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    display: block;
+    padding: 5px;
+    background: #f8fafc;
+    border-radius: 7px;
+    box-sizing: border-box;
+}
+#vtoApp .tryon-ai-product strong {
+    margin: 0;
+    color: #111827;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.25;
+    max-height: 31px;
+    overflow: hidden;
+    display: block;
+}
+#vtoApp .tryon-ai-product span {
+    margin: 0;
+    color: #c0392b;
+    display: block;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.1;
+}
+#vtoApp .tryon-ai-product small {
+    display: none;
+}
+#vtoApp .vto-product:hover,
+#vtoApp .tryon-ai-product:hover {
+    transform: translateY(-2px);
+    border-color: #b7c4d5;
+    box-shadow: 0 10px 24px rgba(15,23,42,.12);
+}
+#vtoApp .vto-product.is-active,
+#vtoApp .tryon-ai-product.is-active {
+    border-color: #0f766e;
+    background: #f0fdfa;
+    box-shadow: 0 0 0 2px rgba(15,118,110,.16), 0 12px 28px rgba(15,23,42,.14);
+}
+#vtoApp .vto-product.no-model,
+#vtoApp .tryon-ai-product.is-unavailable {
+    opacity: .45;
+    filter: grayscale(.6);
+}
+
+/* ── Bottom bar ── */
+#vtoApp .vto-bottom {
+    position: absolute;
+    z-index: 15;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 140px;
+    padding: 16px 20px 20px;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -16px 40px rgba(0,0,0,.18);
+    display: grid;
+    grid-template-columns: 52px 1fr auto;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Camera toggle button */
+#vtoApp .vto-camera-btn {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background: #111;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .18s, transform .12s;
+}
+#vtoApp .vto-camera-btn:hover { background: #333; }
+#vtoApp .vto-camera-btn:active { transform: scale(.93); }
+
+/* Selected product info */
+#vtoApp .vto-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+#vtoApp .vto-info strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+#vtoApp .vto-info .vto-price {
+    font-size: 16px;
+    font-weight: 800;
+    color: #111;
+    margin-top: 3px;
+}
+#vtoApp .vto-info .vto-detail-link {
+    font-size: 12px;
+    color: #666;
+    text-decoration: none;
+    margin-top: 1px;
+}
+#vtoApp .vto-info .vto-detail-link:hover { color: #111; text-decoration: underline; }
+
+/* Add to cart button */
+#vtoApp .vto-cart-btn {
+    height: 52px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 14px;
+    background: #111;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s, transform .12s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    text-decoration: none;
+}
+#vtoApp .vto-cart-btn:hover { background: #333; }
+#vtoApp .vto-cart-btn:active { transform: scale(.96); }
+#vtoApp .vto-cart-btn i { font-size: 17px; }
+
+/* ── Mobile ── */
+@media (max-width: 540px) {
+    #vtoApp {
+        width: 100vw;
+        height: 100svh;
+        margin: 0;
+        border-radius: 0;
+    }
+    #vtoApp .vto-viewer {
+        bottom: 282px;
+    }
+    #vtoApp .vto-status {
+        bottom: 298px;
+    }
+    #vtoApp .vto-products {
+        bottom: 160px;
+        height: 122px;
+        padding: 14px;
+    }
+    #vtoApp .tryon-ai-product {
+        width: 146px;
+    }
+    #vtoApp .vto-bottom {
+        height: 160px;
+        padding: 14px 16px 24px;
+        grid-template-columns: 48px 1fr;
+        grid-template-rows: auto auto;
+        grid-template-areas:
+            "cam  info"
+            "btn  btn";
+        gap: 10px 14px;
+        border-radius: 0;
+    }
+    #vtoApp .vto-camera-btn { grid-area: cam; width: 48px; height: 48px; }
+    #vtoApp .vto-info       { grid-area: info; }
+    #vtoApp .vto-cart-wrap  { grid-area: btn; }
+    #vtoApp .vto-cart-btn   { width: 100%; justify-content: center; }
+}
+
+/* Refined selector layout: keep the camera clean and move frame choices into a separate panel. */
+html,
+body {
+    overflow-x: hidden;
+}
+
+.addThis_listSharing {
+    display: none !important;
+}
+
+#vtoApp {
+    --vto-side: 368px;
+    --vto-gap: 18px;
+    --vto-pad: 18px;
+    width: min(1180px, calc(100vw - 32px));
+    height: auto;
+    min-height: 640px;
+    padding: var(--vto-pad);
+    box-sizing: border-box;
+    border-radius: 18px;
+    overflow: visible;
+    background: #eef2f6;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--vto-side);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: var(--vto-gap);
+    align-items: stretch;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .18);
+}
+
+#vtoApp .vto-viewer {
+    position: relative;
+    inset: auto;
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    height: min(76vh, 720px);
+    min-height: 560px;
+    border-radius: 16px;
+    background: #111827;
+    box-shadow: 0 18px 44px rgba(15, 23, 42, .24);
+}
+
+#vtoApp .vto-topbar {
+    top: calc(var(--vto-pad) + 16px);
+    right: calc(var(--vto-pad) + var(--vto-side) + var(--vto-gap) + 16px);
+    flex-direction: row;
+}
+
+#vtoApp .vto-icon-btn {
+    background: rgba(17, 24, 39, .58);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .18);
+}
+
+#vtoApp .vto-status {
+    position: relative;
+    z-index: 1;
+    grid-column: 2;
+    grid-row: 1;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    min-height: 52px;
+    padding: 12px 14px;
+    border: 1px solid #dbe3ec;
+    border-radius: 8px;
+    background: #fff;
+    color: #334155;
+    text-align: left;
+    text-shadow: none;
+    pointer-events: auto;
+    box-sizing: border-box;
+    letter-spacing: 0;
+    line-height: 1.35;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    display: grid;
+    gap: 4px;
+    transition: border-color .18s, box-shadow .18s, transform .12s, background .18s;
+}
+
+#vtoApp .vto-status::before {
+    content: "Camera";
+    display: block;
+    margin-bottom: 3px;
+    color: #0f766e;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+#vtoApp .vto-status:hover {
+    border-color: #0f766e;
+    box-shadow: 0 10px 24px rgba(15, 118, 110, .12);
+}
+
+#vtoApp .vto-status:active {
+    transform: translateY(1px);
+}
+
+#vtoApp .vto-status.is-active {
+    border-color: #0f766e;
+    background: #f0fdfa;
+}
+
+#vtoApp .vto-toggle-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+#vtoApp .vto-toggle-main i {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #111827;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+#vtoApp .vto-status.is-active .vto-toggle-main i {
+    background: #0f766e;
+}
+
+#vtoApp .vto-status-message {
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#vtoApp .vto-products {
+    position: relative;
+    z-index: 1;
+    grid-column: 2;
+    grid-row: 2;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    height: auto;
+    max-height: 420px;
+    min-height: 0;
+    padding: 14px;
+    border: 1px solid #dbe3ec;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-content: start;
+    gap: 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-snap-type: none;
+}
+
+#vtoApp .vto-products::before {
+    content: "Chọn / đổi kính";
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: block;
+    margin: -14px -14px 2px;
+    padding: 13px 14px 10px;
+    border-bottom: 1px solid #eef2f6;
+    background: #fff;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+#vtoApp .vto-product,
+#vtoApp .tryon-ai-product {
+    width: 100%;
+    height: 96px;
+    padding: 10px;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 6px 10px;
+    border-color: #e2e8f0;
+    border-radius: 8px;
+    box-shadow: none;
+    scroll-snap-align: none;
+}
+
+#vtoApp .vto-product img,
+#vtoApp .tryon-ai-product img {
+    width: 76px;
+    height: 74px;
+    padding: 6px;
+}
+
+#vtoApp .tryon-ai-product strong {
+    font-size: 13px;
+    line-height: 1.3;
+    max-height: 34px;
+}
+
+#vtoApp .tryon-ai-product span {
+    font-size: 13px;
+}
+
+#vtoApp .vto-product:hover,
+#vtoApp .tryon-ai-product:hover {
+    transform: translateX(2px);
+}
+
+#vtoApp .vto-bottom {
+    position: relative;
+    z-index: 1;
+    grid-column: 2;
+    grid-row: 3;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    height: auto;
+    min-height: 0;
+    padding: 14px;
+    border: 1px solid #dbe3ec;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: none;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    grid-template-areas:
+        "cam info"
+        "detail detail"
+        "cart cart";
+    gap: 12px 14px;
+}
+
+#vtoApp .vto-camera-btn {
+    grid-area: cam;
+}
+
+#vtoApp .vto-info {
+    grid-area: info;
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+#vtoApp .vto-info strong {
+    color: #111827;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.3;
+}
+
+#vtoApp .vto-info .vto-price {
+    color: #c0392b;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+#vtoApp .vto-detail-link {
+    grid-area: detail;
+    min-height: 54px;
+    padding: 10px 12px;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+    color: #0f172a;
+    text-decoration: none;
+    display: grid;
+    gap: 2px;
+    box-sizing: border-box;
+    transition: border-color .18s, box-shadow .18s, transform .12s, background .18s;
+}
+
+#vtoApp .vto-detail-link:hover {
+    border-color: #0284c7;
+    background: #e0f2fe;
+    color: #0f172a;
+    text-decoration: none;
+    box-shadow: 0 10px 24px rgba(2, 132, 199, .14);
+    transform: translateY(-1px);
+}
+
+#vtoApp .vto-detail-link strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #075985;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.25;
+}
+
+#vtoApp .vto-detail-link strong i {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #0ea5e9;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+#vtoApp .vto-detail-link span {
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    padding-left: 36px;
+}
+
+#vtoApp .vto-cart-wrap {
+    grid-area: cart;
+}
+
+#vtoApp .vto-cart-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+@media (max-width: 900px) {
+    #vtoApp {
+        width: min(100vw - 20px, 640px);
+        min-height: 0;
+        margin: 10px auto 28px;
+        padding: 10px;
+        border-radius: 14px;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        gap: 10px;
+    }
+
+    #vtoApp .vto-viewer {
+        grid-column: 1;
+        grid-row: auto;
+        height: min(58svh, 520px);
+        min-height: 360px;
+        border-radius: 12px;
+    }
+
+    #vtoApp .vto-topbar {
+        top: 20px;
+        right: 20px;
+    }
+
+    #vtoApp .vto-status,
+    #vtoApp .vto-products,
+    #vtoApp .vto-bottom {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    #vtoApp .vto-products {
+        height: auto;
+        max-height: 210px;
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 540px) {
+    #vtoApp {
+        width: calc(100vw - 12px);
+        margin-top: 6px;
+    }
+
+    #vtoApp .vto-viewer {
+        height: 36svh;
+        min-height: 280px;
+    }
+
+    #vtoApp .vto-products {
+        max-height: 146px;
+    }
+
+    #vtoApp .vto-bottom {
+        grid-template-columns: 48px minmax(0, 1fr);
+        grid-template-areas:
+            "cam info"
+            "detail detail"
+            "cart cart";
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    #vtoApp .vto-camera-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    #vtoApp .tryon-ai-product {
+        height: 92px;
+        grid-template-columns: 68px minmax(0, 1fr);
+    }
+
+    #vtoApp .tryon-ai-product img {
+        width: 68px;
+        height: 68px;
+    }
+}

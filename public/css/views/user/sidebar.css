@@ -1,0 +1,77 @@
+﻿/* Source: views\user\sidebar.php block 1 */
+.profile-sidebar {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.profile-header {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e5e7eb;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 0.25rem 0;
+}
+
+.profile-edit {
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-decoration: none;
+}
+
+.profile-edit:hover {
+    color: #111827;
+}
+
+.profile-menu {
+    padding: 0.5rem 0;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.5rem;
+    color: #374151;
+    text-decoration: none;
+    font-size: 0.9375rem;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+}
+
+.menu-item:hover {
+    background-color: #f9fafb;
+    color: #111827;
+}
+
+.menu-item.active {
+    background-color: #f3f4f6;
+    color: #111827;
+    border-left-color: #111827;
+    font-weight: 500;
+}
+
+.menu-item i {
+    width: 20px;
+    font-size: 1.125rem;
+}
