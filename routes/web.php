@@ -1,0 +1,95 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ClientRouteAliasController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReturnRequestController;
+use App\Http\Controllers\VnPayController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', [ClientRouteAliasController::class, 'home'])->name('home');
+Route::get('/index.php', [ClientRouteAliasController::class, 'index'])->name('php.client.index');
+
+Route::get('/thu-kinh', [ProductController::class, 'tryOn'])->middleware('throttle:web-read')->name('tryon');
+Route::get('/san-pham', [ProductController::class, 'index'])->middleware('throttle:web-read')->name('products.index');
+Route::get('/san-pham/{product:slug}', [ProductController::class, 'show'])->middleware('throttle:web-read')->name('products.show');
+
+Route::get('/bai-viet', [BlogController::class, 'index'])->middleware('throttle:web-read')->name('blog.index');
+Route::get('/bai-viet/{post:slug}', [BlogController::class, 'show'])->middleware('throttle:web-read')->name('blog.show');
+Route::get('/lien-he', [PageController::class, 'contact'])->name('pages.contact');
+Route::get('/ho-tro', [PageController::class, 'support'])->middleware('throttle:web-read')->name('pages.support');
+
+Route::get('/vnpay/return', [VnPayController::class, 'return'])->name('vnpay.return');
+Route::match(['get', 'post'], '/vnpay/ipn', [VnPayController::class, 'ipn'])->name('vnpay.ipn');
+
+Route::get('/xac-thuc-email/{user}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->middleware(['signed', 'throttle:auth'])
+    ->name('verification.verify');
+
+Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
+Route::post('/gio-hang', [CartController::class, 'store'])->middleware('throttle:cart')->name('cart.store');
+Route::put('/gio-hang', [CartController::class, 'update'])->middleware('throttle:cart')->name('cart.update');
+Route::delete('/gio-hang/{variant}', [CartController::class, 'destroy'])->middleware('throttle:cart')->name('cart.destroy');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/dang-nhap', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/dang-nhap', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login.store');
+    Route::get('/dang-ky', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/dang-ky', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register.store');
+    Route::get('/quen-mat-khau', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/quen-mat-khau', [AuthController::class, 'sendResetPasswordLink'])->middleware('throttle:auth')->name('password.email');
+    Route::get('/khoi-phuc-mat-khau/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/khoi-phuc-mat-khau', [AuthController::class, 'resetPassword'])->middleware('throttle:auth')->name('password.update');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/dang-xuat', [AuthController::class, 'logout'])->name('logout.get');
+    Route::post('/dang-xuat', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/tai-khoan', [AccountController::class, 'index'])->name('account.index');
+    Route::get('/tai-khoan/ho-so', [AccountController::class, 'editProfile'])->name('account.profile.edit');
+    Route::put('/tai-khoan/ho-so', [AccountController::class, 'updateProfile'])->middleware('throttle:user-actions')->name('account.profile.update');
+    Route::get('/tai-khoan/doi-mat-khau', [AccountController::class, 'editPassword'])->name('account.password.edit');
+    Route::put('/tai-khoan/doi-mat-khau', [AccountController::class, 'updatePassword'])->middleware('throttle:user-actions')->name('account.password.update');
+    Route::get('/tai-khoan/dia-chi/them', [AccountController::class, 'createAddress'])->name('account.addresses.create');
+    Route::post('/tai-khoan/dia-chi', [AccountController::class, 'storeAddress'])->middleware('throttle:user-actions')->name('account.addresses.store');
+    Route::get('/tai-khoan/dia-chi/{address}/sua', [AccountController::class, 'editAddress'])->name('account.addresses.edit');
+    Route::put('/tai-khoan/dia-chi/{address}', [AccountController::class, 'updateAddress'])->middleware('throttle:user-actions')->name('account.addresses.update');
+    Route::delete('/tai-khoan/dia-chi/{address}', [AccountController::class, 'destroyAddress'])->middleware('throttle:user-actions')->name('account.addresses.destroy');
+    Route::get('/tai-khoan/don-hang', [AccountController::class, 'orders'])->name('account.orders.index');
+    Route::get('/tai-khoan/don-hang/{order}', [AccountController::class, 'showOrder'])->name('account.orders.show');
+    Route::post('/san-pham/{product:slug}/danh-gia', [ProductController::class, 'storeReview'])->middleware('throttle:user-actions')->name('products.reviews.store');
+
+    Route::get('/thanh-toan', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/thanh-toan', [CheckoutController::class, 'store'])->middleware('throttle:checkout')->name('checkout.store');
+    Route::post('/thanh-toan/ma-giam-gia', [CheckoutController::class, 'applyPromotion'])->middleware('throttle:checkout')->name('checkout.promotion.apply');
+    Route::post('/thanh-toan/ma-giam-gia/xoa', [CheckoutController::class, 'removePromotion'])->middleware('throttle:checkout')->name('checkout.promotion.remove');
+
+    Route::get('/hoan-doi', [ReturnRequestController::class, 'index'])->name('returns.index');
+    Route::get('/hoan-doi/don-hang/{order}', [ReturnRequestController::class, 'create'])->name('returns.create');
+    Route::post('/hoan-doi/don-hang/{order}', [ReturnRequestController::class, 'store'])->middleware('throttle:user-actions')->name('returns.store');
+    Route::get('/hoan-doi/{return}', [ReturnRequestController::class, 'show'])->name('returns.show');
+});
+
+Route::get('/{oldRoute}', [ClientRouteAliasController::class, 'path'])
+    ->where('oldRoute', 'trang-chu|cua-hang|chitietsanpham|danh-muc-san-pham|thanh-toan-2|thanh-toan-dia-chi2|edit-address|remove-address|cam-on|don-hang|chi-tiet-don-hang|yeu-cau-hoan-doi|phan-hoi-hoan-doi|thong-tin-tai-khoan|ho-so|them-dia-chi|doi-mat-khau|quen-mat-khau|khoi-phuc-mat-khau|chi-tiet-bai-viet|danh-muc-bai-viet|tim-kiem|ho-tro-khach-hang|chinh-sach-van-chuyen|chinh-sach-thanh-toan|chinh-sach-doi-tra|thanh-toan-momo|thanh-toan-momo-address|thanh-toan-momo-address-2')
+    ->name('php.client.path');
+
+require __DIR__ . '/admin.php';
+
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+});

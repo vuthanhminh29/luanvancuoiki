@@ -1,0 +1,12 @@
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(\.env|\.env\..*|auth\.json|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|repomix-output\.xml)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^(\.env|\.env\..*|auth\.json|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|repomix-output\.xml)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
