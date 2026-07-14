@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'tmn_code' => env('VNPAY_TMN_CODE', ''),
-    'hash_secret' => env('VNPAY_HASH_SECRET', ''),
+    'tmn_code' => env('VNPAY_TMN_CODE', 'TYIMV67T'),
+    'hash_secret' => env('VNPAY_HASH_SECRET', 'LNBQQ3N8MYP26ECD7DW47JM60474RKUD'),
     'environment' => env('VNPAY_ENVIRONMENT', 'sandbox'),
     'return_url' => env('VNPAY_RETURN_URL', env('APP_URL') . '/vnpay/return'),
     'ipn_url' => env('VNPAY_IPN_URL', env('APP_URL') . '/vnpay/ipn'),
