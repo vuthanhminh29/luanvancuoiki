@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Inventory;
+use App\Models\ProductVariant;
 use App\Models\StockTransaction;
 use App\Models\Warehouse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class WarehouseAdminController extends Controller
@@ -146,58 +148,255 @@ class WarehouseAdminController extends Controller
 
     public function createTransaction(): View
     {
-        return view('admin.shared.form', [
-            'title' => 'Thêm hóa đơn kho',
-            'subtitle' => 'Tạo phiếu nhập/xuất/chuyển kho',
-            'action' => route('admin.warehouses.store-transaction'),
-            'submitLabel' => 'Lưu phiếu kho',
-            'formStyle' => 'wa',
-            'fields' => $this->transactionFields(),
-            'backRoute' => route('admin.warehouses.transactions'),
+        $variants = DB::table('product_variants as pv')
+            ->join('products as p', 'p.id', '=', 'pv.product_id')
+            ->leftJoin('colors as c', 'c.id', '=', 'pv.color_id')
+            ->leftJoin('lens_sizes as ls', 'ls.id', '=', 'pv.lens_size_id')
+            ->leftJoin('inventories as i', 'i.variant_id', '=', 'pv.id')
+            ->where('p.status', '<>', 'DISCONTINUED')
+            ->select([
+                'pv.id as variant_id',
+                'pv.sku',
+                'p.product_code',
+                'p.name as product_name',
+                'p.thumbnail_url',
+                'p.import_price',
+                'p.base_price',
+                'p.sale_price',
+                'pv.variant_price',
+                'c.name as color_name',
+                'c.hex_code as color_hex',
+                'ls.name as lens_size_name',
+            ])
+            ->selectRaw('COALESCE(SUM(i.quantity - i.reserved_quantity), 0) as available_stock')
+            ->groupBy(
+                'pv.id',
+                'pv.sku',
+                'p.product_code',
+                'p.name',
+                'p.thumbnail_url',
+                'p.import_price',
+                'p.base_price',
+                'p.sale_price',
+                'pv.variant_price',
+                'c.name',
+                'c.hex_code',
+                'ls.name'
+            )
+            ->orderBy('p.name')
+            ->orderBy('c.name')
+            ->orderBy('ls.name')
+            ->get()
+            ->map(fn ($variant) => [
+                'id' => (int) $variant->variant_id,
+                'label' => trim((string) $variant->product_name),
+                'meta' => trim(($variant->product_code ?? '') . ' | ' . ($variant->color_name ?: '-') . ' | Size ' . ($variant->lens_size_name ?: '-')),
+                'image' => $this->productImageUrl($variant->thumbnail_url),
+                'stock' => (int) $variant->available_stock,
+                'price' => (float) ($variant->import_price ?: $variant->variant_price ?: $variant->sale_price ?: $variant->base_price ?: 0),
+                'salePrice' => (float) ($variant->sale_price ?: $variant->variant_price ?: $variant->base_price ?: 0),
+            ]);
+
+        return view('admin.warehouses.transaction-form', [
+            'warehouses' => Warehouse::active()->orderBy('type')->orderBy('name')->get(),
+            'variants' => $variants,
         ]);
     }
 
     public function storeTransaction(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'transaction_code' => ['nullable', 'string', 'max:50'],
-            'type' => ['required', 'in:IMPORT,EXPORT,TRANSFER,ADJUST,RETURN_IN,SALE_OUT'],
+            'transaction_code' => ['nullable', 'string', 'max:50', 'unique:stock_transactions,transaction_code'],
+            'type' => ['required', 'in:IMPORT,EXPORT,TRANSFER'],
             'source_warehouse_id' => ['nullable', 'exists:warehouses,id'],
             'target_warehouse_id' => ['nullable', 'exists:warehouses,id'],
             'expected_date' => ['nullable', 'date'],
             'note' => ['nullable', 'string', 'max:1000'],
-            'status' => ['required', 'in:DRAFT,PENDING,COMPLETED,CANCELLED'],
+            'variant_id' => ['required', 'array', 'min:1'],
+            'variant_id.*' => ['required', 'integer', 'exists:product_variants,id'],
+            'quantity' => ['required', 'array', 'min:1'],
+            'quantity.*' => ['required', 'integer', 'min:1'],
+            'unit_cost' => ['nullable', 'array'],
+            'unit_cost.*' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $data['transaction_code'] = ($data['transaction_code'] ?? '') !== '' ? $data['transaction_code'] : 'STK' . now()->format('YmdHis');
-        $data['created_by'] = Auth::id();
-        $data['confirmed_by'] = $data['status'] === 'COMPLETED' ? Auth::id() : null;
-        $data['confirmed_at'] = $data['status'] === 'COMPLETED' ? now() : null;
+        $type = $data['type'];
+        $sourceWarehouseId = filled($data['source_warehouse_id'] ?? null) ? (int) $data['source_warehouse_id'] : null;
+        $targetWarehouseId = filled($data['target_warehouse_id'] ?? null) ? (int) $data['target_warehouse_id'] : null;
 
-        StockTransaction::create($data);
+        if ($type === 'IMPORT') {
+            $this->assertActiveWarehouse($targetWarehouseId, 'Phiếu nhập cần chọn kho nhận hàng.', 'target_warehouse_id');
+        }
 
-        return redirect()->route('admin.warehouses.transactions')->with('success', 'Đã thêm phiếu kho.');
+        if ($type === 'EXPORT') {
+            $this->assertActiveWarehouse($sourceWarehouseId, 'Phiếu xuất cần chọn kho xuất hàng.', 'source_warehouse_id');
+        }
+
+        if ($type === 'TRANSFER') {
+            $this->assertActiveWarehouse($sourceWarehouseId, 'Phiếu chuyển cần chọn kho nguồn.', 'source_warehouse_id');
+            $this->assertActiveWarehouse($targetWarehouseId, 'Phiếu chuyển cần chọn kho đích.', 'target_warehouse_id');
+        }
+
+        if ($sourceWarehouseId && $targetWarehouseId && $sourceWarehouseId === $targetWarehouseId) {
+            throw ValidationException::withMessages([
+                'target_warehouse_id' => 'Kho nguồn và kho đích phải khác nhau.',
+            ]);
+        }
+
+        $items = collect($data['variant_id'])
+            ->map(function ($variantId, $index) use ($data) {
+                return [
+                    'variant_id' => (int) $variantId,
+                    'quantity' => (int) ($data['quantity'][$index] ?? 0),
+                    'unit_cost' => filled($data['unit_cost'][$index] ?? null) ? (float) $data['unit_cost'][$index] : null,
+                ];
+            })
+            ->filter(fn ($item) => $item['variant_id'] > 0 && $item['quantity'] > 0)
+            ->values();
+
+        if ($items->isEmpty()) {
+            throw ValidationException::withMessages([
+                'variant_id' => 'Phiếu kho cần ít nhất 1 sản phẩm.',
+            ]);
+        }
+
+        $transaction = DB::transaction(function () use ($data, $items, $sourceWarehouseId, $targetWarehouseId, $type) {
+            if (in_array($type, ['EXPORT', 'TRANSFER'], true)) {
+                foreach ($items as $item) {
+                    $this->subtractVariantInventory($sourceWarehouseId, $item['variant_id'], $item['quantity']);
+                }
+            }
+
+            if (in_array($type, ['IMPORT', 'TRANSFER'], true)) {
+                foreach ($items as $item) {
+                    $this->addVariantInventory($targetWarehouseId, $item['variant_id'], $item['quantity']);
+                    $this->activateVariantProduct($item['variant_id']);
+                }
+            }
+
+            $transaction = StockTransaction::create([
+                'transaction_code' => filled($data['transaction_code'] ?? null)
+                    ? $data['transaction_code']
+                    : $this->nextTransactionCode($type),
+                'type' => $type,
+                'source_warehouse_id' => $sourceWarehouseId,
+                'target_warehouse_id' => $targetWarehouseId,
+                'status' => 'COMPLETED',
+                'expected_date' => $data['expected_date'] ?? null,
+                'note' => $data['note'] ?? null,
+                'created_by' => Auth::id(),
+                'confirmed_by' => Auth::id(),
+                'confirmed_at' => now(),
+            ]);
+
+            foreach ($items as $item) {
+                $transaction->items()->create([
+                    'variant_id' => $item['variant_id'],
+                    'ordered_quantity' => $item['quantity'],
+                    'actual_quantity' => $item['quantity'],
+                    'unit_cost' => $item['unit_cost'],
+                    'note' => $data['note'] ?? null,
+                ]);
+            }
+
+            return $transaction;
+        });
+
+        return redirect()
+            ->route('admin.warehouses.index', ['warehouse_tab' => 'transactions'])
+            ->with('success', 'Đã tạo phiếu kho ' . $transaction->transaction_code . ' và cập nhật tồn kho.');
     }
 
-    private function transactionFields(): array
+    private function assertActiveWarehouse(?int $warehouseId, string $message, string $field): void
     {
-        $warehouses = Warehouse::orderBy('name')->pluck('name', 'id')->all();
+        if (! $warehouseId || ! Warehouse::active()->whereKey($warehouseId)->exists()) {
+            throw ValidationException::withMessages([$field => $message]);
+        }
+    }
 
-        return [
-            ['name' => 'transaction_code', 'label' => 'Mã phiếu', 'value' => 'STK' . now()->format('YmdHis')],
-            ['name' => 'type', 'label' => 'Loại phiếu', 'type' => 'select', 'required' => true, 'value' => 'IMPORT', 'options' => [
-                'IMPORT' => 'Nhập kho',
-                'EXPORT' => 'Xuất kho',
-                'TRANSFER' => 'Chuyển kho',
-                'ADJUST' => 'Điều chỉnh',
-                'RETURN_IN' => 'Nhập hoàn',
-                'SALE_OUT' => 'Xuất bán',
-            ]],
-            ['name' => 'source_warehouse_id', 'label' => 'Kho nguồn', 'type' => 'select', 'placeholder' => 'Không có', 'options' => $warehouses],
-            ['name' => 'target_warehouse_id', 'label' => 'Kho đích', 'type' => 'select', 'placeholder' => 'Không có', 'options' => $warehouses],
-            ['name' => 'expected_date', 'label' => 'Ngày dự kiến', 'type' => 'date'],
-            ['name' => 'status', 'label' => 'Trạng thái', 'type' => 'select', 'required' => true, 'value' => 'DRAFT', 'options' => ['DRAFT' => 'Bản nháp', 'PENDING' => 'Chờ xử lý', 'COMPLETED' => 'Hoàn tất', 'CANCELLED' => 'Đã hủy']],
-            ['name' => 'note', 'label' => 'Ghi chú', 'type' => 'textarea', 'column' => 'col-12'],
-        ];
+    private function addVariantInventory(int $warehouseId, int $variantId, int $quantity): void
+    {
+        $inventory = Inventory::query()
+            ->where('warehouse_id', $warehouseId)
+            ->where('variant_id', $variantId)
+            ->lockForUpdate()
+            ->first();
+
+        if ($inventory) {
+            $inventory->increment('quantity', $quantity);
+            return;
+        }
+
+        Inventory::create([
+            'warehouse_id' => $warehouseId,
+            'variant_id' => $variantId,
+            'quantity' => $quantity,
+            'reserved_quantity' => 0,
+            'min_stock_level' => Warehouse::whereKey($warehouseId)->value('min_stock_level') ?? 10,
+        ]);
+    }
+
+    private function subtractVariantInventory(int $warehouseId, int $variantId, int $quantity): void
+    {
+        $inventory = Inventory::query()
+            ->where('warehouse_id', $warehouseId)
+            ->where('variant_id', $variantId)
+            ->lockForUpdate()
+            ->first();
+
+        $available = $inventory ? max(0, (int) $inventory->quantity - (int) $inventory->reserved_quantity) : 0;
+
+        if ($available < $quantity) {
+            throw ValidationException::withMessages([
+                'quantity' => 'Số lượng xuất vượt quá tồn kho khả dụng.',
+            ]);
+        }
+
+        $inventory->decrement('quantity', $quantity);
+    }
+
+    private function activateVariantProduct(int $variantId): void
+    {
+        ProductVariant::whereKey($variantId)->update(['status' => 'ACTIVE']);
+
+        DB::table('products')
+            ->join('product_variants', 'product_variants.product_id', '=', 'products.id')
+            ->where('product_variants.id', $variantId)
+            ->whereIn('products.status', ['DRAFT', 'INACTIVE'])
+            ->update(['products.status' => 'ACTIVE']);
+    }
+
+    private function nextTransactionCode(string $type): string
+    {
+        $prefix = [
+            'IMPORT' => 'PN',
+            'EXPORT' => 'PX',
+            'TRANSFER' => 'DC',
+        ][$type] ?? 'STK';
+
+        return $prefix . now()->format('YmdHis') . random_int(10, 99);
+    }
+
+    private function productImageUrl(?string $image): string
+    {
+        $image = trim((string) $image);
+
+        if ($image === '') {
+            return asset('upload/no-image.jpg');
+        }
+
+        if (str_starts_with($image, 'http://') || str_starts_with($image, 'https://')) {
+            return $image;
+        }
+
+        if (str_starts_with($image, 'upload/')) {
+            return asset($image);
+        }
+
+        if (str_starts_with($image, 'anh_san_pham/')) {
+            return asset('upload/' . $image);
+        }
+
+        return asset('upload/anh_san_pham/' . $image);
     }
 }
