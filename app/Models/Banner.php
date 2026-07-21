@@ -35,7 +35,7 @@ class Banner extends Model
 
     public function getImageSrcAttribute(): string
     {
-        $image = trim((string) $this->getRawOriginal('image_url'));
+        $image = ltrim(trim((string) $this->getRawOriginal('image_url')), '/');
 
         if ($image === '') {
             return asset('img/banner/banner-main-1.jpg');
@@ -45,14 +45,30 @@ class Banner extends Model
             return $image;
         }
 
-        if (str_starts_with($image, 'upload/')) {
+        if (str_starts_with($image, 'storage/')) {
             return asset($image);
         }
 
-        if (str_starts_with($image, 'banner/')) {
-            return asset('upload/' . $image);
+        if (str_starts_with($image, 'upload/')) {
+            return file_exists(public_path($image))
+                ? asset($image)
+                : asset('storage/' . $image);
         }
 
-        return asset('upload/banner/' . $image);
+        if (str_starts_with($image, 'banner/')) {
+            $publicPath = 'upload/' . $image;
+            $storagePath = 'upload/' . $image;
+
+            return file_exists(public_path($publicPath))
+                ? asset($publicPath)
+                : asset('storage/' . $storagePath);
+        }
+
+        $publicPath = 'upload/banner/' . $image;
+        $storagePath = 'upload/banner/' . $image;
+
+        return file_exists(public_path($publicPath))
+            ? asset($publicPath)
+            : asset('storage/' . $storagePath);
     }
 }
