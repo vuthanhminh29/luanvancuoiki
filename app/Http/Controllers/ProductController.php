@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Color;
@@ -82,6 +83,7 @@ class ProductController extends Controller
             'uvOptions' => Product::active()->whereNotNull('uv_protection')->distinct()->pluck('uv_protection')->filter()->values(),
             'filters' => $request->only(['q', 'category', 'brand', 'color', 'size', 'shape', 'material', 'uv', 'sort', 'from_price', 'to_price', 'sale']),
             'priceRange' => $priceRange,
+            'productBanners' => Banner::visible('PRODUCT_BANNER')->get(),
         ]);
     }
 
