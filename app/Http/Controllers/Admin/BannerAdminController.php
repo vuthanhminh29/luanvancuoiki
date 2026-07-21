@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -152,14 +153,7 @@ class BannerAdminController extends Controller
     {
         $file = $request->file($field);
         $name = (string) Str::uuid() . '.' . $file->extension();
-        $path = public_path('upload/' . $folder);
 
-        if (! is_dir($path)) {
-            mkdir($path, 0777, true);
-        }
-
-        $file->move($path, $name);
-
-        return $folder . '/' . $name;
+        return Storage::disk('public')->putFileAs('upload/' . $folder, $file, $name);
     }
 }
