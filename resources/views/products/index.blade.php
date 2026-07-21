@@ -18,6 +18,8 @@
         $currentSort = (string) ($filters['sort'] ?? '');
         $currentFrom = (int) preg_replace('/\D/', '', (string) ($filters['from_price'] ?? ''));
         $currentTo = (int) preg_replace('/\D/', '', (string) ($filters['to_price'] ?? ''));
+        $productBanners = collect($productBanners ?? []);
+        $productBannerCount = $productBanners->count();
         $clearUrl = route('products.index');
         $catalogUrl = function (array $overrides = []) {
             $params = request()->query();
@@ -201,7 +203,35 @@
                 </form>
 
                 <main class="ebd-product-area">
-                    <div class="ebd-promo-banner">
+                    <div class="ebd-promo-banner {{ $productBannerCount ? 'has-db-banner' : '' }}">
+                        @if ($productBannerCount > 1)
+                            <div id="product-banner-carousel" class="carousel slide" data-ride="carousel">
+                                <div class="carousel-inner">
+                                    @forelse ($productBanners as $index => $banner)
+                                        <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                            <a href="{{ $banner->link_url ?: '#' }}">
+                                                <img src="{{ $banner->image_src }}" alt="{{ $banner->title }}">
+                                            </a>
+                                        </div>
+                                    @empty
+                                    @endforelse
+                                </div>
+                                <a class="carousel-control-prev" href="#product-banner-carousel" data-slide="prev" aria-label="Banner truoc">
+                                    <span class="carousel-control-prev-icon"></span>
+                                </a>
+                                <a class="carousel-control-next" href="#product-banner-carousel" data-slide="next" aria-label="Banner sau">
+                                    <span class="carousel-control-next-icon"></span>
+                                </a>
+                            </div>
+                        @endif
+                        @if ($productBannerCount === 1)
+                            @forelse ($productBanners as $banner)
+                                <a href="{{ $banner->link_url ?: '#' }}">
+                                    <img src="{{ $banner->image_src }}" alt="{{ $banner->title }}">
+                                </a>
+                            @empty
+                            @endforelse
+                        @endif
                         <img src="{{ asset('upload/banner/banner-kinh-3.jpg') }}" alt="Khuyến mãi kính mắt">
                     </div>
 
