@@ -1,7 +1,8 @@
 (function () {
-    const jeelizBasePath = "public/vendor/jeelizGlassesVTOWidget";
     const root = document.querySelector("[data-tryon-app]");
     if (!root) return;
+    const jeelizBasePath = root.dataset.jeelizBasePath || `${window.location.origin}/vendor/jeelizGlassesVTOWidget`;
+    const jeelizScriptUrl = root.dataset.jeelizScriptUrl || `${jeelizBasePath}/dist/JeelizVTOWidget.js`;
 
     const productDataNode = document.getElementById("tryonProductData");
     const products = JSON.parse(productDataNode?.textContent || "[]");
@@ -28,6 +29,7 @@
     const selectedMaterial = document.getElementById("tryonSelectedMaterial");
     const detailLink = document.getElementById("tryonDetailLink");
     const closeLink = document.getElementById("tryonCloseLink");
+    const cartVariantId = document.getElementById("tryonCartVariantId");
     const cartProductId = document.getElementById("tryonCartProductId");
     const cartName = document.getElementById("tryonCartName");
     const cartImage = document.getElementById("tryonCartImage");
@@ -97,6 +99,31 @@
                 JEELIZVTOWIDGET.resize();
             }
         }, delay);
+    }
+
+    let jeelizLoaderPromise = null;
+
+    function ensureJeelizWidget() {
+        if (window.JEELIZVTOWIDGET) return Promise.resolve();
+        if (jeelizLoaderPromise) return jeelizLoaderPromise;
+
+        jeelizLoaderPromise = new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            const separator = jeelizScriptUrl.includes("?") ? "&" : "?";
+
+            script.src = `${jeelizScriptUrl}${separator}retry=${Date.now()}`;
+            script.async = true;
+            script.onload = () => {
+                window.JEELIZVTOWIDGET ? resolve() : reject(new Error("JEELIZ_WIDGET_MISSING"));
+            };
+            script.onerror = () => reject(new Error("JEELIZ_SCRIPT_LOAD_FAILED"));
+            document.head.appendChild(script);
+        }).catch((error) => {
+            jeelizLoaderPromise = null;
+            throw error;
+        });
+
+        return jeelizLoaderPromise;
     }
 
     function fitCanvasToWidget(delay = 0) {
@@ -292,6 +319,7 @@
         if (selectedMaterial) selectedMaterial.textContent = product?.material || "";
         if (detailLink && product?.detailUrl) detailLink.href = product.detailUrl;
         if (closeLink && product?.detailUrl) closeLink.href = product.detailUrl;
+        if (cartVariantId) cartVariantId.value = product?.variantId || "";
         if (cartProductId) cartProductId.value = product?.id || "";
         if (cartName) cartName.value = product?.name || "";
         if (cartImage) cartImage.value = product?.cartImage || "";
@@ -324,7 +352,18 @@
         clearNoModel();
 
         if (!window.JEELIZVTOWIDGET) {
-            setStatus("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c th\u01b0 vi\u1ec7n th\u1eed k\u00ednh 3D. Vui l\u00f2ng ki\u1ec3m tra th\u01b0 m\u1ee5c public/vendor/jeelizGlassesVTOWidget.");
+            root.classList.add("tryon-is-loading");
+            setStatus("\u0110ang t\u1ea3i th\u01b0 vi\u1ec7n th\u1eed k\u00ednh 3D...");
+            ensureJeelizWidget()
+                .then(() => {
+                    root.classList.remove("tryon-is-loading");
+                    loadProduct(product);
+                })
+                .catch(() => {
+                    root.classList.remove("tryon-is-loading");
+                    setCameraToggle(false);
+                    setStatus("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c th\u01b0 vi\u1ec7n th\u1eed k\u00ednh 3D. Vui l\u00f2ng ki\u1ec3m tra file vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js.");
+                });
             return;
         }
 
@@ -570,8 +609,20 @@
         }
 
         if (!window.JEELIZVTOWIDGET || !window.JEELIZVTO || typeof JEELIZVTO.process_image !== "function") {
-            URL.revokeObjectURL(objectUrl);
-            setStatus("Th\u01b0 vi\u1ec7n th\u1eed k\u00ednh ch\u01b0a h\u1ed7 tr\u1ee3 x\u1eed l\u00fd \u1ea3nh.");
+            setStatus("\u0110ang t\u1ea3i th\u01b0 vi\u1ec7n th\u1eed k\u00ednh 3D...");
+            ensureJeelizWidget()
+                .then(() => {
+                    if (!window.JEELIZVTO || typeof JEELIZVTO.process_image !== "function") {
+                        URL.revokeObjectURL(objectUrl);
+                        setStatus("Th\u01b0 vi\u1ec7n th\u1eed k\u00ednh ch\u01b0a h\u1ed7 tr\u1ee3 x\u1eed l\u00fd \u1ea3nh.");
+                        return;
+                    }
+                    startImageTryon(image, objectUrl, originalImage);
+                })
+                .catch(() => {
+                    URL.revokeObjectURL(objectUrl);
+                    setStatus("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c th\u01b0 vi\u1ec7n th\u1eed k\u00ednh 3D. Vui l\u00f2ng ki\u1ec3m tra file vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js.");
+                });
             return;
         }
 
