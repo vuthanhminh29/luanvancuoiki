@@ -3,7 +3,7 @@
 @section('title', 'Thử kính AI - ' . config('app.name'))
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/views/tryon-ai.css') }}?v=20260630-tryon">
+    <link rel="stylesheet" href="{{ asset('css/views/tryon-ai.css') }}?v=tryon-fix-20260726-{{ filemtime(public_path('css/views/tryon-ai.css')) }}">
 @endpush
 
 @section('content')
@@ -12,7 +12,9 @@
         $firstVariantId = $firstTryOn['variantId'] ?? null;
     @endphp
 
-    <section id="vtoApp" data-tryon-app>
+    <section id="vtoApp" data-tryon-app
+        data-jeeliz-base-path="{{ asset('vendor/jeelizGlassesVTOWidget') }}"
+        data-jeeliz-script-url="{{ asset('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js') }}">
         <div class="vto-viewer">
             <div id="JeelizVTOWidget">
                 <canvas id="JeelizVTOWidgetCanvas"></canvas>
@@ -97,6 +99,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js') }}"></script>
-    <script src="{{ asset('js/tryon-ai.js') }}?v=20260630-tryon"></script>
+    <script src="{{ asset('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js') }}?v=tryon-fix-20260726-{{ filemtime(public_path('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js')) }}"></script>
+    <script src="{{ asset('js/tryon-ai.js') }}?v=tryon-fix-20260726-{{ filemtime(public_path('js/tryon-ai.js')) }}"></script>
 @endpush

@@ -135,7 +135,7 @@
     font-weight: 600;
 }
 
-/* Loading overlay */
+/* Lớp phủ đang tải */
 #vtoApp #JeelizVTOWidgetLoading {
     position: absolute;
     inset: 0;
@@ -355,7 +355,7 @@
 #vtoApp .vto-cart-btn:active { transform: scale(.96); }
 #vtoApp .vto-cart-btn i { font-size: 17px; }
 
-/* ── Mobile ── */
+/* ── Điện thoại ── */
 @media (max-width: 540px) {
     #vtoApp {
         width: 100vw;
@@ -468,6 +468,8 @@ body {
     letter-spacing: 0;
     line-height: 1.35;
     cursor: pointer;
+    user-select: text;
+    -webkit-user-select: text;
     appearance: none;
     -webkit-appearance: none;
     display: grid;
@@ -540,7 +542,7 @@ body {
     bottom: auto;
     width: 100%;
     height: auto;
-    max-height: 420px;
+    max-height: min(420px, calc(100vh - 260px));
     min-height: 0;
     padding: 14px;
     border: 1px solid #dbe3ec;
