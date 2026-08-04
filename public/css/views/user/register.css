@@ -96,6 +96,12 @@
     color: #9ca3af;
 }
 
+.input-with-icon select.form-control {
+    appearance: none;
+    cursor: pointer;
+    padding-right: 2.5rem;
+}
+
 .invalid-feedback-custom {
     display: block;
     margin-top: 0.375rem;
@@ -103,7 +109,7 @@
     color: #ef4444;
 }
 
-/* Toggle Password */
+/* áº¨n hiá»‡n máº­t kháº©u */
 .toggle-password {
     position: absolute;
     right: 1rem;

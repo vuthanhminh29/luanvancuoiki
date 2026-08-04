@@ -1,0 +1,432 @@
+/*
+   Tinh chỉnh giao diện quản trị cho phần demo luận văn.
+   Loaded after the legacy inline admin styles.
+*/
+:root {
+    --ad-ink: #1f2937;
+    --ad-muted: #667085;
+    --ad-line: #e4e7ec;
+    --ad-bg: #f6f7f9;
+    --ad-panel: #ffffff;
+    --ad-primary: #0f766e;
+    --ad-primary-dark: #115e59;
+    --ad-sidebar: #171717;
+    --ad-sidebar-soft: #242424;
+    --ad-danger: #b42318;
+}
+
+body {
+    background: var(--ad-bg) !important;
+    color: var(--ad-ink);
+    font-family: "Heebo", "Segoe UI", Arial, sans-serif !important;
+}
+
+.admin-login {
+    background: #f7f8fa !important;
+}
+
+.admin-login-card {
+    border: 1px solid var(--ad-line) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 16px 36px rgba(17, 24, 39, .08) !important;
+}
+
+.admin-brand-icon {
+    background: var(--ad-primary) !important;
+    border-radius: 8px !important;
+}
+
+.admin-brand h1 {
+    color: var(--ad-ink) !important;
+    font-size: 24px !important;
+    letter-spacing: 0 !important;
+}
+
+.admin-sub {
+    color: var(--ad-muted) !important;
+}
+
+.admin-input {
+    border-color: #d0d5dd !important;
+    border-radius: 8px !important;
+}
+
+.admin-input:focus {
+    border-color: var(--ad-primary) !important;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, .12) !important;
+}
+
+.admin-btn {
+    background: var(--ad-primary) !important;
+    border-color: var(--ad-primary) !important;
+    border-radius: 8px !important;
+}
+
+.admin-btn:hover {
+    background: var(--ad-primary-dark) !important;
+    border-color: var(--ad-primary-dark) !important;
+}
+
+.container-xxl {
+    background: var(--ad-bg) !important;
+}
+
+.sidebar {
+    background: var(--ad-sidebar) !important;
+    border-right: 1px solid #262626;
+    box-shadow: 8px 0 22px rgba(17, 24, 39, .08);
+}
+
+.sidebar,
+.sidebar .navbar {
+    background: var(--ad-sidebar) !important;
+}
+
+.sidebar .navbar-brand {
+    margin-bottom: 22px !important;
+}
+
+.sidebar .navbar-brand h3 {
+    color: #fff !important;
+    font-size: 26px !important;
+    font-weight: 850 !important;
+    letter-spacing: 0 !important;
+}
+
+.sidebar .navbar-brand h3::after {
+    color: #a3a3a3;
+    content: " / Bán hàng";
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.sidebar .navbar {
+    padding-top: 24px !important;
+}
+
+.sidebar .navbar-nav {
+    display: grid;
+    gap: 7px;
+    padding-right: 18px;
+}
+
+.sidebar .nav-item {
+    width: 100%;
+}
+
+.sidebar .navbar .navbar-nav .nav-link {
+    border-radius: 0 8px 8px 0 !important;
+    color: #d4d4d4 !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    gap: 14px !important;
+    justify-content: flex-start;
+    margin: 0 !important;
+    min-height: 52px !important;
+    padding: 0 18px 0 32px !important;
+    width: 100%;
+}
+
+.sidebar .navbar .navbar-nav .nav-link i {
+    color: #a3a3a3 !important;
+    font-size: 17px;
+    margin-right: 0 !important;
+    width: 22px !important;
+}
+
+.sidebar .navbar .navbar-nav .nav-link:hover,
+.sidebar .navbar .navbar-nav .nav-link.active,
+.sidebar .dropdown-item.active {
+    background: #2f3a36 !important;
+    color: #fff !important;
+}
+
+.sidebar .navbar .nav-link:hover i,
+.sidebar .navbar .nav-link.active i {
+    color: #5eead4 !important;
+}
+
+.sidebar .navbar .dropdown-toggle::after {
+    margin-left: auto;
+    position: static !important;
+}
+
+.sidebar .dropdown-menu {
+    background: var(--ad-sidebar-soft) !important;
+    border-radius: 0 8px 8px 0 !important;
+    margin: 4px 0 8px 0 !important;
+    padding: 7px 0 !important;
+    width: 100%;
+}
+
+.sidebar .dropdown-item {
+    color: #cbd5e1 !important;
+    font-size: 14px !important;
+    font-weight: 750 !important;
+    padding: 10px 18px 10px 68px !important;
+}
+
+.sidebar .dropdown-item:hover {
+    background: #33413c !important;
+    color: #fff !important;
+}
+
+.content {
+    background: var(--ad-bg) !important;
+}
+
+.content .navbar {
+    background: rgba(246, 247, 249, .96) !important;
+    border-bottom: 1px solid var(--ad-line);
+    min-height: 68px !important;
+}
+
+.content .navbar .sidebar-toggler {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--ad-line);
+    border-radius: 8px;
+    display: inline-flex;
+    height: 40px !important;
+    justify-content: center;
+    width: 40px !important;
+}
+
+.fa-bars {
+    color: var(--ad-primary) !important;
+}
+
+.content .navbar .form-control {
+    border: 1px solid var(--ad-line) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    min-height: 40px !important;
+}
+
+.content .navbar .nav-link {
+    color: #475467 !important;
+    font-weight: 700;
+}
+
+.admin-user-box img {
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px var(--ad-line);
+    height: 36px !important;
+    width: 36px !important;
+}
+
+.admin-logout-btn {
+    border-color: var(--ad-line) !important;
+    border-radius: 8px !important;
+    color: #344054 !important;
+    min-height: 34px !important;
+}
+
+.admin-logout-btn:hover {
+    background: #fef3f2 !important;
+    border-color: #fecdca !important;
+    color: var(--ad-danger) !important;
+}
+
+.container-fluid.pt-4.px-4 {
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+}
+
+.flash,
+.alert {
+    border-radius: 8px !important;
+    font-weight: 700;
+}
+
+.admin-title {
+    padding-bottom: 14px !important;
+}
+
+.admin-title .eyebrow {
+    color: var(--ad-primary) !important;
+    letter-spacing: 0 !important;
+}
+
+.admin-title h1 {
+    color: var(--ad-ink) !important;
+    font-size: 28px !important;
+    letter-spacing: 0 !important;
+}
+
+.section,
+.metric,
+.admin-table,
+.panel-form,
+.checkout-panel,
+.pa-card,
+.promo-card,
+.biz-card,
+.ret-card,
+.return-card,
+.review-card {
+    background: var(--ad-panel) !important;
+    border: 1px solid var(--ad-line) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 22px rgba(17, 24, 39, .04) !important;
+}
+
+.section {
+    padding: 22px !important;
+}
+
+.metric {
+    padding: 20px !important;
+}
+
+.metric span {
+    color: var(--ad-muted) !important;
+    font-size: 13px !important;
+}
+
+.metric strong {
+    color: var(--ad-ink) !important;
+    font-size: 25px !important;
+}
+
+.admin-row.head {
+    background: #f8fafc !important;
+    color: #475467 !important;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.admin-row + .admin-row {
+    border-top-color: var(--ad-line) !important;
+}
+
+.table th,
+.pa-table th,
+.promo-table th {
+    background: #f8fafc !important;
+    color: #667085 !important;
+    font-size: 11px !important;
+    letter-spacing: 0 !important;
+}
+
+.table td,
+.pa-table td,
+.promo-table td {
+    color: #344054 !important;
+}
+
+.table tr:hover td,
+.pa-table tr:hover td,
+.promo-table tr:hover td {
+    background: #fbfcfd !important;
+}
+
+.inline-filter input,
+.inline-filter select,
+.panel-form input,
+.panel-form select,
+.panel-form textarea,
+.checkout-panel input,
+.checkout-panel select,
+.checkout-panel textarea,
+.pa-input,
+.pa-select,
+.promo-field input,
+.promo-field select,
+.promo-field textarea,
+.biz-form input,
+.biz-form select,
+.biz-form textarea {
+    border: 1px solid #d0d5dd !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    color: #1f2937 !important;
+    min-height: 40px !important;
+}
+
+.btn.primary,
+.btn-primary,
+.pa-btn.primary,
+.promo-btn.primary,
+.biz-btn.primary,
+.admin-cta {
+    background: var(--ad-primary) !important;
+    border-color: var(--ad-primary) !important;
+    border-radius: 8px !important;
+    color: #fff !important;
+    font-weight: 800 !important;
+}
+
+.btn.primary:hover,
+.btn-primary:hover,
+.pa-btn.primary:hover,
+.promo-btn.primary:hover,
+.biz-btn.primary:hover,
+.admin-cta:hover {
+    background: var(--ad-primary-dark) !important;
+    border-color: var(--ad-primary-dark) !important;
+}
+
+.pa-btn,
+.promo-btn,
+.biz-btn,
+.btn,
+.promo-icon-btn,
+.pa-pill,
+.promo-badge,
+.mem-badge {
+    border-radius: 8px !important;
+    letter-spacing: 0 !important;
+}
+
+.pa-title,
+.promo-title h4,
+.biz-title h4 {
+    color: var(--ad-ink) !important;
+    font-size: 26px !important;
+    font-weight: 850 !important;
+    letter-spacing: 0 !important;
+}
+
+.pa-kicker,
+.promo-title small,
+.biz-title small {
+    color: var(--ad-primary) !important;
+    letter-spacing: 0 !important;
+}
+
+.pa-subtitle,
+.promo-title p,
+.biz-title p {
+    color: var(--ad-muted) !important;
+}
+
+.pa-thumb {
+    background: #f8fafc !important;
+    border: 1px solid var(--ad-line);
+    border-radius: 8px !important;
+    object-fit: contain;
+    padding: 6px;
+}
+
+.footer,
+.bg-light.rounded-top {
+    background: #fff !important;
+    border-top: 1px solid var(--ad-line);
+}
+
+.back-to-top {
+    background: var(--ad-primary) !important;
+    border-color: var(--ad-primary) !important;
+}
+
+@media (max-width: 991px) {
+    .container-fluid.pt-4.px-4 {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    .content .navbar {
+        min-height: 62px !important;
+    }
+}

@@ -14,6 +14,20 @@
         $totalPayment = max(0, $subtotalPayment - $discountAmount);
         $totalQuantity = $items->sum('quantity');
         $appliedPromotion = $appliedPromotion ?? null;
+        $promotionExplanation = null;
+        if ($appliedPromotion) {
+            $formatPromotionNumber = fn ($value) => rtrim(rtrim(number_format((float) $value, 2, ',', '.'), '0'), ',');
+            $discountText = $appliedPromotion->discount_type === 'PERCENT'
+                ? $formatPromotionNumber($appliedPromotion->discount_value) . '%'
+                : number_format((float) $appliedPromotion->discount_value, 0, ',', '.') . 'Ä‘';
+            $conditionText = (float) $appliedPromotion->min_order_amount > 0
+                ? ' cho Ä‘Æ¡n hÃ ng tá»« ' . number_format((float) $appliedPromotion->min_order_amount, 0, ',', '.') . 'Ä‘'
+                : ' cho Ä‘Æ¡n hÃ ng nÃ y';
+            $maxDiscountText = (float) ($appliedPromotion->max_discount_amount ?? 0) > 0
+                ? ' Tá»‘i Ä‘a ' . number_format((float) $appliedPromotion->max_discount_amount, 0, ',', '.') . 'Ä‘.'
+                : '';
+            $promotionExplanation = 'Giáº£m ' . $discountText . $conditionText . '.' . $maxDiscountText;
+        }
         $user = auth()->user();
         $defaultAddress = $defaultAddress ?? null;
         $fullName = old('recipient_name', $defaultAddress->recipient_name ?? $user->full_name ?? '');
@@ -25,7 +39,7 @@
         ])->filter()->implode(', '));
         $city = old('city', $defaultAddress->province_name ?? '');
         $shippingAddress = trim((string) old('shipping_address', collect([$addressDetail, $city])->filter()->implode(', ')));
-        $paymentMethod = old('payment_method', 'VNPAY');
+        $paymentMethod = in_array(old('payment_method', 'COD'), ['COD', 'VNPAY'], true) ? old('payment_method', 'COD') : 'COD';
         $cities = [
             'Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
             'An Giang', 'Bà Rịa Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu',
@@ -74,7 +88,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('checkout.store') }}" method="post" class="checkout-form" id="checkout-form">
+            <form action="{{ route('checkout.store') }}" method="post" class="checkout-form" id="checkout-form" novalidate>
                 @csrf
                 <input type="hidden" name="recipient_name" value="{{ $fullName }}">
                 <input type="hidden" name="shipping_address" id="shipping-address" value="{{ $shippingAddress }}">
@@ -239,6 +253,10 @@
                                 @endforelse
                             </div>
 
+                            <div class="coupon-helper">
+                                <strong>Gá»£i Ã½ mÃ£ giáº£m giÃ¡:</strong>
+                                Nháº­p mÃ£ <span>HELLO</span> Ä‘á»ƒ giáº£m 20% cho Ä‘Æ¡n tá»« 500.000Ä‘, tá»‘i Ä‘a 1.000.000Ä‘.
+                            </div>
                             <div class="discount-box">
                                 <input type="text" name="promotion_code" value="{{ old('promotion_code', $appliedPromotion->promotion_code ?? '') }}" placeholder="Mã giảm giá" maxlength="20" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
                                 @if ($appliedPromotion)
@@ -343,11 +361,186 @@
             const form = document.getElementById('checkout-form');
             const addressDetail = document.getElementById('address-detail');
             const city = document.getElementById('city');
+            const recipientPhone = document.getElementById('recipient-phone');
             const shippingAddress = document.getElementById('shipping-address');
 
             function syncShippingAddress() {
                 const parts = [addressDetail.value.trim(), city.value.trim()].filter(Boolean);
                 shippingAddress.value = parts.join(', ');
+            }
+
+            function fieldError(name) {
+                return document.querySelector('[data-checkout-error="' + name + '"]');
+            }
+
+            function setFieldError(input, name, message) {
+                const error = fieldError(name);
+
+                if (!input || !error) {
+                    return;
+                }
+
+                input.classList.toggle('is-invalid', Boolean(message));
+                error.textContent = message || '';
+            }
+
+            function validateCheckoutForm() {
+                let firstInvalid = null;
+                const addressValue = addressDetail ? addressDetail.value.trim() : '';
+                const cityValue = city ? city.value.trim() : '';
+                const phoneValue = recipientPhone ? recipientPhone.value.trim() : '';
+
+                setFieldError(addressDetail, 'address_detail', '');
+                setFieldError(city, 'city', '');
+                setFieldError(recipientPhone, 'recipient_phone', '');
+
+                if (!addressValue) {
+                    setFieldError(addressDetail, 'address_detail', 'Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ chi tiáº¿t.');
+                    firstInvalid = firstInvalid || addressDetail;
+                }
+
+                if (!cityValue) {
+                    setFieldError(city, 'city', 'Vui lÃ²ng chá»n Tá»‰nh/ThÃ nh phá»‘.');
+                    firstInvalid = firstInvalid || city;
+                }
+
+                if (!phoneValue) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                } else if (!/^[0-9]+$/.test(phoneValue)) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i chá»‰ Ä‘Æ°á»£c nháº­p sá»‘.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                } else if (phoneValue.length !== 10) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i báº¯t buá»™c 10 sá»‘.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                } else if (!phoneValue.startsWith('0')) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i báº¯t Ä‘áº§u báº±ng sá»‘ 0.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                }
+
+                if (firstInvalid) {
+                    hideCheckoutModal();
+                    firstInvalid.focus();
+                    return false;
+                }
+
+                return true;
+            }
+
+            function fieldError(name) {
+                return document.querySelector('[data-checkout-error="' + name + '"]');
+            }
+
+            function setFieldError(input, name, message) {
+                const error = fieldError(name);
+
+                if (!input || !error) {
+                    return;
+                }
+
+                input.classList.toggle('is-invalid', Boolean(message));
+                error.textContent = message || '';
+            }
+
+            function validateCheckoutForm() {
+                let firstInvalid = null;
+                const addressValue = addressDetail ? addressDetail.value.trim() : '';
+                const cityValue = city ? city.value.trim() : '';
+                const phoneValue = recipientPhone ? recipientPhone.value.trim() : '';
+
+                setFieldError(addressDetail, 'address_detail', '');
+                setFieldError(city, 'city', '');
+                setFieldError(recipientPhone, 'recipient_phone', '');
+
+                if (!addressValue) {
+                    setFieldError(addressDetail, 'address_detail', 'Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ chi tiáº¿t.');
+                    firstInvalid = firstInvalid || addressDetail;
+                }
+
+                if (!cityValue) {
+                    setFieldError(city, 'city', 'Vui lÃ²ng chá»n Tá»‰nh/ThÃ nh phá»‘.');
+                    firstInvalid = firstInvalid || city;
+                }
+
+                if (!phoneValue) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                } else if (!/^[0-9]+$/.test(phoneValue)) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i chá»‰ Ä‘Æ°á»£c nháº­p sá»‘.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                } else if (phoneValue.length !== 10) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i báº¯t buá»™c 10 sá»‘.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                } else if (!phoneValue.startsWith('0')) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i báº¯t Ä‘áº§u báº±ng sá»‘ 0.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                }
+
+                if (firstInvalid) {
+                    hideCheckoutModal();
+                    firstInvalid.focus();
+                    return false;
+                }
+
+                return true;
+            }
+
+            function fieldError(name) {
+                return document.querySelector('[data-checkout-error="' + name + '"]');
+            }
+
+            function setFieldError(input, name, message) {
+                const error = fieldError(name);
+
+                if (!input || !error) {
+                    return;
+                }
+
+                input.classList.toggle('is-invalid', Boolean(message));
+                error.textContent = message || '';
+            }
+
+            function validateCheckoutForm() {
+                let firstInvalid = null;
+                const addressValue = addressDetail ? addressDetail.value.trim() : '';
+                const cityValue = city ? city.value.trim() : '';
+                const phoneValue = recipientPhone ? recipientPhone.value.trim() : '';
+
+                setFieldError(addressDetail, 'address_detail', '');
+                setFieldError(city, 'city', '');
+                setFieldError(recipientPhone, 'recipient_phone', '');
+
+                if (!addressValue) {
+                    setFieldError(addressDetail, 'address_detail', 'Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ chi tiáº¿t.');
+                    firstInvalid = firstInvalid || addressDetail;
+                }
+
+                if (!cityValue) {
+                    setFieldError(city, 'city', 'Vui lÃ²ng chá»n Tá»‰nh/ThÃ nh phá»‘.');
+                    firstInvalid = firstInvalid || city;
+                }
+
+                if (!phoneValue) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                } else if (!/^[0-9]+$/.test(phoneValue)) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i chá»‰ Ä‘Æ°á»£c nháº­p sá»‘.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                } else if (phoneValue.length !== 10) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i báº¯t buá»™c 10 sá»‘.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                } else if (!phoneValue.startsWith('0')) {
+                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i báº¯t Ä‘áº§u báº±ng sá»‘ 0.');
+                    firstInvalid = firstInvalid || recipientPhone;
+                }
+
+                if (firstInvalid) {
+                    hideCheckoutModal();
+                    firstInvalid.focus();
+                    return false;
+                }
+
+                return true;
             }
 
             if (form && addressDetail && city && shippingAddress) {
@@ -357,9 +550,95 @@
                 syncShippingAddress();
             }
 
+            [
+                [addressDetail, 'address_detail'],
+                [city, 'city'],
+                [recipientPhone, 'recipient_phone']
+            ].forEach(function(pair) {
+                const input = pair[0];
+                const name = pair[1];
+
+                if (!input) {
+                    return;
+                }
+
+                input.addEventListener(input.tagName === 'SELECT' ? 'change' : 'input', function() {
+                    setFieldError(input, name, '');
+                });
+            });
+
             const paymentCards = document.querySelectorAll('[data-payment-card]');
             const paymentSummary = document.getElementById('checkout-payment-summary');
             const confirmMessage = document.getElementById('checkout-confirm-message');
+            const checkoutModal = document.getElementById('thanh-toan-1');
+            const confirmSubmit = document.getElementById('checkout-confirm-submit');
+
+            if (checkoutModal && checkoutModal.parentElement !== document.body) {
+                if (form && confirmSubmit) {
+                    confirmSubmit.setAttribute('form', form.id);
+                }
+
+                document.body.appendChild(checkoutModal);
+            }
+
+            function cleanupModalState() {
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
+                document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                    backdrop.remove();
+                });
+            }
+
+            function hideCheckoutModal() {
+                if (!checkoutModal) {
+                    return;
+                }
+
+                if (window.jQuery && window.jQuery.fn && window.jQuery.fn.modal) {
+                    window.jQuery(checkoutModal).modal('hide');
+                    window.setTimeout(cleanupModalState, 250);
+                    return;
+                }
+
+                checkoutModal.classList.remove('show');
+                checkoutModal.style.display = 'none';
+                checkoutModal.setAttribute('aria-hidden', 'true');
+                cleanupModalState();
+            }
+
+            function showCheckoutModal() {
+                if (!checkoutModal || !form) {
+                    return;
+                }
+
+                syncShippingAddress();
+
+                if (!validateCheckoutForm()) {
+                    return;
+                }
+
+                if (window.jQuery && window.jQuery.fn && window.jQuery.fn.modal) {
+                    window.jQuery(checkoutModal).modal({
+                        backdrop: true,
+                        keyboard: true,
+                        show: true
+                    });
+                } else {
+                    const backdrop = document.createElement('div');
+                    backdrop.className = 'modal-backdrop fade show checkout-modal-backdrop';
+                    document.body.appendChild(backdrop);
+                    document.body.classList.add('modal-open');
+                    checkoutModal.classList.add('show');
+                    checkoutModal.style.display = 'flex';
+                    checkoutModal.removeAttribute('aria-hidden');
+                }
+
+                window.setTimeout(function() {
+                    if (confirmSubmit) {
+                        confirmSubmit.focus();
+                    }
+                }, 150);
+            }
 
             function syncPaymentUi() {
                 const selected = document.querySelector('input[name="payment_method"]:checked');

@@ -35,7 +35,6 @@ class DashboardController extends Controller
 
         $stock = Inventory::query()
             ->selectRaw('COALESCE(SUM(quantity), 0) as total_stock')
-            ->selectRaw('COALESCE(SUM(reserved_quantity), 0) as reserved_stock')
             ->first();
 
         $lowStockItems = ProductVariant::query()
@@ -50,7 +49,7 @@ class DashboardController extends Controller
                 'colors.name as color_name',
                 'lens_sizes.name as lens_size',
             ])
-            ->selectRaw('COALESCE(SUM(inventories.quantity - inventories.reserved_quantity), 0) as available_stock')
+            ->selectRaw('COALESCE(SUM(inventories.quantity), 0) as available_stock')
             ->selectRaw('COALESCE(MAX(inventories.min_stock_level), 10) as min_stock_level')
             ->groupBy('product_variants.id', 'products.name', 'product_variants.sku', 'colors.name', 'lens_sizes.name')
             ->havingRaw('available_stock <= min_stock_level')
@@ -85,7 +84,7 @@ class DashboardController extends Controller
         return view('admin.dashboard', [
             'orderStats' => $orderStats,
             'returnStats' => $returnStats,
-            'availableStock' => max(0, (float) $stock->total_stock - (float) $stock->reserved_stock),
+            'availableStock' => max(0, (float) $stock->total_stock),
             'activeProducts' => Product::active()->count(),
             'totalVariants' => ProductVariant::count(),
             'activeCategories' => Category::active()->count(),

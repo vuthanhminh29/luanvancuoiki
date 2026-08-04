@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -48,11 +49,13 @@ class EnsureAdmin
 
     private function hasAnyRole(int $userId, array $roles): bool
     {
-        return DB::table('user_roles')
+        $userRoles = Cache::remember("users.{$userId}.role_codes", now()->addMinutes(5), fn () => DB::table('user_roles')
             ->join('roles', 'roles.id', '=', 'user_roles.role_id')
             ->where('user_roles.user_id', $userId)
-            ->whereIn('roles.code', $roles)
-            ->exists();
+            ->pluck('roles.code')
+            ->all());
+
+        return count(array_intersect($roles, $userRoles)) > 0;
     }
 
     private function logout(Request $request): void

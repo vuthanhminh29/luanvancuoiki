@@ -91,10 +91,11 @@
         }
     </style>
     @stack('styles')
+    <link rel="stylesheet" href="{{ asset('css/ui-human.css') }}?v={{ file_exists(public_path('css/ui-human.css')) ? filemtime(public_path('css/ui-human.css')) : time() }}">
 </head>
 <body>
     @php
-        $cartTotalQuantity = min(20, array_sum(array_map('intval', session('cart', []))));
+        $cartTotalQuantity = array_sum(array_map('intval', session('cart', [])));
     @endphp
     <div class="offcanvas-menu-overlay"></div>
     <div class="offcanvas-menu-wrapper">
@@ -109,7 +110,7 @@
             </li>
         </ul>
         <div class="offcanvas__logo">
-            <a href="{{ route('home') }}"><img src="{{ asset('upload/logo/logo-kinh.png') }}" alt="{{ config('app.name') }}"></a>
+            <a href="{{ route('home') }}"><img src="{{ asset('upload/logo/logo-1.png') }}" alt="{{ config('app.name') }}"></a>
         </div>
         <div id="mobile-menu-wrap"></div>
         <div class="offcanvas__auth">
@@ -128,7 +129,7 @@
                 <div class="col-xl-3 col-lg-2">
                     <div class="header__logo">
                         <a href="{{ route('home') }}">
-                            <img style="max-height: 50px; margin-top: 2px;" src="{{ asset('upload/logo/logo-kinh.png') }}" alt="{{ config('app.name') }}">
+                            <img src="{{ asset('upload/logo/logo-1.png') }}" alt="{{ config('app.name') }}">
                         </a>
                     </div>
                 </div>
@@ -245,6 +246,11 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="footer__bottom">
+                <span>Â© {{ date('Y') }} {{ config('app.name') }}. Dá»± Ã¡n bÃ¡n kÃ­nh máº¯t.</span>
+                <a href="{{ route('account.orders.index') }}">Theo dÃµi Ä‘Æ¡n hÃ ng</a>
             </div>
         </div>
     </footer>

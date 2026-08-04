@@ -8,26 +8,25 @@ use App\Models\StockTransaction;
 use App\Models\Warehouse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class BusinessAdminController extends Controller
 {
-    public function index(Request $request): View
+    // Hiá»ƒn thá»‹ mÃ n hÃ¬nh nghiá»‡p vá»¥: thÆ°Æ¡ng hiá»‡u, kho vÃ  cÃ¡c dá»¯ liá»‡u cáº¥u hÃ¬nh.
+    public function index(Request $request): RedirectResponse|View
     {
-        $tabs = ['brands', 'promotions', 'warehouses', 'stores', 'stock'];
+        if ($request->query('tab') === 'promotions') {
+            return redirect()->route('admin.promotions.index');
+        }
+
+        $tabs = ['brands', 'warehouses', 'stores', 'stock'];
         $activeTab = in_array($request->query('tab'), $tabs, true) ? $request->query('tab') : 'brands';
 
         $brands = Brand::query()
             ->withCount('products')
             ->latest()
-            ->limit(40)
-            ->get();
-
-        $promotions = DB::table('promotions')
-            ->latest('id')
             ->limit(40)
             ->get();
 
@@ -51,7 +50,6 @@ class BusinessAdminController extends Controller
 
         $summary = [
             'brands' => Brand::count(),
-            'promotions' => DB::table('promotions')->count(),
             'warehouses' => Warehouse::count(),
             'stores' => DB::table('stores')->count(),
             'stock' => StockTransaction::count(),
@@ -60,7 +58,6 @@ class BusinessAdminController extends Controller
         return view('admin.business.index', compact(
             'activeTab',
             'brands',
-            'promotions',
             'warehouses',
             'stores',
             'stockTransactions',
@@ -151,6 +148,7 @@ class BusinessAdminController extends Controller
         return $this->redirectTab('warehouses', 'Đã lưu kho.');
     }
 
+    // Báº­t/táº¯t tráº¡ng thÃ¡i dá»¯ liá»‡u cáº¥u hÃ¬nh trong má»™t báº£ng cá»¥ thá»ƒ.
     private function toggleTableStatus(Request $request, string $table, string $tab): RedirectResponse
     {
         $data = $request->validate([
@@ -167,6 +165,7 @@ class BusinessAdminController extends Controller
         return $this->redirectTab($tab, 'Đã cập nhật trạng thái.');
     }
 
+    // Tá»± sinh mÃ£ má»›i theo prefix vÃ  sá»‘ lá»›n nháº¥t hiá»‡n táº¡i trong báº£ng.
     private function nextCode(string $table, string $column, string $prefix): string
     {
         do {
@@ -176,6 +175,7 @@ class BusinessAdminController extends Controller
         return $code;
     }
 
+    // Redirect vá» Ä‘Ãºng tab nghiá»‡p vá»¥ sau khi lÆ°u.
     private function redirectTab(string $tab, string $message): RedirectResponse
     {
         return redirect()

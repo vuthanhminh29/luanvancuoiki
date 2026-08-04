@@ -13,9 +13,11 @@ use App\Http\Controllers\Admin\HomeLayoutAdminController;
 use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\PostAdminController;
 use App\Http\Controllers\Admin\ProductAdminController;
+use App\Http\Controllers\Admin\PromotionAdminController;
 use App\Http\Controllers\Admin\ReportAdminController;
 use App\Http\Controllers\Admin\ReturnAdminController;
 use App\Http\Controllers\Admin\ReviewAdminController;
+use App\Http\Controllers\Admin\TryOnSnapshotAdminController;
 use App\Http\Controllers\Admin\WarehouseAdminController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +91,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/thanh-vien/{user}/sua', [CustomerAdminController::class, 'edit'])->name('customers.edit');
         Route::put('/thanh-vien/{user}', [CustomerAdminController::class, 'update'])->name('customers.update');
         Route::patch('/thanh-vien/{user}/trang-thai', [CustomerAdminController::class, 'updateStatus'])->name('customers.status');
+        // Trang admin láº¥y láº¡i danh sÃ¡ch káº¿t quáº£ thá»­ kÃ­nh Ä‘Ã£ lÆ°u.
+        Route::get('/thu-kinh', [TryOnSnapshotAdminController::class, 'index'])->name('tryon-snapshots.index');
         Route::get('/banner', [BannerAdminController::class, 'index'])->name('banners.index');
         Route::get('/banner/them', [BannerAdminController::class, 'create'])->name('banners.create');
         Route::post('/banner', [BannerAdminController::class, 'store'])->name('banners.store');
@@ -100,6 +104,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/bo-cuc-trang', [HomeLayoutAdminController::class, 'update'])->name('home-layout.update');
         Route::get('/nghiep-vu', [BusinessAdminController::class, 'index'])->name('business.index');
         Route::post('/nghiep-vu', [BusinessAdminController::class, 'store'])->name('business.store');
+        Route::get('/khuyen-mai', [PromotionAdminController::class, 'index'])->name('promotions.index');
+        Route::post('/khuyen-mai', [PromotionAdminController::class, 'store'])->name('promotions.store');
     });
 
     Route::middleware('admin:ADMIN')->get('/{oldRoute}', [AdminRouteAliasController::class, 'path'])

@@ -145,16 +145,22 @@ class AuthController extends Controller
             'email.email' => 'Email không đúng định dạng.',
         ]);
 
+        // TÃ¬m user theo email vá»«a nháº­p.
         $user = User::where('email', $data['email'])->first();
 
+        // Náº¿u user khÃ´ng tá»“n táº¡i thÃ¬ bá» qua, cuá»‘i hÃ m váº«n tráº£ thÃ´ng bÃ¡o chung.
         if ($user) {
+            // Táº¡o token ngáº«u nhiÃªn dÃ i 72 kÃ½ tá»± Ä‘á»ƒ Ä‘Æ°a vÃ o link khÃ´i phá»¥c máº­t kháº©u.
             $token = Str::random(72);
 
+            // ÄÃ¡nh dáº¥u cÃ¡c token cÅ© chÆ°a dÃ¹ng cá»§a user nÃ y lÃ  Ä‘Ã£ dÃ¹ng, Ä‘á»ƒ chá»‰ link má»›i nháº¥t cÃ²n hiá»‡u lá»±c.
             DB::table('password_reset_tokens')
                 ->where('user_id', $user->id)
                 ->whereNull('used_at')
                 ->update(['used_at' => now()]);
 
+            // LÆ°u token vÃ o database á»Ÿ dáº¡ng hash sha256.
+            // KhÃ´ng lÆ°u token tháº­t Ä‘á»ƒ náº¿u database lá»™ thÃ¬ ngÆ°á»i khÃ¡c khÃ´ng dÃ¹ng token Ä‘Æ°á»£c.
             DB::table('password_reset_tokens')->insert([
                 'user_id' => $user->id,
                 'token_hash' => hash('sha256', $token),
@@ -163,9 +169,11 @@ class AuthController extends Controller
                 'created_at' => now(),
             ]);
 
+            // Táº¡o URL Ä‘áº·t láº¡i máº­t kháº©u, gá»­i token tháº­t qua email cho ngÆ°á»i dÃ¹ng.
             $url = route('password.reset', ['token' => $token, 'email' => $user->email]);
 
             try {
+                // Mail::raw() gá»­i email dáº¡ng text Ä‘Æ¡n giáº£n, khÃ´ng dÃ¹ng template Blade.
                 Mail::raw(
                     "Xin chào {$user->full_name},\n\nBạn vừa yêu cầu khôi phục mật khẩu.\nNhấn vào liên kết sau để đặt mật khẩu mới:\n{$url}\n\nLiên kết có hiệu lực trong 60 phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.",
                     fn ($message) => $message
@@ -281,18 +289,43 @@ class AuthController extends Controller
         );
     }
 
+    // Danh sÃ¡ch tá»‰nh/thÃ nh cho form Ä‘Äƒng kÃ½ vÃ  Ä‘á»‹a chá»‰ máº·c Ä‘á»‹nh.
+    private function cities(): array
+    {
+        return [
+            'HÃ  Ná»™i', 'Há»“ ChÃ­ Minh', 'ÄÃ  Náºµng', 'Háº£i PhÃ²ng', 'Cáº§n ThÆ¡',
+            'An Giang', 'BÃ  Rá»‹a VÅ©ng TÃ u', 'Báº¯c Giang', 'Báº¯c Káº¡n', 'Báº¡c LiÃªu',
+            'Báº¯c Ninh', 'Báº¿n Tre', 'BÃ¬nh Äá»‹nh', 'BÃ¬nh DÆ°Æ¡ng', 'BÃ¬nh PhÆ°á»›c',
+            'BÃ¬nh Thuáº­n', 'CÃ  Mau', 'Cao Báº±ng', 'Äáº¯k Láº¯k', 'Äáº¯k NÃ´ng',
+            'Äiá»‡n BiÃªn', 'Äá»“ng Nai', 'Äá»“ng ThÃ¡p', 'Gia Lai', 'HÃ  Giang',
+            'HÃ  Nam', 'HÃ  TÄ©nh', 'Háº£i DÆ°Æ¡ng', 'Háº­u Giang', 'HÃ²a BÃ¬nh',
+            'HÆ°ng YÃªn', 'KhÃ¡nh HÃ²a', 'KiÃªn Giang', 'Kon Tum', 'Lai ChÃ¢u',
+            'LÃ¢m Äá»“ng', 'Láº¡ng SÆ¡n', 'LÃ o Cai', 'Long An', 'Nam Äá»‹nh',
+            'Nghá»‡ An', 'Ninh BÃ¬nh', 'Ninh Thuáº­n', 'PhÃº Thá»', 'PhÃº YÃªn',
+            'Quáº£ng BÃ¬nh', 'Quáº£ng Nam', 'Quáº£ng NgÃ£i', 'Quáº£ng Ninh', 'Quáº£ng Trá»‹',
+            'SÃ³c TrÄƒng', 'SÆ¡n La', 'TÃ¢y Ninh', 'ThÃ¡i BÃ¬nh', 'ThÃ¡i NguyÃªn',
+            'Thanh HÃ³a', 'Thá»«a ThiÃªn Huáº¿', 'Tiá»n Giang', 'TrÃ  Vinh', 'TuyÃªn Quang',
+            'VÄ©nh Long', 'VÄ©nh PhÃºc', 'YÃªn BÃ¡i',
+        ];
+    }
+
+    // Kiá»ƒm tra token Ä‘áº·t láº¡i máº­t kháº©u cÃ³ Ä‘Ãºng email, chÆ°a dÃ¹ng vÃ  chÆ°a háº¿t háº¡n khÃ´ng.
     private function validResetToken(string $email, string $token): ?object
     {
+        // Thiáº¿u email hoáº·c token thÃ¬ cháº¯c cháº¯n khÃ´ng há»£p lá»‡.
         if ($email === '' || $token === '') {
             return null;
         }
 
+        // TÃ¬m user theo email Ä‘á»ƒ láº¥y user_id.
         $user = User::where('email', $email)->first();
 
+        // KhÃ´ng cÃ³ user thÃ¬ token khÃ´ng thá»ƒ há»£p lá»‡.
         if (! $user) {
             return null;
         }
 
+        // TÃ¬m token theo user_id, token_hash, chÆ°a dÃ¹ng vÃ  expires_at cÃ²n lá»›n hÆ¡n thá»i Ä‘iá»ƒm hiá»‡n táº¡i.
         return DB::table('password_reset_tokens')
             ->where('user_id', $user->id)
             ->where('token_hash', hash('sha256', $token))

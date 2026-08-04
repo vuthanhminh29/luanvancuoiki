@@ -25,15 +25,59 @@
 }
 
 .modal-backdrop.show {
-    display: none;
+    display: block !important;
+    opacity: 0.5;
+    z-index: 2040;
 }
 
-.modal-content {
-    z-index: 10000;
+#thanh-toan-1.modal {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    padding: 14px !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 2050;
 }
 
-.modal {
-    top: 20px !important;
+#thanh-toan-1.modal.show {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+#thanh-toan-1 .modal-dialog {
+    width: min(520px, calc(100vw - 24px));
+    max-width: 520px;
+    margin: 0 auto !important;
+}
+
+#thanh-toan-1 .modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 28px);
+    max-height: calc(100dvh - 28px);
+    overflow: hidden;
+    z-index: 1;
+}
+
+#thanh-toan-1 .modal-header,
+#thanh-toan-1 .modal-footer {
+    flex-shrink: 0;
+}
+
+#thanh-toan-1 .modal-body {
+    overflow-y: auto;
+}
+
+body.modal-open {
+    padding-right: 0 !important;
 }
 
 .back-to-cart {
@@ -141,6 +185,10 @@ select.form-control {
     margin-top: 0.375rem;
     font-size: 0.875rem;
     color: #ef4444;
+}
+
+.checkout-field-error:empty {
+    display: none;
 }
 
 /* Address Options */
@@ -417,7 +465,7 @@ select.form-control {
 /* Modal Styles */
 .checkout-modal .modal-header {
     border-bottom: 1px solid #e5e7eb;
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
 }
 
 .checkout-modal .modal-title {
@@ -427,14 +475,14 @@ select.form-control {
 }
 
 .checkout-modal .modal-body {
-    padding: 2rem 1.5rem;
+    padding: 1.4rem 1.25rem;
     text-align: center;
 }
 
 .confirm-icon {
-    width: 60px;
-    height: 60px;
-    margin: 0 auto 1.5rem;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 1rem;
     background-color: #f3f4f6;
     border-radius: 50%;
     display: flex;
@@ -443,7 +491,7 @@ select.form-control {
 }
 
 .confirm-icon i {
-    font-size: 1.875rem;
+    font-size: 1.55rem;
     color: #111827;
 }
 
@@ -458,7 +506,7 @@ select.form-control {
 .checkout-modal .modal-body p {
     font-size: 1rem;
     color: #374151;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .confirm-total {
@@ -473,7 +521,7 @@ select.form-control {
 
 .checkout-modal .modal-footer {
     border-top: 1px solid #e5e7eb;
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
     display: flex;
     gap: 0.75rem;
 }
@@ -481,7 +529,8 @@ select.form-control {
 .btn-modal-cancel,
 .btn-modal-confirm {
     flex: 1;
-    padding: 0.75rem 1.5rem;
+    min-height: 46px;
+    padding: 0.65rem 1.25rem;
     border-radius: 0.375rem;
     font-size: 0.9375rem;
     font-weight: 500;
@@ -507,6 +556,12 @@ select.form-control {
 
 .btn-modal-confirm:hover {
     background-color: #1f2937;
+}
+
+.btn-modal-confirm:disabled,
+.btn-modal-confirm.is-loading {
+    cursor: wait;
+    opacity: 0.82;
 }
 
 .btn-modal-confirm-cod {
@@ -1085,6 +1140,27 @@ textarea.form-control {
     }
 }
 
+@media (max-height: 640px) {
+    #thanh-toan-1.modal.show {
+        align-items: flex-start;
+    }
+
+    #thanh-toan-1 .modal-dialog {
+        margin-top: 0 !important;
+    }
+
+    .checkout-modal .modal-body {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .confirm-icon {
+        width: 46px;
+        height: 46px;
+        margin-bottom: 0.75rem;
+    }
+}
+
 
 /* Inline styles moved from views\checkout.php */
-.view-checkout-inline-1 { z-index: 1000; }
+.view-checkout-inline-1 { z-index: 2050; }
