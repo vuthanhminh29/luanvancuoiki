@@ -17,7 +17,7 @@
 .wt-btn{align-items:center;background:#fff;border:1px solid #d0d5dd;border-radius:7px;color:#111827;cursor:pointer;display:inline-flex;font-size:13px;font-weight:900;gap:8px;justify-content:center;min-height:38px;padding:0 13px;text-decoration:none;white-space:nowrap}.wt-btn.primary{background:#2563eb;border-color:#2563eb;color:#fff}.wt-btn.dark{background:#111827;border-color:#111827;color:#fff}.wt-btn.danger{background:#fee2e2;border-color:#fecaca;color:#991b1b}.wt-btn:hover{filter:brightness(.98);color:inherit}.wt-btn.primary:hover,.wt-btn.dark:hover{color:#fff}
 .wt-card{background:#fff;border:1px solid #e4e7ec;border-radius:8px;box-shadow:0 8px 24px rgba(16,24,40,.04);overflow:visible}.wt-card-head{align-items:center;border-bottom:1px solid #eef2f6;display:flex;gap:12px;justify-content:space-between;padding:13px 15px}.wt-card-head h6{color:#111827;font-size:16px;font-weight:900;margin:0}.wt-card-head small{color:#667085;font-size:12px;font-weight:800}
 .wt-form{padding:15px}.wt-form-grid{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}.wt-field label{color:#667085;display:block;font-size:11px;font-weight:900;margin-bottom:5px;text-transform:uppercase}.wt-input,.wt-select{background:#fff;border:1px solid #d0d5dd;border-radius:7px;color:#111827;font-size:13px;font-weight:700;min-height:38px;padding:0 10px;width:100%}.wt-input:focus,.wt-select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12);outline:none}.wt-help{color:#667085;font-size:12px;line-height:1.4;margin-top:6px}.wt-error{color:#dc2626;font-size:12px;font-weight:800;margin-top:5px}
-.wt-table-wrap{overflow:visible}.wt-table{border-collapse:collapse;min-width:1080px;width:100%}.wt-table th{background:#fff;border-bottom:1px solid #e4e7ec;color:#667085;font-size:11px;font-weight:900;letter-spacing:.04em;padding:10px 11px;text-align:left;text-transform:uppercase;white-space:nowrap}.wt-table td{border-bottom:1px solid #f1f5f9;color:#344054;font-size:13px;padding:10px 11px;vertical-align:top}.wt-table th:first-child,.wt-table td:first-child{min-width:520px;width:52%}.wt-number{max-width:155px}.wt-picker{position:relative}.wt-picker-menu{background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.14);display:none;left:0;max-height:330px;overflow-y:auto;position:absolute;right:0;top:calc(100% + 6px);z-index:1000}.wt-picker-menu.is-open{display:block}.wt-option{align-items:center;background:#fff;border:0;border-bottom:1px solid #eef2f7;cursor:pointer;display:flex;gap:10px;padding:10px;text-align:left;width:100%}.wt-option:hover{background:#eff6ff}.wt-option img{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;flex:0 0 46px;height:46px;object-fit:cover;width:46px}.wt-option strong{color:#111827;display:block;font-size:13px;line-height:1.35}.wt-option span{color:#6b7280;display:block;font-size:12px;margin-top:3px}.wt-selected{color:#2563eb;font-size:12px;font-weight:900;line-height:1.35;margin-top:7px;min-height:18px}.wt-empty{color:#667085;font-size:13px;padding:12px}.wt-stock{color:#111827;font-weight:900;padding-top:10px;white-space:nowrap}
+.wt-table-wrap{overflow:visible}.wt-table{border-collapse:collapse;min-width:1080px;width:100%}.wt-table th{background:#fff;border-bottom:1px solid #e4e7ec;color:#667085;font-size:11px;font-weight:900;letter-spacing:0;padding:10px 11px;text-align:left;text-transform:uppercase;white-space:nowrap}.wt-table td{border-bottom:1px solid #f1f5f9;color:#344054;font-size:13px;padding:10px 11px;vertical-align:top}.wt-table th:first-child,.wt-table td:first-child{min-width:520px;width:52%}.wt-number{max-width:155px}.wt-picker{position:relative}.wt-picker-menu{background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,.14);display:none;left:0;max-height:330px;overflow-y:auto;position:absolute;right:0;top:calc(100% + 6px);z-index:1000}.wt-picker-menu.is-open{display:block}.wt-option{align-items:center;background:#fff;border:0;border-bottom:1px solid #eef2f7;cursor:pointer;display:flex;gap:10px;padding:10px;text-align:left;width:100%}.wt-option:hover{background:#eff6ff}.wt-option img{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;flex:0 0 46px;height:46px;object-fit:cover;width:46px}.wt-option strong{color:#111827;display:block;font-size:13px;line-height:1.35}.wt-option span{color:#6b7280;display:block;font-size:12px;margin-top:3px}.wt-selected{color:#2563eb;font-size:12px;font-weight:900;line-height:1.35;margin-top:7px;min-height:18px}.wt-empty{color:#667085;font-size:13px;padding:12px}.wt-stock{color:#111827;font-weight:900;padding-top:10px;white-space:nowrap}
 @media(max-width:900px){.wt-page{padding:14px}.wt-toolbar,.wt-card-head{align-items:flex-start;flex-direction:column}.wt-actions,.wt-btn{width:100%}.wt-form-grid{grid-template-columns:1fr}.wt-card{overflow:hidden}.wt-table-wrap{overflow-x:auto;overflow-y:visible}.wt-table{min-width:980px}}
 </style>
 @endpush
@@ -59,8 +59,9 @@
                             <option value="IMPORT" @selected(old('type', 'IMPORT') === 'IMPORT')>Nhập kho</option>
                             <option value="EXPORT" @selected(old('type') === 'EXPORT')>Xuất kho</option>
                             <option value="TRANSFER" @selected(old('type') === 'TRANSFER')>Chuyển kho</option>
+                            <option value="ADJUST" @selected(old('type') === 'ADJUST')>Cập nhật tồn kho</option>
                         </select>
-                        <div class="wt-help">Nhập cộng tồn, xuất trừ tồn, chuyển sẽ trừ kho nguồn và cộng kho đích.</div>
+                        <div class="wt-help">Nhập cộng tồn, xuất trừ tồn, chuyển kho, hoặc cập nhật tồn kho trực tiếp.</div>
                     </div>
                     <div class="wt-field" id="sourceWarehouseGroup">
                         <label>Kho nguồn</label>
@@ -169,7 +170,7 @@ const stockVariants = @json($variants, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_S
 function syncWarehouseFields() {
     const type = document.getElementById('stockType').value;
     document.getElementById('sourceWarehouseGroup').style.display = (type === 'EXPORT' || type === 'TRANSFER') ? '' : 'none';
-    document.getElementById('targetWarehouseGroup').style.display = (type === 'IMPORT' || type === 'TRANSFER') ? '' : 'none';
+    document.getElementById('targetWarehouseGroup').style.display = (type === 'IMPORT' || type === 'TRANSFER' || type === 'ADJUST') ? '' : 'none';
 }
 
 function normalizeSearch(value) {
@@ -245,6 +246,7 @@ document.getElementById('addStockRow').addEventListener('click', function () {
     const clone = document.getElementById('stockRowTemplate').content.cloneNode(true);
     const tbody = document.querySelector('#stockItemsTable tbody');
     tbody.appendChild(clone);
+    syncWarehouseFields();
     const search = tbody.querySelector('tr:last-child .variant-search');
     search.focus();
     renderVariantMenu(search.closest('.wt-picker'), '');
@@ -302,9 +304,9 @@ document.getElementById('stockForm').addEventListener('submit', function (event)
         alert('Bạn cần chọn kho nguồn.');
         return;
     }
-    if ((type === 'IMPORT' || type === 'TRANSFER') && !target) {
+    if ((type === 'IMPORT' || type === 'TRANSFER' || type === 'ADJUST') && !target) {
         event.preventDefault();
-        alert('Bạn cần chọn kho đích.');
+        alert(type === 'ADJUST' ? 'Bạn cần chọn kho cần cập nhật.' : 'Bạn cần chọn kho đích.');
         return;
     }
     if (type === 'TRANSFER' && source && target && source === target) {

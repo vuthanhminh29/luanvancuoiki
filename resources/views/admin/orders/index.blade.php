@@ -52,7 +52,7 @@
 .ao-result span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ao-table-wrap { overflow-x:auto; padding:0 22px 22px; }
 .ao-table { width:100%; border-collapse:collapse; min-width:960px; }
-.ao-table th { padding:13px 10px; color:#6b7280; background:#fff; border-bottom:1px solid #e5e7eb; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.ao-table th { padding:13px 10px; color:#6b7280; background:#fff; border-bottom:1px solid #e5e7eb; font-size:12px; text-transform:uppercase; letter-spacing:0; }
 .ao-table td { padding:13px 10px; border-bottom:1px solid #f1f3f5; vertical-align:middle; font-size:14px; color:#111827; }
 .ao-table tr:hover td { background:#fafafa; }
 .ao-id { display:inline-flex; align-items:center; gap:6px; color:#111827; font-weight:800; text-decoration:none; }
@@ -146,7 +146,7 @@
         @endunless
 
         <div class="ao-result">
-            <span>Đang hiển thị <strong>{{ number_format($orders->count()) }}</strong> đơn hàng</span>
+            <span>Đang hiển thị <strong>{{ number_format($orders->count()) }}</strong> / {{ number_format($orders->total()) }} đơn hàng</span>
             @if (($filters['keyword'] ?? '') !== '')
                 <span>Từ khóa: <strong>{{ $filters['keyword'] }}</strong></span>
             @endif
@@ -206,7 +206,7 @@
                     @endforelse
                 </tbody>
             </table>
-            <div style=padding-top:16px;>{{ $orders->links() }}</div>
+            <div style="padding-top:16px;">{{ $orders->links() }}</div>
         </div>
     </div>
 </div>

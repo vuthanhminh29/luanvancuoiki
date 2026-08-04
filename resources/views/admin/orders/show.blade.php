@@ -3,7 +3,7 @@
 @section('title', $order->order_code ?: 'Đơn hàng #' . $order->id)
 
 @php
-    $statusLabels = [
+    $statusLabels = $statusLabels ?? [
         'PENDING' => ['Chờ xác nhận', 'pending', 'fa-clock'],
         'AWAITING_PAYMENT' => ['Chờ thanh toán', 'payment', 'fa-credit-card'],
         'CONFIRMED' => ['Đã xác nhận', 'confirmed', 'fa-clipboard-check'],
@@ -18,8 +18,9 @@
     $paymentMap = ['COD' => 'Thanh toán khi nhận hàng', 'VNPAY' => 'VNPay'];
     $currentStatus = $statusLabels[$order->status] ?? [$order->status, 'dark', 'fa-question-circle'];
     $nonCancellableStatuses = ['DELIVERING', 'DELIVERED', 'RETURN_PENDING', 'RETURNED', 'EXCHANGED', 'LOST_IN_TRANSIT', 'CANCELLED'];
-    $canCancelOrder = ! in_array($order->status, $nonCancellableStatuses, true);
+    $canCancelOrder = $canCancelOrder ?? ! in_array($order->status, $nonCancellableStatuses, true);
     $nextStatusOptions = $statusOptions ?? [];
+    $viewErrors = $errors ?? new \Illuminate\Support\ViewErrorBag;
     $progressSteps = [
         'AWAITING_PAYMENT' => ['Chờ thanh toán', 'fa-credit-card', 'payment'],
         'PENDING' => ['Chờ xác nhận', 'fa-clock', 'pending'],
@@ -163,17 +164,30 @@
                     @if (session('success'))
                         <div class="alert alert-success p-2">{{ session('success') }}</div>
                     @endif
+                    @if ($viewErrors->has('status'))
+                        <div class="alert alert-danger p-2">{{ $viewErrors->first('status') }}</div>
+                    @endif
                     <form method="post" action="{{ route('admin.orders.status', $order) }}" class="aod-form">
                         @csrf
                         @method('PUT')
                         <label for="status-select">Trạng thái đơn hàng</label>
                         <select name="status" class="aod-select" id="status-select">
-                            @foreach ($statusLabels as $value => $meta)
-                                @continue($value === 'CANCELLED' && ! $canCancelOrder && $order->status !== 'CANCELLED')
-                                <option value="{{ $value }}" @selected($order->status === $value)>{{ $meta[0] }}</option>
+                            <option value="">{{ empty($nextStatusOptions) ? 'Không còn trạng thái tiếp theo' : 'Chọn trạng thái tiếp theo' }}</option>
+                            @foreach ($nextStatusOptions as $value => $meta)
+                                <option value="{{ $value }}" @selected(old('status') === $value)>{{ $meta[0] }}</option>
                             @endforeach
                         </select>
-                        <button type="submit" class="aod-btn primary">
+                        @if ($viewErrors->has('status'))
+                            <div class="aod-error">{{ $viewErrors->first('status') }}</div>
+                        @endif
+                        @if (array_key_exists('CANCELLED', $nextStatusOptions))
+                            <label for="cancel-reason">Lý do hủy đơn</label>
+                            <textarea name="cancel_reason" class="aod-textarea" id="cancel-reason" placeholder="Nhập nếu chọn hủy đơn">{{ old('cancel_reason') }}</textarea>
+                            @if ($viewErrors->has('cancel_reason'))
+                                <div class="aod-error">{{ $viewErrors->first('cancel_reason') }}</div>
+                            @endif
+                        @endif
+                        <button type="submit" class="aod-btn primary" @disabled(empty($nextStatusOptions))>
                             <i class="fas fa-save"></i> Cập nhật trạng thái
                         </button>
                     </form>
