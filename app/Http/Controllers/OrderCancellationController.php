@@ -22,7 +22,7 @@ class OrderCancellationController extends Controller
     public function show(Order $order, string $token): View
     {
         // Load user và items để trang xác nhận hiển thị khách hàng + danh sách sản phẩm.
-        $order->load(['user', 'items']);
+        $order->load(['user', 'items.product']);
 
         return view('orders.cancel-confirmation', [
             'order' => $order,
@@ -39,7 +39,7 @@ class OrderCancellationController extends Controller
     // Chỉ hàm này mới thật sự đổi status của đơn sang CANCELLED.
     public function confirm(Request $request, Order $order, string $token): View|RedirectResponse
     {
-        $order->load(['user', 'items']);
+        $order->load(['user', 'items.product']);
 
         // Service kiểm tra lại token/trạng thái trong transaction rồi mới hủy.
         // Kiểm tra lại ở backend là bắt buộc vì người dùng có thể tự gửi request POST.
@@ -48,14 +48,14 @@ class OrderCancellationController extends Controller
         if ($result !== true) {
             return view('orders.cancel-confirmation', [
                 // fresh() lấy lại dữ liệu mới nhất sau khi service vừa kiểm tra/xử lý.
-                'order' => $order->fresh(['user', 'items']) ?? $order,
+                'order' => $order->fresh(['user', 'items.product']) ?? $order,
                 'token' => $token,
                 'error' => $result,
                 'confirmed' => false,
             ]);
         }
 
-        $order = $order->fresh(['user', 'items']);
+        $order = $order->fresh(['user', 'items.product']);
 
         // Nếu khách đang đăng nhập đúng tài khoản chủ đơn thì đưa họ về trang chi tiết đơn.
         // Nếu họ bấm email khi chưa đăng nhập, vẫn cho xác nhận bằng signed link và hiện trang kết quả.

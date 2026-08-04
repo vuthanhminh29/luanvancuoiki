@@ -9,6 +9,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ClientRouteAliasController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OrderCancellationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReturnRequestController;
@@ -45,6 +46,14 @@ Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
 Route::post('/gio-hang', [CartController::class, 'store'])->middleware('throttle:cart')->name('cart.store');
 Route::put('/gio-hang', [CartController::class, 'update'])->middleware('throttle:cart')->name('cart.update');
 Route::delete('/gio-hang/{variant}', [CartController::class, 'destroy'])->middleware('throttle:cart')->name('cart.destroy');
+
+// Route xác nhận hủy đơn hàng từ email, có signed middleware.
+Route::get('/don-hang/{order}/xac-nhan-huy/{token}', [OrderCancellationController::class, 'show'])
+    ->middleware(['signed', 'throttle:user-actions'])
+    ->name('orders.cancel-confirm.show');
+Route::post('/don-hang/{order}/xac-nhan-huy/{token}', [OrderCancellationController::class, 'confirm'])
+    ->middleware(['signed', 'throttle:user-actions'])
+    ->name('orders.cancel-confirm.submit');
 
 // Chỉ khách chưa đăng nhập mới được vào các trang đăng nhập, đăng ký và quên mật khẩu.
 Route::middleware('guest')->group(function () {
