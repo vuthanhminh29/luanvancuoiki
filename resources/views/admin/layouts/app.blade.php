@@ -198,7 +198,9 @@
                 <a href="{{ route('admin.warehouses.index') }}" class="nav-item nav-link {{ $isRoute('admin.warehouses.*') ? 'active' : '' }}"><i class="fas fa-warehouse me-2"></i>Quản lý kho</a>
                 @if ($isAdminUser)
                 <a href="{{ route('admin.business.index') }}" class="nav-item nav-link {{ $isRoute('admin.business.*') ? 'active' : '' }}"><i class="fas fa-briefcase me-2"></i>Nghiệp vụ</a>
+                <a href="{{ route('admin.promotions.index') }}" class="nav-item nav-link {{ $isRoute('admin.promotions.*') ? 'active' : '' }}"><i class="fas fa-tags me-2"></i>Khuyến mãi</a>
                 <a href="{{ route('admin.customers.index') }}" class="nav-item nav-link {{ $isRoute('admin.customers.*') ? 'active' : '' }}"><i class="fas fa-users me-2"></i>Thành viên</a>
+                <a href="{{ route('admin.tryon-snapshots.index') }}" class="nav-item nav-link {{ $isRoute('admin.tryon-snapshots.*') ? 'active' : '' }}"><i class="fas fa-camera-retro me-2"></i>Thử kính</a>
                 @endif
                 <a href="{{ route('admin.reviews.index') }}" class="nav-item nav-link {{ $isRoute('admin.reviews.*') ? 'active' : '' }}"><i class="fas fa-comment me-2"></i>Bình luận</a>
 
