@@ -28,8 +28,8 @@
         .sidebar.pb-3 { padding-bottom: 0 !important; }
         .content { margin-left: 280px; background: #f3f6fa; }
         .sidebar, .sidebar .navbar { background: #111827 !important; }
-        .sidebar .navbar { align-content: flex-start; align-items: flex-start; display: flex; flex-direction: column; min-height: 100%; padding: 18px 0 16px; }
-        .sidebar .navbar-brand { align-items: center; display: flex; margin: 0 0 20px 26px !important; min-height: 44px; }
+        .sidebar .navbar { align-content: flex-start; align-items: flex-start; display: flex; flex-direction: column; justify-content: flex-start !important; min-height: 100%; padding: 18px 0 16px; }
+        .sidebar .navbar-brand { align-items: center; display: flex; margin: 0 0 18px 26px !important; min-height: 44px; }
         .sidebar .navbar-brand h3 { color: #fff !important; font-size: 26px; font-weight: 800; letter-spacing: 0; margin: 0; }
         .sidebar .navbar .navbar-nav { display: flex; flex-direction: column; gap: 5px; margin-top: 0 !important; padding-right: 14px; width: 100%; }
         .sidebar .navbar .navbar-nav .nav-link {
