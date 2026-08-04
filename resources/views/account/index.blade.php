@@ -42,7 +42,6 @@
                         <img src="{{ $avatarUrl }}" alt="avatar" class="profile-avatar">
                         <div class="profile-info">
                             <h6 class="profile-name">{{ $user->full_name }}</h6>
-                            <a href="{{ route('account.profile.edit') }}" class="profile-edit">Sửa hồ sơ</a>
                         </div>
                     </div>
 
@@ -187,10 +186,6 @@
                     </div>
 
                     <div class="card-actions">
-                        <a href="{{ route('account.profile.edit') }}" class="btn-edit">
-                            <i class="fa fa-edit"></i>
-                            Sửa hồ sơ
-                        </a>
                         <a href="{{ route('account.orders.index') }}" class="btn-orders">
                             <i class="fa fa-shopping-bag"></i>
                             Đơn mua
