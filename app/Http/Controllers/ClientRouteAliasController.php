@@ -84,7 +84,7 @@ class ClientRouteAliasController extends Controller
             'dang-nhap' => '/dang-nhap',
             'dang-ky' => '/dang-ky',
             'thong-tin-tai-khoan' => '/tai-khoan',
-            'ho-so' => '/tai-khoan/ho-so',
+            'ho-so' => '/tai-khoan',
             'them-dia-chi' => '/tai-khoan/dia-chi/them',
             'doi-mat-khau' => '/tai-khoan/doi-mat-khau',
             'quen-mat-khau' => '/dang-nhap',

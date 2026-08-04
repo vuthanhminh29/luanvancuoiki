@@ -66,8 +66,7 @@ Route::middleware('auth')->group(function () {
 
     // Khu vực tài khoản: hồ sơ, mật khẩu, địa chỉ và lịch sử đơn hàng.
     Route::get('/tai-khoan', [AccountController::class, 'index'])->name('account.index');
-    Route::get('/tai-khoan/ho-so', [AccountController::class, 'editProfile'])->name('account.profile.edit');
-    Route::put('/tai-khoan/ho-so', [AccountController::class, 'updateProfile'])->middleware('throttle:user-actions')->name('account.profile.update');
+    Route::redirect('/tai-khoan/ho-so', '/tai-khoan')->name('account.profile.edit');
     Route::get('/tai-khoan/doi-mat-khau', [AccountController::class, 'editPassword'])->name('account.password.edit');
     Route::put('/tai-khoan/doi-mat-khau', [AccountController::class, 'updatePassword'])->middleware('throttle:user-actions')->name('account.password.update');
     Route::get('/tai-khoan/dia-chi/them', [AccountController::class, 'createAddress'])->name('account.addresses.create');
