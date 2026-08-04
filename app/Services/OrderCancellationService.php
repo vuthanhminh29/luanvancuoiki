@@ -21,7 +21,7 @@ class OrderCancellationService
     public function requestCancellation(Order $order, ?string $reason = null): true|string
     {
         // Token thật chỉ gửi qua email. Database chỉ lưu token đã hash.
-        // Nếu database bị lá»™, người khác cũng không lấy được link xác nhận thật.
+        // Nếu database bị lộ, người khác cũng không lấy được link xác nhận thật.
         $token = Str::random(72);
         $tokenHash = hash('sha256', $token);
         $reason = $this->normalizeReason($reason);
@@ -48,7 +48,7 @@ class OrderCancellationService
                 return 'Đơn hàng này chưa có email khách hàng để gửi xác nhận hủy.';
             }
 
-            // L?u tr?ng th?i "?ang ch? kh?ch x?c nh?n h?y".
+            // Lưu trạng thái "đang chờ khách xác nhận hủy".
             // status vẫn giữ nguyên để báo cáo không tính là đã hủy sớm.
             $lockedOrder->forceFill([
                 'cancel_confirmation_token_hash' => $tokenHash,
@@ -258,7 +258,7 @@ class OrderCancellationService
             'Bấm vào liên kết sau để xem lại và xác nhận hủy đơn:',
             $url,
             '',
-            'Liên kết có hiệu lá»±c trong 3 ngày. Nếu bạn không đồng ý há»§y, vui lòng bỏ qua email này hoặc liên hệ cửa hàng.',
+            'Liên kết có hiệu lực trong 3 ngày. Nếu bạn không đồng ý hủy, vui lòng bỏ qua email này hoặc liên hệ cửa hàng.',
         ]));
     }
 

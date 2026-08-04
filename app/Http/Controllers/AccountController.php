@@ -180,15 +180,15 @@ class AccountController extends Controller
 
     // Mở form sửa địa chỉ.
     // Route gọi hàm này: GET /tai-khoan/dia-chi/{address}/sua.
-    // Laravel t? l?y UserAddress theo id tr?n URL v? truy?n v?o $address.
+    // Laravel tự lấy UserAddress theo id trên URL và truyền vào $address.
     public function editAddress(UserAddress $address): View
     {
         // Kiểm tra địa chỉ này có thuộc user đang đăng nhập không.
-        // N?u kh?ng ki?m tra, kh?ch c? th? s?a URL ?? s?a ??a ch? c?a ng??i kh?c.
+        // Nếu không kiểm tra, khách có thể sửa URL để sửa địa chỉ của người khác.
         $this->ensureOwnAddress($address);
 
         return view('account.address-form', [
-            // G?i ??a ch? hi?n t?i sang view ?? form ?i?n s?n.
+            // Gửi địa chỉ hiện tại sang view để form điền sẵn.
             'address' => $address,
             'cities' => $this->cities(),
 
@@ -213,7 +213,7 @@ class AccountController extends Controller
         $makeDefault = $request->boolean('is_default') || ! Auth::user()->addresses()->whereKeyNot($address->id)->exists();
 
         DB::transaction(function () use ($address, $data, $makeDefault): void {
-            // N?u ??a ch? ?ang s?a ???c ??t m?c ??nh, c?c ??a ch? kh?c c?a user b? b? m?c ??nh.
+            // Nếu địa chỉ đang sửa được đặt mặc định, các địa chỉ khác của user bỏ mặc định.
             if ($makeDefault) {
                 Auth::user()->addresses()->whereKeyNot($address->id)->update(['is_default' => false]);
             }
@@ -235,17 +235,17 @@ class AccountController extends Controller
     // Route gọi hàm này: DELETE /tai-khoan/dia-chi/{address}.
     public function destroyAddress(UserAddress $address): RedirectResponse
     {
-        // Ch?n x?a ??a ch? c?a ng??i kh?c.
+        // Chặn xóa địa chỉ của người khác.
         $this->ensureOwnAddress($address);
 
         DB::transaction(function () use ($address): void {
             // Ghi nhớ địa chỉ sắp xóa có phải địa chỉ mặc định không.
             $wasDefault = $address->is_default;
 
-            // X?a ??a ch? kh?i database.
+            // Xóa địa chỉ khỏi database.
             $address->delete();
 
-            // N?u ??a ch? b? x?a l? m?c ??nh th? ph?i ch?n m?t ??a ch? kh?c l?m m?c ??nh.
+            // Nếu địa chỉ bị xóa là mặc định thì phải chọn một địa chỉ khác làm mặc định.
             if ($wasDefault) {
                 // Lấy địa chỉ còn lại mới nhất của user.
                 $remaining = Auth::user()->addresses()->latest()->first();
@@ -263,7 +263,7 @@ class AccountController extends Controller
     private function validateAddress(Request $request): array
     {
         return $request->validate([
-            // T?n ng??i nh?n b?t bu?c, t?i ?a 100 k? t?.
+            // Tên người nhận bắt buộc, tối đa 100 ký tự.
             'recipient_name' => ['required', 'string', 'max:100'],
 
             // Số điện thoại bắt buộc, đúng đầu số di động Việt Nam và đủ 10 số.
@@ -273,7 +273,7 @@ class AccountController extends Controller
             // Rule in:... chỉ cho chọn tỉnh/thành nằm trong danh sách cities().
             'province_name' => ['required', 'string', 'max:100', 'in:' . implode(',', $this->cities())],
 
-            // ??a ch? chi ti?t b?t bu?c, t?i ?a 255 k? t?.
+            // Địa chỉ chi tiết bắt buộc, tối đa 255 ký tự.
             'address_detail' => ['required', 'string', 'max:255'],
         ], [
             'recipient_name.required' => 'Họ tên người nhận không được để trống.',

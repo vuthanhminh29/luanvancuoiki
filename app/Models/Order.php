@@ -48,13 +48,13 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Má»™t đơn hàng có nhiều dòng sản phẩm.
+    // Một đơn hàng có nhiều dòng sản phẩm.
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    // Má»™t đơn hàng có thể phát sinh nhiều yêu cầu hoàn đổi.
+    // Một đơn hàng có thể phát sinh nhiều yêu cầu hoàn đổi.
     public function returnRequests(): HasMany
     {
         return $this->hasMany(ReturnRequest::class);

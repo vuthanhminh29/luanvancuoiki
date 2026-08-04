@@ -107,6 +107,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // KhÃ´ng tá»± Ä‘á»•i NORMAL vá» RETURN vÃ¬ sau khi gá»™p kho khÃ´ng cÃ²n phÃ¢n biá»‡t Ä‘Æ°á»£c kho nÃ o tá»«ng lÃ  kho hoÃ n.
+        // Không tự đổi NORMAL về RETURN vì sau khi gộp kho không còn phân biệt được kho nào từng là kho hoàn.
     }
 };

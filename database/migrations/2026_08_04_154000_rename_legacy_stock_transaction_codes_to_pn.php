@@ -18,8 +18,8 @@ return new class extends Migration
             ->where(function ($query) {
                 $query->where('transaction_code', 'like', 'RETURN_IN%')
                     ->orWhere('transaction_code', 'like', 'ADJUST%')
-                    ->orWhere('note', 'like', '%Nháº­p hÃ ng hoÃ n%')
-                    ->orWhere('note', 'like', '%HoÃ n tá»“n%');
+                    ->orWhere('note', 'like', '%Nhập hàng hoàn%')
+                    ->orWhere('note', 'like', '%Hoàn tồn%');
             })
             ->orderBy('id')
             ->each(function ($transaction) use ($hasUpdatedAt) {

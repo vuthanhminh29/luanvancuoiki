@@ -34,7 +34,7 @@ class TryOnSnapshotAdminController extends Controller
         }
 
         // Phân trang để danh sách ảnh không bị quá dài khi có nhiều lượt thử kính.
-        // Phân trang 10 hình má»—i trang để admin xem ảnh thá»­ kính gọn hơn.
+        // Phân trang 10 hình mỗi trang để admin xem ảnh thử kính gọn hơn.
         $snapshots = $snapshotsQuery->paginate(10)->withQueryString();
 
         // Các số liệu nhỏ ở đầu trang giúp thầy/admin nhìn nhanh tổng quan.
