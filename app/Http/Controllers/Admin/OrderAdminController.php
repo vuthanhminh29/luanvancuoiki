@@ -3,13 +3,38 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Inventory;
 use App\Models\Order;
+use App\Models\StockTransaction;
+use App\Models\Warehouse;
+use App\Services\OrderCancellationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class OrderAdminController extends Controller
 {
+    public function __construct(private readonly OrderCancellationService $cancellations)
+    {
+    }
+
+    private const VALID_STATUSES = [
+        'PENDING',
+        'AWAITING_PAYMENT',
+        'CONFIRMED',
+        'DELIVERING',
+        'DELIVERED',
+        'CANCELLED',
+        'RETURN_PENDING',
+        'RETURNED',
+        'EXCHANGED',
+        'LOST_IN_TRANSIT',
+    ];
+
     private const STATUS_LABELS = [
         'PENDING' => ['Chờ xác nhận', 'warning', 'fa-clock'],
         'AWAITING_PAYMENT' => ['Chờ thanh toán', 'warning', 'fa-credit-card'],
@@ -21,6 +46,19 @@ class OrderAdminController extends Controller
         'RETURNED' => ['Đã hoàn trả', 'dark', 'fa-undo'],
         'EXCHANGED' => ['Đã đổi hàng', 'success', 'fa-exchange-alt'],
         'LOST_IN_TRANSIT' => ['Mất hàng khi giao', 'lost', 'fa-exclamation-triangle'],
+    ];
+
+    private const STATUS_TRANSITIONS = [
+        'PENDING' => ['CONFIRMED', 'CANCELLED'],
+        'AWAITING_PAYMENT' => ['CONFIRMED', 'CANCELLED'],
+        'CONFIRMED' => ['DELIVERING', 'CANCELLED'],
+        'DELIVERING' => ['DELIVERED', 'LOST_IN_TRANSIT'],
+        'DELIVERED' => ['RETURN_PENDING'],
+        'RETURN_PENDING' => ['RETURNED', 'EXCHANGED', 'DELIVERED'],
+        'CANCELLED' => [],
+        'RETURNED' => [],
+        'EXCHANGED' => [],
+        'LOST_IN_TRANSIT' => [],
     ];
 
     private const CANCELLABLE_STATUSES = ['PENDING', 'AWAITING_PAYMENT', 'CONFIRMED'];
@@ -39,43 +77,242 @@ class OrderAdminController extends Controller
 
     public function show(Order $order): View
     {
+        $order->load(['user', 'items.product.images', 'items.variant.color', 'items.variant.lensSize']);
+
         return view('admin.orders.show', [
-            'order' => $order->load(['user', 'items.product.images', 'items.variant.color', 'items.variant.lensSize']),
+            'order' => $order,
+            'statusLabels' => self::STATUS_LABELS,
+            'statusOptions' => $this->availableStatusOptions($order),
+            'canCancelOrder' => $this->canCancelOrder($order),
         ]);
     }
 
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
         $data = $request->validate([
-            'status' => ['required', 'in:PENDING,AWAITING_PAYMENT,CONFIRMED,DELIVERING,DELIVERED,CANCELLED,RETURN_PENDING,RETURNED,EXCHANGED,LOST_IN_TRANSIT'],
+            'status' => ['required', Rule::in(self::VALID_STATUSES)],
+            'cancel_reason' => ['nullable', 'string', 'max:500'],
+        ], [
+            'status.required' => 'Vui lòng chọn trạng thái mới cho đơn hàng.',
+            'status.in' => 'Trạng thái đơn hàng không hợp lệ.',
+            'cancel_reason.max' => 'Lý do hủy đơn tối đa 500 ký tự.',
         ]);
 
-        if ($data['status'] === 'CANCELLED' && ! $this->canCancelOrder($order)) {
-            return back()->with('error', 'Không thể hủy đơn hàng ở trạng thái hiện tại.');
+        if ($data['status'] === 'CANCELLED') {
+            return $this->cancel($request, $order);
         }
 
-        $order->update([
-            'status' => $data['status'],
-            'delivered_at' => $data['status'] === 'DELIVERED' ? now() : $order->delivered_at,
-        ]);
+        $result = $this->changeStatus($order, $data['status'], $data['cancel_reason'] ?? null);
+
+        if ($result !== true) {
+            return back()->withErrors(['status' => $result])->withInput();
+        }
 
         return back()->with('success', 'Đã cập nhật trạng thái đơn hàng.');
     }
 
-    public function cancel(Order $order): RedirectResponse
+    public function cancel(Request $request, Order $order): RedirectResponse
     {
-        if (! $this->canCancelOrder($order)) {
-            return back()->with('error', 'Không thể hủy đơn hàng ở trạng thái hiện tại.');
+        $data = $request->validate([
+            'cancel_reason' => ['nullable', 'string', 'max:500'],
+        ], [
+            'cancel_reason.max' => 'Lý do hủy đơn tối đa 500 ký tự.',
+        ]);
+
+        $result = $this->cancellations->requestCancellation($order, $data['cancel_reason'] ?? null);
+
+        if ($result !== true) {
+            return back()->withErrors(['status' => $result])->withInput();
         }
 
-        $order->update(['status' => 'CANCELLED']);
+        return back()->with('success', 'Đã gửi email xác nhận hủy đơn cho khách hàng. Đơn hàng chỉ được hủy sau khi khách bấm xác nhận.');
+    }
 
-        return back()->with('success', 'Đã hủy đơn hàng.');
+    private function changeStatus(Order $order, string $newStatus, ?string $cancelReason = null): true|string
+    {
+        return DB::transaction(function () use ($order, $newStatus, $cancelReason): true|string {
+            $lockedOrder = Order::query()->lockForUpdate()->find($order->id);
+
+            if (! $lockedOrder) {
+                return 'Không tìm thấy đơn hàng cần xử lý.';
+            }
+
+            if ($lockedOrder->status === $newStatus) {
+                return 'Vui lòng chọn trạng thái mới khác trạng thái hiện tại.';
+            }
+
+            if (! in_array($newStatus, $this->nextStatuses($lockedOrder), true)) {
+                return 'Không thể chuyển đơn từ trạng thái hiện tại sang trạng thái đã chọn.';
+            }
+
+            if ($newStatus === 'CANCELLED' && ! $this->canCancelOrder($lockedOrder)) {
+                return 'Không thể hủy đơn hàng ở trạng thái hiện tại.';
+            }
+
+            $lockedOrder->forceFill([
+                'status' => $newStatus,
+                'delivered_at' => $newStatus === 'DELIVERED'
+                    ? ($lockedOrder->delivered_at ?: now())
+                    : $lockedOrder->delivered_at,
+                'note' => $newStatus === 'CANCELLED'
+                    ? $this->cancelNote($lockedOrder->note, $cancelReason)
+                    : $lockedOrder->note,
+            ])->save();
+
+            if ($newStatus === 'DELIVERING') {
+                $this->createSaleOutTransaction($lockedOrder);
+            }
+
+            return true;
+        });
+    }
+
+    private function createSaleOutTransaction(Order $order): void
+    {
+        $order->loadMissing('items');
+
+        $items = $order->items
+            ->filter(fn ($item) => (int) $item->variant_id > 0 && (int) $item->quantity > 0)
+            ->values();
+
+        if ($items->isEmpty() || $this->saleOutTransactionExists($order)) {
+            return;
+        }
+
+        $payload = [
+            'transaction_code' => $this->nextSaleOutTransactionCode(),
+            'type' => 'SALE_OUT',
+            'source_warehouse_id' => $this->saleOutSourceWarehouseId($order),
+            'target_warehouse_id' => null,
+            'status' => 'COMPLETED',
+            'expected_date' => null,
+            'note' => $this->saleOutTransactionNote($order),
+            'created_by' => Auth::id(),
+            'confirmed_by' => Auth::id(),
+            'confirmed_at' => now(),
+        ];
+
+        if ($this->stockTransactionsHaveRelatedOrderId()) {
+            $payload['related_order_id'] = $order->id;
+        }
+
+        $transaction = StockTransaction::create($payload);
+
+        foreach ($items as $item) {
+            $transaction->items()->create([
+                'variant_id' => (int) $item->variant_id,
+                'ordered_quantity' => (int) $item->quantity,
+                'actual_quantity' => (int) $item->quantity,
+                'unit_cost' => null,
+                'note' => trim((string) $item->product_name) ?: null,
+            ]);
+        }
+    }
+
+    private function saleOutTransactionExists(Order $order): bool
+    {
+        if ($this->stockTransactionsHaveRelatedOrderId()) {
+            $existsByOrder = StockTransaction::query()
+                ->where('type', 'SALE_OUT')
+                ->where('related_order_id', $order->id)
+                ->exists();
+
+            if ($existsByOrder) {
+                return true;
+            }
+        }
+
+        return StockTransaction::query()
+            ->where('type', 'SALE_OUT')
+            ->where('note', $this->saleOutTransactionNote($order))
+            ->exists();
+    }
+
+    private function stockTransactionsHaveRelatedOrderId(): bool
+    {
+        static $hasColumn = null;
+
+        return $hasColumn ??= Schema::hasColumn('stock_transactions', 'related_order_id');
+    }
+
+    private function nextSaleOutTransactionCode(): string
+    {
+        do {
+            $code = 'SALE_OUT' . now()->format('YmdHis') . random_int(100, 999);
+        } while (StockTransaction::query()->where('transaction_code', $code)->exists());
+
+        return $code;
+    }
+
+    private function saleOutTransactionNote(Order $order): string
+    {
+        return 'Xuất bán khi cập nhật đơn #' . $order->id . ' sang DELIVERING';
+    }
+
+    private function saleOutSourceWarehouseId(Order $order): ?int
+    {
+        $variantIds = $order->items
+            ->pluck('variant_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($variantIds->isNotEmpty()) {
+            $warehouseId = Inventory::query()
+                ->whereIn('variant_id', $variantIds)
+                ->whereHas('warehouse', fn ($query) => $query->where('status', 'ACTIVE'))
+                ->orderByDesc('quantity')
+                ->value('warehouse_id');
+
+            if ($warehouseId) {
+                return (int) $warehouseId;
+            }
+
+            $warehouseId = Inventory::query()
+                ->whereIn('variant_id', $variantIds)
+                ->orderByDesc('quantity')
+                ->value('warehouse_id');
+
+            if ($warehouseId) {
+                return (int) $warehouseId;
+            }
+        }
+
+        $warehouseId = Warehouse::active()->orderBy('id')->value('id')
+            ?: Warehouse::query()->orderBy('id')->value('id');
+
+        return $warehouseId ? (int) $warehouseId : null;
     }
 
     private function canCancelOrder(Order $order): bool
     {
-        return in_array($order->status, self::CANCELLABLE_STATUSES, true);
+        return $this->cancellations->canCancel($order);
+    }
+
+    private function nextStatuses(Order $order): array
+    {
+        return self::STATUS_TRANSITIONS[$order->status] ?? [];
+    }
+
+    private function availableStatusOptions(Order $order): array
+    {
+        return collect(self::STATUS_LABELS)
+            ->only($this->nextStatuses($order))
+            ->all();
+    }
+
+    private function cancelNote(?string $currentNote, ?string $cancelReason): ?string
+    {
+        $cancelReason = trim((string) $cancelReason);
+
+        if ($cancelReason === '') {
+            return $currentNote;
+        }
+
+        $line = '[Hủy đơn ' . now()->format('d/m/Y H:i') . '] ' . $cancelReason;
+        $currentNote = trim((string) $currentNote);
+
+        return $currentNote === '' ? $line : $currentNote . PHP_EOL . $line;
     }
 
     private function orderList(Request $request, bool $isUnconfirmed): View
@@ -100,23 +337,28 @@ class OrderAdminController extends Controller
                             ->orWhere('email', 'like', $keyword));
                 });
             })
-            // Đơn mới nhất lên trước.
             ->latest();
 
-        // Trả dữ liệu sang view admin.orders.index.
+        $summaryRow = Order::query()
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw("SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pending")
+            ->selectRaw("SUM(CASE WHEN status = 'DELIVERING' THEN 1 ELSE 0 END) as shipping")
+            ->selectRaw("SUM(CASE WHEN status = 'DELIVERED' THEN 1 ELSE 0 END) as completed")
+            ->selectRaw("SUM(CASE WHEN status IN ('RETURN_PENDING', 'RETURNED', 'EXCHANGED') THEN 1 ELSE 0 END) as returning")
+            ->first();
+
         return view('admin.orders.index', [
-            'orders' => $ordersQuery->paginate(15)->withQueryString(),
+            'orders' => $ordersQuery->paginate(20)->withQueryString(),
             'summary' => [
-                'total' => Order::count(),
-                'pending' => Order::where('status', 'PENDING')->count(),
-                'shipping' => Order::where('status', 'DELIVERING')->count(),
-                'completed' => Order::where('status', 'DELIVERED')->count(),
-                'returning' => Order::whereIn('status', ['RETURN_PENDING', 'RETURNED', 'EXCHANGED'])->count(),
+                'total' => (int) ($summaryRow->total ?? 0),
+                'pending' => (int) ($summaryRow->pending ?? 0),
+                'shipping' => (int) ($summaryRow->shipping ?? 0),
+                'completed' => (int) ($summaryRow->completed ?? 0),
+                'returning' => (int) ($summaryRow->returning ?? 0),
             ],
             'filters' => $filters,
             'isUnconfirmed' => $isUnconfirmed,
             'statusLabels' => self::STATUS_LABELS,
-            // Mảng status_code => label tiếng Việt để view render filter.
             'statusOptions' => collect(self::STATUS_LABELS)->map(fn ($meta) => $meta[0])->all(),
             'cancellableStatuses' => self::CANCELLABLE_STATUSES,
         ]);
