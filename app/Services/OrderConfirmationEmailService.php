@@ -24,13 +24,13 @@ class OrderConfirmationEmailService
                 return false;
             }
 
-            // Nếu đã gá»­i rồi thì bỏ qua, coi như thành công.
+            // Nếu đã gửi rồi thì bỏ qua, coi như thành công.
             if ($lockedOrder->order_confirmation_email_sent_at !== null) {
                 return true;
             }
 
             // Lấy email từ tài khoản user gắn với đơn hàng.
-            // Đơn hàng checkout bắt buá»™c đăng nhập nên user thường luôn có email.
+            // Đơn hàng checkout bắt buộc đăng nhập nên user thường luôn có email.
             $email = $this->customerEmail($lockedOrder);
 
             if ($email === null) {
@@ -59,7 +59,7 @@ class OrderConfirmationEmailService
                 return false;
             }
 
-            // Đánh dấu đã gá»­i email để các lần gọi sau không gửi lại.
+            // Đánh dấu đã gửi email để các lần gọi sau không gửi lại.
             $lockedOrder->forceFill([
                 'order_confirmation_email_sent_at' => now(),
             ])->save();
@@ -119,7 +119,7 @@ class OrderConfirmationEmailService
             $lines[] = '  Thành tiền: ' . $this->money($item->total_price);
         }
 
-        return implode(\n, array_merge($lines, [
+        return implode("\n", array_merge($lines, [
             '',
             'THANH TOÁN',
             'Tổng tiền hàng: ' . $this->money($order->subtotal_amount),

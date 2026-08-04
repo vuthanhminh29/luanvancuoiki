@@ -40,7 +40,7 @@
                 <h1>Xác nhận hủy đơn hàng</h1>
                 <p>{{ $order->order_code ?: '#' . $order->id }}</p>
             </div>
-            <span class="oc-badge">{{ $order->status === 'CANCELLED' ? 'Đã há»§y' : 'Chờ khách xác nhận' }}</span>
+            <span class="oc-badge">{{ $order->status === 'CANCELLED' ? 'Đã hủy' : 'Chờ khách xác nhận' }}</span>
         </div>
 
         <div class="oc-body">

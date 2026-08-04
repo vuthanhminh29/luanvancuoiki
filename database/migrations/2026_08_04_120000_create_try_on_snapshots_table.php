@@ -8,21 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Báº£ng nÃ y lÆ°u má»—i láº§n khÃ¡ch báº¥m chá»¥p/lÆ°u káº¿t quáº£ sau khi thá»­ kÃ­nh.
+        // Bảng này lưu mỗi lần khách bấm chụp/lưu kết quả sau khi thử kính.
         Schema::create('try_on_snapshots', function (Blueprint $table) {
             $table->id();
-            // DB hiá»‡n táº¡i Ä‘ang dÃ¹ng bigint signed, nÃªn dÃ¹ng bigInteger + index Ä‘á»ƒ tÆ°Æ¡ng thÃ­ch.
+            // DB hiện tại đang dùng bigint signed, nên dùng bigInteger + index để tương thích.
             $table->bigInteger('user_id')->nullable()->index();
             $table->bigInteger('product_id')->nullable()->index();
             $table->bigInteger('variant_id')->nullable()->index();
-            // LÆ°u láº¡i tÃªn/email táº¡i thá»i Ä‘iá»ƒm chá»¥p Ä‘á»ƒ sau nÃ y user Ä‘á»•i thÃ´ng tin váº«n xem Ä‘Æ°á»£c lá»‹ch sá»­ cÅ©.
+            // Lưu lại tên/email tại thời điểm chụp để sau này user đổi thông tin vẫn xem được lịch sử cũ.
             $table->string('user_name', 100);
             $table->string('user_email');
-            // product_name vÃ  model_sku lÃ  thÃ´ng tin kÃ­nh Ä‘Ã£ thá»­, model_sku chÃ­nh lÃ  mÃ£ model Jeeliz.
+            // product_name và model_sku là thông tin kính đã thử, model_sku chính là mã model Jeeliz.
             $table->string('product_name');
             $table->string('model_sku', 100);
             $table->decimal('price', 12, 2)->default(0);
-            // áº¢nh tháº­t lÆ°u trong storage/app/public, database chá»‰ lÆ°u Ä‘Æ°á»ng dáº«n áº£nh.
+            // Ảnh thật lưu trong storage/app/public, database chỉ lưu đường dẫn ảnh.
             $table->string('image_path');
             $table->string('tryon_mode', 20)->default('camera');
             $table->timestamps();

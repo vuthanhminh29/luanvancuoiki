@@ -8,30 +8,30 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Má»™t sá»‘ mÃ´i trÆ°á»ng test/schema cÅ© cÃ³ thá»ƒ chÆ°a táº¡o báº£ng orders.
-        // Kiá»ƒm tra trÆ°á»›c Ä‘á»ƒ migration khÃ´ng lÃ m há»ng quÃ¡ trÃ¬nh cháº¡y lá»‡nh.
+        // Một số môi trường test/schema cũ có thể chưa tạo bảng orders.
+        // Kiểm tra trước để migration không làm hỏng quá trình chạy lệnh.
         if (! Schema::hasTable('orders')) {
             return;
         }
 
         Schema::table('orders', function (Blueprint $table): void {
-            // LÆ°u hash cá»§a token xÃ¡c nháº­n, khÃ´ng lÆ°u token tháº­t.
-            // Token tháº­t chá»‰ náº±m trong email gá»­i cho khÃ¡ch.
+            // Lưu hash của token xác nhận, không lưu token thật.
+            // Token thật chỉ nằm trong email gửi cho khách.
             if (! Schema::hasColumn('orders', 'cancel_confirmation_token_hash')) {
                 $table->string('cancel_confirmation_token_hash', 64)->nullable();
             }
 
-            // LÆ°u lÃ½ do admin nháº­p khi yÃªu cáº§u há»§y Ä‘á»ƒ Ä‘Æ°a vÃ o email vÃ  note Ä‘Æ¡n hÃ ng.
+            // Lưu lý do admin nhập khi yêu cầu hủy để đưa vào email và note đơn hàng.
             if (! Schema::hasColumn('orders', 'cancel_reason')) {
                 $table->text('cancel_reason')->nullable();
             }
 
-            // Thá»i Ä‘iá»ƒm admin gá»­i yÃªu cáº§u há»§y, dÃ¹ng Ä‘á»ƒ kiá»ƒm tra link háº¿t háº¡n sau 3 ngÃ y.
+            // Thời điểm admin gửi yêu cầu hủy, dùng để kiểm tra link hết hạn sau 3 ngày.
             if (! Schema::hasColumn('orders', 'cancel_requested_at')) {
                 $table->timestamp('cancel_requested_at')->nullable();
             }
 
-            // Thá»i Ä‘iá»ƒm khÃ¡ch báº¥m xÃ¡c nháº­n há»§y thÃ nh cÃ´ng.
+            // Thời điểm khách bấm xác nhận hủy thành công.
             if (! Schema::hasColumn('orders', 'cancel_confirmed_at')) {
                 $table->timestamp('cancel_confirmed_at')->nullable();
             }
@@ -40,8 +40,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Rollback chá»‰ xÃ³a cÃ¡c cá»™t cá»§a luá»“ng xÃ¡c nháº­n há»§y.
-        // CÃ¡c cá»™t khÃ¡c cá»§a orders Ä‘Æ°á»£c giá»¯ nguyÃªn.
+        // Rollback chỉ xóa các cột của luồng xác nhận hủy.
+        // Các cột khác của orders được giữ nguyên.
         if (! Schema::hasTable('orders')) {
             return;
         }

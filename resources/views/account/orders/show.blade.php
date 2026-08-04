@@ -12,7 +12,7 @@
         'AWAITING_PAYMENT' => ['Chờ thanh toán', 'warning', 'fa-credit-card'],
         'PENDING' => ['Chờ xác nhận', 'warning', 'fa-clock'],
         'CONFIRMED' => ['Đã xác nhận', 'info', 'fa-clipboard-check'],
-        'SHIPPING' => ['Đang giao', 'moving', 'fa-truck'],
+        'DELIVERING' => ['Đang giao', 'moving', 'fa-truck'],
         'DELIVERED' => ['Giao thành công', 'success', 'fa-check-circle'],
         'CANCELLED' => ['Đã hủy', 'danger', 'fa-times-circle'],
         'RETURN_PENDING' => ['Chờ xử lý hoàn/đổi', 'return', 'fa-rotate-left'],
@@ -26,12 +26,19 @@
         'AWAITING_PAYMENT' => ['Chờ thanh toán', 'fa-credit-card'],
         'PENDING' => ['Chờ xác nhận', 'fa-clock'],
         'CONFIRMED' => ['Đã xác nhận', 'fa-clipboard-check'],
-        'SHIPPING' => ['Đang giao', 'fa-truck'],
+        'DELIVERING' => ['Đang giao', 'fa-truck'],
         'DELIVERED' => ['Giao thành công', 'fa-check-circle'],
     ];
     $progressOrder = array_keys($progressSteps);
     $progressCurrent = in_array($order->status, ['RETURN_PENDING', 'RETURNED', 'EXCHANGED'], true) ? 'DELIVERED' : $order->status;
     $progressIndex = array_search($progressCurrent, $progressOrder, true);
+    $progressClasses = [
+        'AWAITING_PAYMENT' => 'payment',
+        'PENDING' => 'pending',
+        'CONFIRMED' => 'confirmed',
+        'DELIVERING' => 'shipping',
+        'DELIVERED' => 'success',
+    ];
     $paymentMap = ['COD' => 'COD - Nhận hàng', 'VNPAY' => 'VNPay'];
     $returnItemLabels = $order->returnRequests->flatMap(function ($request) {
         return $request->items->mapWithKeys(function ($item) use ($request) {
@@ -105,7 +112,7 @@
                 @if ($order->status !== 'CANCELLED')
                     <div class="od-progress">
                         @foreach ($progressSteps as $stepStatus => [$stepLabel, $stepIcon])
-                            <div class="od-step {{ $progressIndex !== false && $progressIndex >= $loop->index ? 'active' : '' }}">
+                            <div class="od-step {{ $progressClasses[$stepStatus] ?? '' }} {{ $progressIndex !== false && $progressIndex >= $loop->index ? 'active' : '' }}">
                                 <div class="od-step-icon"><i class="fas {{ $stepIcon }}"></i></div>
                                 {{ $stepLabel }}
                             </div>

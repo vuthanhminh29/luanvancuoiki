@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Promotion;
 use App\Models\ProductVariant;
+use App\Services\OrderConfirmationEmailService;
 use App\Services\VnPayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +24,7 @@ class VnPayController extends Controller
 {
     private const MAX_CART_QUANTITY = 10;
 
-    public function return(Request $request, VnPayService $vnPay): RedirectResponse
+    public function return(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail): RedirectResponse
     {
         $result = $vnPay->verify($request->query());
         $txnRef = (string) $result['txn_ref'];
@@ -71,6 +72,7 @@ class VnPayController extends Controller
 
         $this->forgetPendingDraft($txnRef);
         session()->forget('cart');
+        $orderConfirmationEmail->send($order);
 
         if (Auth::id() === $order->user_id) {
             return redirect()->route('account.orders.show', $order)->with('success', 'Thanh toán VNPay thành công.');
@@ -79,7 +81,7 @@ class VnPayController extends Controller
         return redirect()->route('home')->with('success', 'Thanh toán VNPay thành công.');
     }
 
-    public function ipn(Request $request, VnPayService $vnPay): JsonResponse
+    public function ipn(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail): JsonResponse
     {
         $result = $vnPay->verify($request->all());
         $txnRef = (string) $result['txn_ref'];
@@ -113,6 +115,7 @@ class VnPayController extends Controller
             if ($result['is_success']) {
                 $order = $order ? $this->markPaid($order, $result) : $this->createPaidOrderFromDraft($draft, $result);
                 $this->forgetPendingDraft($txnRef);
+                $orderConfirmationEmail->send($order);
             } elseif ($order) {
                 $this->markFailed($order, $result, (string) $result['response_code'], (string) $result['message']);
             } else {

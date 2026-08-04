@@ -176,19 +176,19 @@ class AuthController extends Controller
         // Tìm user theo email vừa nhập.
         $user = User::where('email', $data['email'])->first();
 
-        // N?u user kh?ng t?n t?i th? b? qua, cu?i h?m v?n tr? th?ng b?o chung.
+        // Nếu user không tồn tại thì bỏ qua, cuối hàm vẫn trả thông báo chung.
         if ($user) {
             // Tạo token ngẫu nhiên dài 72 ký tự để đưa vào link khôi phục mật khẩu.
             $token = Str::random(72);
 
-            // ??nh d?u c?c token c? ch?a d?ng c?a user n?y l? ?? d?ng, ?? ch? link m?i nh?t c?n hi?u l?c.
+            // Đánh dấu các token cũ chưa dùng của user này là đã dùng, để chỉ link mới nhất còn hiệu lực.
             DB::table('password_reset_tokens')
                 ->where('user_id', $user->id)
                 ->whereNull('used_at')
                 ->update(['used_at' => now()]);
 
             // Lưu token vào database ở dạng hash sha256.
-            // Kh?ng l?u token th?t ?? n?u database l? th? ng??i kh?c kh?ng d?ng token ???c.
+            // Không lưu token thật để nếu database lộ thì người khác không dùng token được.
             DB::table('password_reset_tokens')->insert([
                 'user_id' => $user->id,
                 'token_hash' => hash('sha256', $token),
@@ -197,7 +197,7 @@ class AuthController extends Controller
                 'created_at' => now(),
             ]);
 
-            // T?o URL ??t l?i m?t kh?u, g?i token th?t qua email cho ng??i d?ng.
+            // Tạo URL đặt lại mật khẩu, gửi token thật qua email cho người dùng.
             $url = route('password.reset', ['token' => $token, 'email' => $user->email]);
 
             try {
@@ -321,19 +321,19 @@ class AuthController extends Controller
     private function cities(): array
     {
         return [
-            'H? N?i', 'H? Ch? Minh', '?? N?ng', 'H?i Ph?ng', 'C?n Th?',
-            'An Giang', 'B? R?a V?ng T?u', 'B?c Giang', 'B?c K?n', 'B?c Li?u',
-            'B?c Ninh', 'B?n Tre', 'B?nh ??nh', 'B?nh D??ng', 'B?nh Ph??c',
-            'B?nh Thu?n', 'C? Mau', 'Cao B?ng', '??k L?k', '??k N?ng',
-            '?i?n Bi?n', '??ng Nai', '??ng Th?p', 'Gia Lai', 'H? Giang',
-            'H? Nam', 'H? T?nh', 'H?i D??ng', 'H?u Giang', 'H?a B?nh',
-            'H?ng Y?n', 'Kh?nh H?a', 'Ki?n Giang', 'Kon Tum', 'Lai Ch?u',
-            'L?m ??ng', 'L?ng S?n', 'L?o Cai', 'Long An', 'Nam ??nh',
-            'Ngh? An', 'Ninh B?nh', 'Ninh Thu?n', 'Ph? Th?', 'Ph? Y?n',
-            'Qu?ng B?nh', 'Qu?ng Nam', 'Qu?ng Ng?i', 'Qu?ng Ninh', 'Qu?ng Tr?',
-            'S?c Tr?ng', 'S?n La', 'T?y Ninh', 'Th?i B?nh', 'Th?i Nguy?n',
-            'Thanh H?a', 'Th?a Thi?n Hu?', 'Ti?n Giang', 'Tr? Vinh', 'Tuy?n Quang',
-            'V?nh Long', 'V?nh Ph?c', 'Y?n B?i',
+            'Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
+            'An Giang', 'Bà Rịa Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu',
+            'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước',
+            'Bình Thuận', 'Cà Mau', 'Cao Bằng', 'Đắk Lắk', 'Đắk Nông',
+            'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang',
+            'Hà Nam', 'Hà Tĩnh', 'Hải Dương', 'Hậu Giang', 'Hòa Bình',
+            'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu',
+            'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định',
+            'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên',
+            'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị',
+            'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên',
+            'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'Trà Vinh', 'Tuyên Quang',
+            'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái',
         ];
     }
 
@@ -352,7 +352,7 @@ class AuthController extends Controller
             return null;
         }
 
-        // T?m token theo user_id, token_hash, ch?a d?ng v? expires_at c?n l?n h?n th?i ?i?m hi?n t?i.
+        // Tìm token theo user_id, token_hash, chưa dùng và expires_at còn lớn hơn thời điểm hiện tại.
         return DB::table('password_reset_tokens')
             ->where('user_id', $user->id)
             ->where('token_hash', hash('sha256', $token))

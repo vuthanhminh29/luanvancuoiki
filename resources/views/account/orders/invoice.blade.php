@@ -66,7 +66,7 @@
 
     @isset($invoiceEmailSent)
         <div class="mail-status {{ $invoiceEmailSent ? '' : 'error' }}">
-            {{ $invoiceEmailSent ? 'Hóa đơn đã được gá»­i về email của bạn.' : 'Chưa gửi được email hóa đơn, bạn vẫn có thể in hoặc tải PDF tại trang này.' }}
+            {{ $invoiceEmailSent ? 'Hóa đơn đã được gửi về email của bạn.' : 'Chưa gửi được email hóa đơn, bạn vẫn có thể in hoặc tải PDF tại trang này.' }}
         </div>
     @endisset
 

@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Promotion;
 use App\Models\ProductVariant;
+use App\Services\OrderConfirmationEmailService;
 use App\Services\VnPayService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -100,7 +101,7 @@ class CheckoutController extends Controller
             ->with('success', 'Đã bỏ mã giảm giá.');
     }
 
-    public function store(Request $request, VnPayService $vnPay): RedirectResponse
+    public function store(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail): RedirectResponse
     {
         $data = $request->validate([
             'recipient_name' => ['required', 'string', 'max:100'],
@@ -170,6 +171,7 @@ class CheckoutController extends Controller
         }
 
         $order = $this->createOrder($data, $cart, $variants, $shippingAddress, $promotion, $discountAmount);
+        $orderConfirmationEmail->send($order);
 
         session()->forget(['cart', 'checkout_promotion_code']);
 

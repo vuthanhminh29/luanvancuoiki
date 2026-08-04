@@ -42,7 +42,7 @@ class OrderCancellationController extends Controller
         $order->load(['user', 'items']);
 
         // Service kiểm tra lại token/trạng thái trong transaction rồi mới hủy.
-        // Kiểm tra lại ở backend là bắt buá»™c vì người dùng có thể tự gửi request POST.
+        // Kiểm tra lại ở backend là bắt buộc vì người dùng có thể tự gửi request POST.
         $result = $this->cancellations->confirmCancellation($order, $token);
 
         if ($result !== true) {
@@ -57,7 +57,7 @@ class OrderCancellationController extends Controller
 
         $order = $order->fresh(['user', 'items']);
 
-        // N?u kh?ch ?ang ??ng nh?p ??ng t?i kho?n ch? ??n th? ??a h? v? trang chi ti?t ??n.
+        // Nếu khách đang đăng nhập đúng tài khoản chủ đơn thì đưa họ về trang chi tiết đơn.
         // Nếu họ bấm email khi chưa đăng nhập, vẫn cho xác nhận bằng signed link và hiện trang kết quả.
         if ($request->user()?->id === $order?->user_id) {
             return redirect()
