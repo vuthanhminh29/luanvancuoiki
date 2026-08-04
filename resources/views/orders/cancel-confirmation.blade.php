@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'XÃ¡c nháº­n há»§y Ä‘Æ¡n hÃ ng - ' . config('app.name'))
+@section('title', 'Xác nhận hủy đơn hàng - ' . config('app.name'))
 
 @push('styles')
 <style>
@@ -37,28 +37,28 @@
     <section class="oc-shell">
         <div class="oc-head">
             <div>
-                <h1>XÃ¡c nháº­n há»§y Ä‘Æ¡n hÃ ng</h1>
+                <h1>Xác nhận hủy đơn hàng</h1>
                 <p>{{ $order->order_code ?: '#' . $order->id }}</p>
             </div>
-            <span class="oc-badge">{{ $order->status === 'CANCELLED' ? 'ÄÃ£ há»§y' : 'Chá» khÃ¡ch xÃ¡c nháº­n' }}</span>
+            <span class="oc-badge">{{ $order->status === 'CANCELLED' ? 'Đã há»§y' : 'Chờ khách xác nhận' }}</span>
         </div>
 
         <div class="oc-body">
             @if ($confirmed)
-                <div class="oc-alert success">ÄÆ¡n hÃ ng Ä‘Ã£ Ä‘Æ°á»£c há»§y thÃ nh cÃ´ng. Cáº£m Æ¡n báº¡n Ä‘Ã£ xÃ¡c nháº­n.</div>
+                <div class="oc-alert success">Đơn hàng đã được hủy thành công. Cảm ơn bạn đã xác nhận.</div>
             @elseif ($error)
                 <div class="oc-alert error">{{ $error }}</div>
             @else
-                <div class="oc-alert error">Cá»­a hÃ ng Ä‘ang yÃªu cáº§u há»§y Ä‘Æ¡n hÃ ng nÃ y. Vui lÃ²ng kiá»ƒm tra thÃ´ng tin bÃªn dÆ°á»›i trÆ°á»›c khi xÃ¡c nháº­n.</div>
+                <div class="oc-alert error">Cửa hàng đang yêu cầu hủy đơn hàng này. Vui lòng kiểm tra thông tin bên dưới trước khi xác nhận.</div>
             @endif
 
             <div class="oc-grid">
-                <div class="oc-item"><span>KhÃ¡ch hÃ ng</span><strong>{{ $order->user->full_name ?? $order->recipient_name }}</strong></div>
+                <div class="oc-item"><span>Khách hàng</span><strong>{{ $order->user->full_name ?? $order->recipient_name }}</strong></div>
                 <div class="oc-item"><span>Email</span><strong>{{ $order->user->email ?? '-' }}</strong></div>
-                <div class="oc-item"><span>NgÆ°á»i nháº­n</span><strong>{{ $order->recipient_name }}</strong></div>
-                <div class="oc-item"><span>Sá»‘ Ä‘iá»‡n thoáº¡i</span><strong>{{ $order->recipient_phone }}</strong></div>
-                <div class="oc-item"><span>Äá»‹a chá»‰ giao hÃ ng</span><strong>{{ $order->shipping_address }}</strong></div>
-                <div class="oc-item"><span>LÃ½ do há»§y</span><strong>{{ $order->cancel_reason ?: 'KhÃ´ng cÃ³' }}</strong></div>
+                <div class="oc-item"><span>Người nhận</span><strong>{{ $order->recipient_name }}</strong></div>
+                <div class="oc-item"><span>Số điện thoại</span><strong>{{ $order->recipient_phone }}</strong></div>
+                <div class="oc-item"><span>Địa chỉ giao hàng</span><strong>{{ $order->shipping_address }}</strong></div>
+                <div class="oc-item"><span>Lý do hủy</span><strong>{{ $order->cancel_reason ?: 'Không có' }}</strong></div>
             </div>
 
             <div class="oc-products">
@@ -68,22 +68,22 @@
                             <strong>{{ $item->product_name }}</strong>
                             <span>SL: {{ $item->quantity }}{{ $item->sku ? ' | SKU: ' . $item->sku : '' }}</span>
                         </div>
-                        <strong>{{ number_format($item->total_price, 0, ',', '.') }}Ä‘</strong>
+                        <strong>{{ number_format($item->total_price, 0, ',', '.') }}đ</strong>
                     </div>
                 @endforeach
             </div>
 
             <div class="oc-total">
-                <span>Tá»•ng thanh toÃ¡n</span>
-                <strong>{{ number_format($order->total_amount, 0, ',', '.') }}Ä‘</strong>
+                <span>Tổng thanh toán</span>
+                <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>
             </div>
 
             <div class="oc-actions">
-                <a class="oc-btn light" href="{{ route('home') }}">Vá» trang chá»§</a>
+                <a class="oc-btn light" href="{{ route('home') }}">Về trang chủ</a>
                 @if (! $confirmed && ! $error)
                     <form method="post" action="{{ url()->full() }}">
                         @csrf
-                        <button class="oc-btn danger" type="submit">XÃ¡c nháº­n há»§y Ä‘Æ¡n</button>
+                        <button class="oc-btn danger" type="submit">Xác nhận hủy đơn</button>
                     </form>
                 @endif
             </div>

@@ -39,6 +39,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/san-pham/{product}/sua', [ProductAdminController::class, 'edit'])->name('products.edit');
     Route::put('/san-pham/{product}', [ProductAdminController::class, 'update'])->name('products.update');
     Route::patch('/san-pham/{product}/an', [ProductAdminController::class, 'hidden'])->name('products.hidden');
+    Route::patch('/san-pham/{product}/khoi-phuc', [ProductAdminController::class, 'restore'])->name('products.restore');
 
     Route::get('/danh-muc', [CategoryAdminController::class, 'index'])->name('categories.index');
     Route::get('/danh-muc/them', [CategoryAdminController::class, 'create'])->name('categories.create');
@@ -91,7 +92,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/thanh-vien/{user}/sua', [CustomerAdminController::class, 'edit'])->name('customers.edit');
         Route::put('/thanh-vien/{user}', [CustomerAdminController::class, 'update'])->name('customers.update');
         Route::patch('/thanh-vien/{user}/trang-thai', [CustomerAdminController::class, 'updateStatus'])->name('customers.status');
-        // Trang admin láº¥y láº¡i danh sÃ¡ch káº¿t quáº£ thá»­ kÃ­nh Ä‘Ã£ lÆ°u.
+        // Trang admin lấy lại danh sách kết quả thử kính đã lưu.
         Route::get('/thu-kinh', [TryOnSnapshotAdminController::class, 'index'])->name('tryon-snapshots.index');
         Route::get('/banner', [BannerAdminController::class, 'index'])->name('banners.index');
         Route::get('/banner/them', [BannerAdminController::class, 'create'])->name('banners.create');

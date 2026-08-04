@@ -31,15 +31,15 @@
         <section class="shop-cart spad">
             <div class="container">
                 <div class="cart-page-head">
-                    <h1>Giá» hÃ ng</h1>
-                    <div class="cart-count">{{ $totalQuantity }}/{{ $orderMaxQuantity }} sáº£n pháº©m</div>
+                    <h1>Giỏ hàng</h1>
+                    <div class="cart-count">{{ $totalQuantity }}/{{ $orderMaxQuantity }} sản phẩm</div>
                 </div>
 
                 <div class="cart-bulk-note">
                     <i class="fa fa-info-circle" aria-hidden="true"></i>
                     <span>
-                        Náº¿u khÃ¡ch hÃ ng muá»‘n Ä‘áº·t trÃªn {{ $orderMaxQuantity }} cÃ¡i, vui lÃ²ng báº¥m sang
-                        <a href="{{ route('pages.contact') }}">LiÃªn há»‡</a> Ä‘á»ƒ liÃªn há»‡ vá»›i shop.
+                        Nếu khách hàng muốn đặt trên {{ $orderMaxQuantity }} cái, vui lòng bấm sang
+                        <a href="{{ route('pages.contact') }}">Liên hệ</a> để liên hệ với shop.
                     </span>
                 </div>
 
@@ -207,14 +207,14 @@
                     if (quantity > stock) {
                         event.preventDefault();
                         input.value = Math.max(1, stock);
-                        showCartAlert('Sáº£n pháº©m nÃ y chá»‰ cÃ²n ' + stock + ' sáº£n pháº©m trong kho. Vui lÃ²ng giáº£m sá»‘ lÆ°á»£ng.', input);
+                        showCartAlert('Sản phẩm này chỉ còn ' + stock + ' sản phẩm trong kho. Vui lòng giảm số lượng.', input);
                         return false;
                     }
                 }
 
                 if (totalQuantity > maxQuantity) {
                     event.preventDefault();
-                    showCartAlert('Má»—i Ä‘Æ¡n chá»‰ Ä‘áº·t tá»‘i Ä‘a ' + maxQuantity + ' sáº£n pháº©m. Vui lÃ²ng giáº£m sá»‘ lÆ°á»£ng trong giá».');
+                    showCartAlert('Mỗi đơn chỉ đặt tối đa ' + maxQuantity + ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
                     return false;
                 }
 
@@ -238,7 +238,7 @@
 
                     if (hasUnsavedChanges) {
                         event.preventDefault();
-                        showCartAlert('Báº¡n vá»«a thay Ä‘á»•i sá»‘ lÆ°á»£ng. Vui lÃ²ng báº¥m Cáº­p nháº­t giá» hÃ ng trÆ°á»›c khi thanh toÃ¡n.', changedInput);
+                        showCartAlert('Bạn vừa thay đổi số lượng. Vui lòng bấm Cập nhật giỏ hàng trước khi thanh toán.', changedInput);
 
                     }
                 });

@@ -90,7 +90,7 @@
                         <div class="watch-cat-img-box">
                             <img src="https://matkinhsaigon.com.vn/img/featured-category/1669985298-Khuyen_Mai_2.png" alt="Khuyến mãi">
                         </div>
-                        <h3 class="watch-cat-title">KHUYẾN MÃI</h3>
+                        <h3 class="watch-cat-title">KHUY?N M?I</h3>
                         <span class="watch-cat-btn">Xem ngay</span>
                     </a>
                     <a href="{{ route('pages.contact') }}" class="watch-cat-card view-home-categories-inline-7">
@@ -116,7 +116,7 @@
                 <div class="watch-product-slider-window">
                     <div id="new-products-track" class="watch-products-grid">
                         @foreach ($newProducts as $product)
-                            @include('partials.watch-product-card', ['product' => $product])
+                            @include('partials.watch-product-card', ['product' => $product, 'showTryOn' => true])
                         @endforeach
                     </div>
                 </div>
@@ -138,7 +138,7 @@
                 <div class="watch-product-slider-window">
                     <div id="best-seller-track" class="watch-products-grid">
                         @foreach ($featuredProducts as $product)
-                            @include('partials.watch-product-card', ['product' => $product])
+                            @include('partials.watch-product-card', ['product' => $product, 'showTryOn' => true])
                         @endforeach
                     </div>
                 </div>

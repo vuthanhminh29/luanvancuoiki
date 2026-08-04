@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Káº¿t quáº£ thá»­ kÃ­nh')
+@section('title', 'Kết quả thử kính')
 
 @php
     $num = fn ($value) => number_format((float) $value, 0, ',', '.');
@@ -18,41 +18,41 @@
     <div class="tos-inner">
         <div class="tos-head">
             <div class="tos-title">
-                <small>Máº¯t kÃ­nh admin</small>
-                <h4>Káº¿t quáº£ thá»­ kÃ­nh</h4>
-                <p>Danh sÃ¡ch áº£nh chá»¥p sau khi khÃ¡ch thá»­ kÃ­nh, kÃ¨m email, tÃªn khÃ¡ch vÃ  model kÃ­nh Ä‘Ã£ thá»­.</p>
+                <small>Mắt kính admin</small>
+                <h4>Kết quả thử kính</h4>
+                <p>Danh sách ảnh chụp sau khi khách thử kính, kèm email, tên khách và model kính đã thử.</p>
             </div>
         </div>
 
         <div class="tos-summary">
-            <div class="tos-stat"><i class="fa fa-camera-retro"></i><span>Tá»•ng áº£nh chá»¥p</span><strong>{{ $num($summary['total']) }}</strong></div>
-            <div class="tos-stat"><i class="fa fa-users"></i><span>KhÃ¡ch Ä‘Ã£ thá»­</span><strong>{{ $num($summary['users']) }}</strong></div>
-            <div class="tos-stat"><i class="fa fa-glasses"></i><span>Model kÃ­nh</span><strong>{{ $num($summary['models']) }}</strong></div>
-            <div class="tos-stat"><i class="fa fa-calendar-day"></i><span>HÃ´m nay</span><strong>{{ $num($summary['today']) }}</strong></div>
+            <div class="tos-stat"><i class="fa fa-camera-retro"></i><span>Tổng ảnh chụp</span><strong>{{ $num($summary['total']) }}</strong></div>
+            <div class="tos-stat"><i class="fa fa-users"></i><span>Khách đã thử</span><strong>{{ $num($summary['users']) }}</strong></div>
+            <div class="tos-stat"><i class="fa fa-glasses"></i><span>Model kính</span><strong>{{ $num($summary['models']) }}</strong></div>
+            <div class="tos-stat"><i class="fa fa-calendar-day"></i><span>Hôm nay</span><strong>{{ $num($summary['today']) }}</strong></div>
         </div>
 
         <div class="tos-card">
             <form class="tos-filter" method="get" action="{{ route('admin.tryon-snapshots.index') }}">
                 <div class="tos-field">
-                    <label>TÃ¬m kiáº¿m</label>
-                    <input name="keyword" value="{{ $keyword }}" placeholder="TÃªn khÃ¡ch, email, tÃªn kÃ­nh hoáº·c mÃ£ model">
+                    <label>Tìm kiếm</label>
+                    <input name="keyword" value="{{ $keyword }}" placeholder="Tên khách, email, tên kính hoặc mã model">
                 </div>
-                <button class="tos-btn primary" type="submit"><i class="fa fa-search"></i> Lá»c</button>
-                <a class="tos-btn" href="{{ route('admin.tryon-snapshots.index') }}"><i class="fa fa-redo"></i> XÃ³a lá»c</a>
+                <button class="tos-btn primary" type="submit"><i class="fa fa-search"></i> Lọc</button>
+                <a class="tos-btn" href="{{ route('admin.tryon-snapshots.index') }}"><i class="fa fa-redo"></i> Xóa lọc</a>
             </form>
 
             <div class="tos-table-head">
-                <h6>Danh sÃ¡ch áº£nh thá»­ kÃ­nh</h6>
-                <small>{{ $snapshots->total() }} káº¿t quáº£</small>
+                <h6>Danh sách ảnh thử kính</h6>
+                <small>{{ $snapshots->total() }} kết quả</small>
             </div>
 
             <div class="tos-list">
                 <div class="tos-list-head">
-                    <div>áº¢nh chá»¥p</div>
-                    <div>KhÃ¡ch hÃ ng</div>
-                    <div>KÃ­nh Ä‘Ã£ thá»­</div>
-                    <div>GiÃ¡</div>
-                    <div>Thá»i gian</div>
+                    <div>Ảnh chụp</div>
+                    <div>Khách hàng</div>
+                    <div>Kính đã thử</div>
+                    <div>Giá</div>
+                    <div>Thời gian</div>
                 </div>
 
                 @forelse ($snapshots as $snapshot)
@@ -69,11 +69,11 @@
                         <div class="tos-cell">
                             <div class="tos-name">{{ $snapshot->product_name }}</div>
                             <div class="tos-model">Model: {{ $snapshot->model_sku }}</div>
-                            <div class="tos-sub">{{ $snapshot->tryon_mode === 'image' ? 'Thá»­ báº±ng áº£nh táº£i lÃªn' : 'Thá»­ báº±ng camera' }}</div>
+                            <div class="tos-sub">{{ $snapshot->tryon_mode === 'image' ? 'Thử bằng ảnh tải lên' : 'Thử bằng camera' }}</div>
                         </div>
 
                         <div class="tos-cell">
-                            <div class="tos-name">{{ number_format((float) $snapshot->price, 0, ',', '.') }}Ä‘</div>
+                            <div class="tos-name">{{ number_format((float) $snapshot->price, 0, ',', '.') }}đ</div>
                             <div class="tos-sub">ID: {{ $snapshot->id }}</div>
                         </div>
 
@@ -83,12 +83,12 @@
                         </div>
                     </div>
                 @empty
-                    <div class="tos-empty">ChÆ°a cÃ³ káº¿t quáº£ thá»­ kÃ­nh nÃ o.</div>
+                    <div class="tos-empty">Chưa có kết quả thử kính nào.</div>
                 @endforelse
             </div>
 
             <div class="tos-pagination">
-                <div class="tos-page-info">Hiá»ƒn thá»‹ {{ $snapshots->firstItem() ?? 0 }}-{{ $snapshots->lastItem() ?? 0 }} / {{ $snapshots->total() }} káº¿t quáº£</div>
+                <div class="tos-page-info">Hiển thị {{ $snapshots->firstItem() ?? 0 }}-{{ $snapshots->lastItem() ?? 0 }} / {{ $snapshots->total() }} kết quả</div>
                 @if ($snapshots->hasPages())
                     <div class="tos-pager">
                         <a class="tos-page-link {{ $snapshots->onFirstPage() ? 'disabled' : '' }}" href="{{ $snapshots->previousPageUrl() ?: '#' }}"><i class="fa fa-chevron-left"></i></a>

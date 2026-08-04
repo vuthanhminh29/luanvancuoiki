@@ -17,6 +17,7 @@
     $extraAddresses = $addresses->skip(1);
     $canAddAddress = $addresses->count() < 2;
     $genderMap = ['MALE' => 'Nam', 'FEMALE' => 'Nữ', 'OTHER' => 'Khác'];
+    $tryOnCount = $tryOnSnapshots->total();
 @endphp
 
 <section class="account-section">
@@ -28,52 +29,6 @@
                         <a href="{{ route('home') }}"><i class="fa fa-home"></i> Trang chủ</a>
                         <span>Thông tin tài khoản</span>
                     </div>
-                </div>
-
-                <div class="account-card tryon-history-card" id="lich-su-thu-kinh">
-                    <div class="tryon-history-head">
-                        <div>
-                            <span class="tryon-history-eyebrow">áº¢nh Ä‘Ã£ lÆ°u</span>
-                            <h5 class="card-title">Lá»‹ch sá»­ thá»­ kÃ­nh</h5>
-                            <p class="card-subtitle">CÃ¡c áº£nh báº¡n Ä‘Ã£ chá»¥p sau khi thá»­ kÃ­nh trá»±c tuyáº¿n</p>
-                        </div>
-                        <div class="tryon-history-summary">
-                            <strong>{{ $tryOnCount }}</strong>
-                            <span>áº£nh Ä‘Ã£ lÆ°u</span>
-                        </div>
-                    </div>
-
-                    {{-- Lá»‹ch sá»­ nÃ y láº¥y tá»« báº£ng try_on_snapshots theo user_id cá»§a tÃ i khoáº£n Ä‘ang Ä‘Äƒng nháº­p. --}}
-                    @if ($tryOnSnapshots->isNotEmpty())
-                        <div class="tryon-history-grid">
-                            @foreach ($tryOnSnapshots as $snapshot)
-                                {{-- Má»—i tháº» lÃ  má»™t láº§n khÃ¡ch báº¥m nÃºt Chá»¥p/LÆ°u káº¿t quáº£ á»Ÿ trang thá»­ kÃ­nh. --}}
-                                <article class="tryon-history-item">
-                                    <a href="{{ $snapshot->image_url }}" target="_blank" rel="noopener" class="tryon-history-photo">
-                                        <img src="{{ $snapshot->image_url }}" alt="{{ $snapshot->product_name }}">
-                                    </a>
-
-                                    <div class="tryon-history-info">
-                                        <h6>{{ $snapshot->product_name }}</h6>
-                                        <span><i class="fa fa-clock-o"></i> {{ $snapshot->created_at?->format('d/m/Y H:i') }}</span>
-                                    </div>
-                                </article>
-                            @endforeach
-                        </div>
-                        <div class="tryon-history-actions">
-                            <a href="{{ route('tryon') }}" class="btn-orders">
-                                <i class="fa fa-camera-retro"></i>
-                                Thá»­ kÃ­nh tiáº¿p
-                            </a>
-                        </div>
-                    @else
-                        <div class="tryon-history-empty">
-                            <i class="fa fa-camera-retro"></i>
-                            <h6>ChÆ°a cÃ³ áº£nh thá»­ kÃ­nh</h6>
-                            <p>Sau khi thá»­ kÃ­nh, báº¥m Chá»¥p/LÆ°u káº¿t quáº£ Ä‘á»ƒ áº£nh xuáº¥t hiá»‡n táº¡i Ä‘Ã¢y.</p>
-                            <a href="{{ route('tryon') }}" class="btn-orders">Thá»­ kÃ­nh ngay</a>
-                        </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -99,6 +54,11 @@
                         <a href="{{ route('account.orders.index') }}" class="menu-item">
                             <i class="fa fa-shopping-bag"></i>
                             <span>Đơn mua</span>
+                        </a>
+                        <a href="#lich-su-thu-kinh" class="menu-item menu-item-history">
+                            <i class="fa fa-camera-retro"></i>
+                            <span>Thử kính</span>
+                            <em>{{ $tryOnCount }}</em>
                         </a>
                         <a href="{{ route('account.password.edit') }}" class="menu-item">
                             <i class="fa fa-lock"></i>
@@ -236,6 +196,55 @@
                             Đơn mua
                         </a>
                     </div>
+                </div>
+
+                <div class="account-card tryon-history-card" id="lich-su-thu-kinh">
+                    <div class="tryon-history-head">
+                        <div>
+                            <span class="tryon-history-eyebrow">Ảnh đã lưu</span>
+                            <h5 class="card-title">Lịch sử thử kính</h5>
+                            <p class="card-subtitle">Các ảnh bạn đã chụp sau khi thử kính trực tuyến</p>
+                        </div>
+                        <div class="tryon-history-summary">
+                            <strong>{{ $tryOnCount }}</strong>
+                            <span>ảnh đã lưu</span>
+                        </div>
+                    </div>
+
+                    @if ($tryOnSnapshots->count() > 0)
+                        <div class="tryon-history-grid">
+                            @foreach ($tryOnSnapshots as $snapshot)
+                                <article class="tryon-history-item">
+                                    <a href="{{ $snapshot->image_url }}" target="_blank" rel="noopener" class="tryon-history-photo">
+                                        <img src="{{ $snapshot->image_url }}" alt="{{ $snapshot->product_name }}">
+                                    </a>
+
+                                    <div class="tryon-history-info">
+                                        <h6>{{ $snapshot->product_name }}</h6>
+                                        <span><i class="fa fa-clock-o"></i> {{ $snapshot->created_at?->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+                        <div class="tryon-history-actions">
+                            <a href="{{ route('tryon') }}" class="btn-orders">
+                                <i class="fa fa-camera-retro"></i>
+                                Thử kính tiếp
+                            </a>
+                        </div>
+                        @if ($tryOnSnapshots->hasPages())
+                            <div class="tryon-history-pages">
+                                {{ $tryOnSnapshots->links() }}
+                            </div>
+                        @endif
+                    @else
+                        <div class="tryon-history-empty">
+                            <i class="fa fa-camera-retro"></i>
+                            <h6>Chưa có ảnh thử kính</h6>
+                            <p>Sau khi thử kính, bấm Chụp/Lưu kết quả để ảnh xuất hiện tại đây.</p>
+                            <a href="{{ route('tryon') }}" class="btn-orders">Thử kính ngay</a>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

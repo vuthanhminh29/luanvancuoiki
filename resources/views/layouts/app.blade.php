@@ -193,10 +193,28 @@
 
     <footer class="footer">
         <div class="container">
-            <div class="row">
+            <div class="footer__top">
+                <a href="{{ route('home') }}" class="footer__brand" aria-label="{{ config('app.name') }}">
+                    <img src="{{ asset('upload/logo/logo-1.png') }}" alt="{{ config('app.name') }}">
+                    <span>WARFARER</span>
+                </a>
+                <div class="footer__badges" aria-label="Cam kết dịch vụ">
+                    <span><i class="fa fa-shipping-fast"></i> Giao hàng nhanh</span>
+                    <span><i class="fa fa-sync-alt"></i> Đổi trả rõ ràng</span>
+                    <span><i class="fa fa-lock"></i> Thanh toán an toàn</span>
+                </div>
+            </div>
+
+            <div class="row footer__grid">
                 <div class="col-lg-4 col-md-6 col-sm-12">
                     <div class="footer__about">
-                        <p class="footer__description">Chào mừng quý khách đến với website. Hãy lựa chọn và đặt hàng ngay để được giao hàng nhanh.</p>
+                        <h6>WARFARER</h6>
+                        <p class="footer__description">Chuyên kính mát, gọng kính và phụ kiện mắt kính chính hãng. Tư vấn sản phẩm phù hợp nhu cầu sử dụng hằng ngày.</p>
+                        <ul class="footer__contact">
+                            <li><i class="fa fa-map-marker-alt"></i> 828 Sư Vạn Hạnh, Phường 13, Quận 10, TP.HCM</li>
+                            <li><i class="fa fa-phone"></i> 0909 000 888</li>
+                            <li><i class="fa fa-envelope"></i> support@warfarer.vn</li>
+                        </ul>
                         <div class="footer__social">
                             <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
                             <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
@@ -249,8 +267,8 @@
             </div>
 
             <div class="footer__bottom">
-                <span>Â© {{ date('Y') }} {{ config('app.name') }}. Dá»± Ã¡n bÃ¡n kÃ­nh máº¯t.</span>
-                <a href="{{ route('account.orders.index') }}">Theo dÃµi Ä‘Æ¡n hÃ ng</a>
+                <span>© {{ date('Y') }} WARFARER. Dự án bán kính mắt.</span>
+                <a href="{{ route('account.orders.index') }}">Theo dõi đơn hàng</a>
             </div>
         </div>
     </footer>

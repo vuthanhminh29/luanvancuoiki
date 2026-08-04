@@ -9,7 +9,7 @@ class Inventory extends Model
 {
     public const CREATED_AT = null;
 
-    protected $fillable = ['warehouse_id', 'variant_id', 'quantity', 'reserved_quantity', 'min_stock_level'];
+    protected $fillable = ['warehouse_id', 'variant_id', 'quantity', 'min_stock_level'];
 
     public function warehouse(): BelongsTo
     {

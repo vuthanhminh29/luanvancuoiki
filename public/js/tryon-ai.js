@@ -3,6 +3,9 @@
     if (!root) return;
     const jeelizBasePath = root.dataset.jeelizBasePath || `${window.location.origin}/vendor/jeelizGlassesVTOWidget`;
     const jeelizScriptUrl = root.dataset.jeelizScriptUrl || `${jeelizBasePath}/dist/JeelizVTOWidget.js`;
+    const snapshotStoreUrl = root.dataset.snapshotStoreUrl || "";
+    const loginUrl = root.dataset.loginUrl || "/dang-nhap";
+    const canStoreSnapshot = root.dataset.authenticated === "true";
 
     const productDataNode = document.getElementById("tryonProductData");
     const products = JSON.parse(productDataNode?.textContent || "[]");
@@ -34,6 +37,7 @@
     const cartName = document.getElementById("tryonCartName");
     const cartImage = document.getElementById("tryonCartImage");
     const cartPrice = document.getElementById("tryonCartPrice");
+    const snapshotButton = document.getElementById("tryonSaveSnapshot");
     const widgetNode = document.getElementById("JeelizVTOWidget");
     const canvasNode = document.getElementById("JeelizVTOWidgetCanvas");
     const isImmersivePage = root.classList.contains("tryon-ai-page--immersive");
@@ -80,6 +84,16 @@
 
     function setStatus(message) {
         if (statusNode) statusNode.textContent = sanitizeStatusMessage(message);
+    }
+
+    function setSnapshotLoading(isLoading) {
+        if (!snapshotButton) return;
+
+        snapshotButton.disabled = isLoading || !activeProduct?.hasModel;
+        snapshotButton.classList.toggle("is-loading", isLoading);
+        snapshotButton.innerHTML = isLoading
+            ? '<i class="fas fa-spinner fa-spin"></i> Đang lưu...'
+            : '<i class="fas fa-camera-retro"></i> Chụp/Lưu kết quả';
     }
 
     function showInlineError(message) {
@@ -324,6 +338,14 @@
         if (cartName) cartName.value = product?.name || "";
         if (cartImage) cartImage.value = product?.cartImage || "";
         if (cartPrice) cartPrice.value = product?.price || "";
+
+        if (snapshotButton) {
+            const canSnapshot = !!product?.hasModel;
+            snapshotButton.disabled = !canSnapshot;
+            snapshotButton.title = canSnapshot
+                ? "Chụp và lưu ảnh thử kính"
+                : "Sản phẩm chưa có model thử kính";
+        }
 
         document.querySelectorAll(".tryon-ai-product").forEach((button) => {
             button.classList.toggle("is-active", button.dataset.sku === product?.sku);
@@ -799,6 +821,117 @@
 
         JEELIZVTOWIDGET.enter_adjustMode();
     };
+
+    function canvasToSnapshotDataUrl(canvas) {
+        if (typeof canvas === "string" && canvas.startsWith("data:image/")) {
+            return canvas;
+        }
+
+        if (!canvas || typeof canvas.toDataURL !== "function") {
+            throw new Error("Không tìm thấy ảnh thử kính để lưu.");
+        }
+
+        return canvas.toDataURL("image/jpeg", 0.9);
+    }
+
+    function captureTryonSnapshot() {
+        return new Promise((resolve, reject) => {
+            let isSettled = false;
+
+            const finish = (capturedCanvas) => {
+                if (isSettled) return;
+                isSettled = true;
+
+                try {
+                    resolve(canvasToSnapshotDataUrl(capturedCanvas || canvasNode));
+                } catch (error) {
+                    reject(error);
+                }
+            };
+
+            if (window.JEELIZVTOWIDGET && typeof JEELIZVTOWIDGET.capture_image === "function" && (isStarted || isReady)) {
+                try {
+                    JEELIZVTOWIDGET.capture_image(1, finish, false);
+                    window.setTimeout(() => finish(canvasNode), 2500);
+                    return;
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            finish(canvasNode);
+        });
+    }
+
+    async function saveTryonSnapshot() {
+        if (!activeProduct) {
+            setStatus("Vui lòng chọn kính trước khi lưu kết quả.");
+            return;
+        }
+
+        if (!canStoreSnapshot) {
+            setStatus("Vui lòng đăng nhập để lưu kết quả thử kính.");
+            window.setTimeout(() => {
+                window.location.href = loginUrl;
+            }, 900);
+            return;
+        }
+
+        if (!snapshotStoreUrl) {
+            setStatus("Chưa cấu hình đường dẫn lưu kết quả thử kính.");
+            return;
+        }
+
+        if (!activeProduct.hasModel || !activeProduct.sku) {
+            setStatus("Sản phẩm này chưa có model thử kính nên chưa thể lưu kết quả.");
+            return;
+        }
+
+        if (!isStarted && !isReady) {
+            setStatus("Hãy bật camera hoặc xử lý ảnh trước khi lưu kết quả thử kính.");
+            return;
+        }
+
+        setSnapshotLoading(true);
+        setStatus("Đang chụp và lưu kết quả thử kính...");
+
+        try {
+            const image = await captureTryonSnapshot();
+            const response = await fetch(snapshotStoreUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content || "",
+                },
+                body: JSON.stringify({
+                    product_id: activeProduct.id,
+                    variant_id: activeProduct.variantId || null,
+                    model_sku: activeProduct.sku,
+                    tryon_mode: tryonMode === "image" ? "image" : "camera",
+                    image,
+                }),
+            });
+
+            const payload = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(payload.message || "Không lưu được kết quả thử kính.");
+            }
+
+            setStatus(payload.message || "Đã lưu kết quả thử kính.");
+        } catch (error) {
+            console.error(error);
+            setStatus(error?.message || "Không lưu được kết quả thử kính. Vui lòng thử lại.");
+        } finally {
+            setSnapshotLoading(false);
+        }
+    }
+
+    if (snapshotButton) {
+        snapshotButton.addEventListener("click", saveTryonSnapshot);
+    }
 
     renderProducts();
     if (activeProduct) {

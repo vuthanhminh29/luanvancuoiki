@@ -28,7 +28,7 @@ class ProductAdminController extends Controller
         $products = Product::with(['category', 'brand', 'frameShape'])
             ->withCount('variants')
             ->select('products.*')
-            ->selectRaw("(SELECT COALESCE(SUM(inventories.quantity - inventories.reserved_quantity), 0)
+            ->selectRaw("(SELECT COALESCE(SUM(inventories.quantity), 0)
                 FROM product_variants
                 LEFT JOIN inventories ON inventories.variant_id = product_variants.id
                 WHERE product_variants.product_id = products.id) as quantity")
@@ -90,7 +90,7 @@ class ProductAdminController extends Controller
         $products = Product::with(['category', 'brand'])
             ->withCount('variants')
             ->select('products.*')
-            ->selectRaw("(SELECT COALESCE(SUM(inventories.quantity - inventories.reserved_quantity), 0)
+            ->selectRaw("(SELECT COALESCE(SUM(inventories.quantity), 0)
                 FROM product_variants
                 LEFT JOIN inventories ON inventories.variant_id = product_variants.id
                 WHERE product_variants.product_id = products.id) as quantity")
@@ -138,6 +138,13 @@ class ProductAdminController extends Controller
         $product->update(['status' => 'INACTIVE']);
 
         return back()->with('success', 'Đã ẩn sản phẩm.');
+    }
+
+    public function restore(Product $product): RedirectResponse
+    {
+        $product->update(['status' => 'ACTIVE']);
+
+        return redirect()->route('admin.products.index')->with('success', 'Đã khôi phục sản phẩm.');
     }
 
     public function uploadEditorImage(Request $request): JsonResponse

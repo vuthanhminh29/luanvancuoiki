@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 class TryOnSnapshot extends Model
 {
-    // CÃ¡c cá»™t Ä‘Æ°á»£c phÃ©p lÆ°u khi controller táº¡o káº¿t quáº£ thá»­ kÃ­nh má»›i.
+    // Các cột được phép lưu khi controller tạo kết quả thử kính mới.
     protected $fillable = [
         'user_id',
         'product_id',
@@ -26,33 +26,33 @@ class TryOnSnapshot extends Model
         'price' => 'decimal:2',
     ];
 
-    // Má»™t káº¿t quáº£ thá»­ kÃ­nh thuá»™c vá» má»™t tÃ i khoáº£n khÃ¡ch hÃ ng.
+    // Một kết quả thử kính thuộc về một tài khoản khách hàng.
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // Má»™t káº¿t quáº£ thá»­ kÃ­nh gáº¯n vá»›i sáº£n pháº©m kÃ­nh Ä‘Ã£ Ä‘Æ°á»£c chá»n.
+    // Một kết quả thử kính gắn với sản phẩm kính đã được chọn.
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    // Biáº¿n thá»ƒ giÃºp biáº¿t khÃ¡ch thá»­ mÃ u/size nÃ o náº¿u sáº£n pháº©m cÃ³ nhiá»u lá»±a chá»n.
+    // Biến thể giúp biết khách thử màu/size nào nếu sản phẩm có nhiều lựa chọn.
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'variant_id');
     }
 
-    // Accessor Ä‘á»•i image_path trong database thÃ nh URL public Ä‘á»ƒ admin má»Ÿ áº£nh trá»±c tiáº¿p.
+    // Accessor đổi image_path trong database thành URL public để admin mở ảnh trực tiếp.
     public function getImageUrlAttribute(): string
     {
-        // áº¢nh má»›i lÆ°u trá»±c tiáº¿p trong public/upload/tryons Ä‘á»ƒ dá»… kiá»ƒm tra trong project.
+        // Ảnh mới lưu trực tiếp trong public/upload/tryons để dễ kiểm tra trong project.
         if (str_starts_with($this->image_path, 'upload/')) {
             return asset($this->image_path);
         }
 
-        // CÃ¡c áº£nh cÅ© trÆ°á»›c Ä‘Ã³ váº«n Ä‘á»c Ä‘Æ°á»£c tá»« storage/app/public/tryons.
+        // Các ảnh cũ trước đó vẫn đọc được từ storage/app/public/tryons.
         return Storage::disk('public')->url($this->image_path);
     }
 }

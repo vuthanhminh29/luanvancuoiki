@@ -8,13 +8,21 @@ use App\Models\Category;
 use App\Models\Color;
 use App\Models\FrameMaterial;
 use App\Models\FrameShape;
+use App\Models\Inventory;
 use App\Models\LensSize;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductReview;
+use App\Models\ProductVariant;
+use App\Models\TryOnSnapshot;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -93,6 +101,12 @@ class ProductController extends Controller
 
         $product->increment('view_count');
         $product->load(['brand', 'category', 'frameShape', 'frameMaterial', 'images', 'variants.color', 'variants.lensSize']);
+        $variantStock = Inventory::query()
+            ->whereIn('variant_id', $product->variants->pluck('id'))
+            ->selectRaw('variant_id, COALESCE(SUM(quantity), 0) as available_stock')
+            ->groupBy('variant_id')
+            ->pluck('available_stock', 'variant_id')
+            ->map(fn ($stock) => max(0, (int) $stock));
         $visibleReviewsQuery = $product->visibleReviews()->with('user');
         $reviewStats = [
             'count' => (clone $visibleReviewsQuery)->count(),
@@ -107,6 +121,7 @@ class ProductController extends Controller
             'product' => $product,
             'visibleReviews' => $visibleReviews,
             'reviewStats' => $reviewStats,
+            'variantStock' => $variantStock,
             'relatedProducts' => Product::active()
                 ->where('category_id', $product->category_id)
                 ->whereKeyNot($product->getKey())
@@ -190,6 +205,99 @@ class ProductController extends Controller
         ]);
     }
 
+    public function tryOnModelCheck(Request $request): JsonResponse
+    {
+        $sku = trim((string) $request->query('sku', ''));
+
+        if ($sku === '') {
+            return response()->json(['supported' => false]);
+        }
+
+        try {
+            $response = Http::withoutVerifying()
+                ->timeout(5)
+                ->withUserAgent('Mozilla/5.0')
+                ->acceptJson()
+                ->get('https://glassesdbcached.jeeliz.com/sku/' . rawurlencode($sku));
+
+            $data = $response->json();
+            $isSupported = $response->ok()
+                && is_array($data)
+                && isset($data['intrinsic'])
+                && empty($data['error']);
+
+            return response()->json(['supported' => $isSupported]);
+        } catch (\Throwable) {
+            return response()->json(['supported' => false]);
+        }
+    }
+
+    public function storeTryOnSnapshot(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        abort_unless($user, 401);
+
+        $data = $request->validate([
+            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
+            'model_sku' => ['required', 'string', 'max:100'],
+            'tryon_mode' => ['required', 'string', 'in:camera,image'],
+            'image' => ['required', 'string', 'max:7000000'],
+        ], [
+            'product_id.required' => 'Vui lòng chọn kính trước khi lưu kết quả.',
+            'model_sku.required' => 'Sản phẩm này chưa có model thử kính.',
+            'image.required' => 'Chưa có ảnh thử kính để lưu.',
+        ]);
+
+        $product = Product::active()
+            ->with('variants')
+            ->findOrFail((int) $data['product_id']);
+
+        $modelSku = trim((string) $product->product_code);
+        if ($modelSku === '' || trim((string) $data['model_sku']) !== $modelSku) {
+            return response()->json([
+                'message' => 'Sản phẩm này chưa có model thử kính hợp lệ.',
+            ], 422);
+        }
+
+        $variant = null;
+        if (! empty($data['variant_id'])) {
+            $variant = ProductVariant::query()
+                ->where('product_id', $product->id)
+                ->find((int) $data['variant_id']);
+
+            if (! $variant) {
+                return response()->json([
+                    'message' => 'Biến thể kính không thuộc sản phẩm đang thử.',
+                ], 422);
+            }
+        }
+
+        $imagePath = $this->storeTryOnImage((string) $data['image']);
+
+        $snapshot = TryOnSnapshot::create([
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'variant_id' => $variant?->id,
+            'user_name' => $user->full_name,
+            'user_email' => $user->email,
+            'product_name' => $product->name,
+            'model_sku' => $modelSku,
+            'price' => $variant?->display_price ?? $product->display_price,
+            'image_path' => $imagePath,
+            'tryon_mode' => $data['tryon_mode'],
+        ]);
+
+        return response()->json([
+            'message' => 'Đã lưu kết quả thử kính.',
+            'snapshot' => [
+                'id' => $snapshot->id,
+                'image_url' => $snapshot->image_url,
+            ],
+        ]);
+    }
+
     private function tryOnPayload($products)
     {
         return $products->map(function (Product $product) {
@@ -230,6 +338,39 @@ class ProductController extends Controller
         $description = trim(preg_replace('/\s+/', ' ', strip_tags((string) $description)));
 
         return $description !== '' ? $description : 'Kiểu dáng dễ đeo, phù hợp sử dụng hằng ngày.';
+    }
+
+    private function storeTryOnImage(string $imageData): string
+    {
+        if (! preg_match('/^data:image\/(png|jpe?g);base64,/', $imageData, $matches)) {
+            throw ValidationException::withMessages([
+                'image' => 'Định dạng ảnh chụp không hợp lệ.',
+            ]);
+        }
+
+        $extension = $matches[1] === 'png' ? 'png' : 'jpg';
+        $base64 = substr($imageData, strpos($imageData, ',') + 1);
+        $binary = base64_decode($base64, true);
+
+        if ($binary === false || strlen($binary) < 1000) {
+            throw ValidationException::withMessages([
+                'image' => 'Ảnh chụp không đọc được.',
+            ]);
+        }
+
+        if (strlen($binary) > 5 * 1024 * 1024) {
+            throw ValidationException::withMessages([
+                'image' => 'Ảnh chụp tối đa 5 MB.',
+            ]);
+        }
+
+        $directory = 'upload/tryons/' . now()->format('Y/m');
+        File::ensureDirectoryExists(public_path($directory));
+
+        $path = $directory . '/' . Str::uuid() . '.' . $extension;
+        File::put(public_path($path), $binary);
+
+        return $path;
     }
 
     private function filterStrings(Request $request, string $key): array

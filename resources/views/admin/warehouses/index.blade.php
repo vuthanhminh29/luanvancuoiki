@@ -83,7 +83,6 @@
                 <div class="wa-stat"><span>Biến thể</span><strong>{{ $num($summary->variant_count ?? 0) }}</strong></div>
                 <div class="wa-stat"><span>Tổng tồn</span><strong>{{ $num($summary->total_stock ?? 0) }}</strong></div>
                 <div class="wa-stat"><span>Có thể bán</span><strong>{{ $num($summary->available_stock ?? 0) }}</strong></div>
-                <div class="wa-stat"><span>Đang giữ</span><strong>{{ $num($summary->reserved_stock ?? 0) }}</strong></div>
                 <div class="wa-stat"><span>Sắp hết</span><strong>{{ $num($summary->low_stock_rows ?? 0) }}</strong></div>
             </div>
 
@@ -165,7 +164,6 @@
                                 <th>Biến thể</th>
                                 <th>Kho</th>
                                 <th>Tồn</th>
-                                <th>Giữ</th>
                                 <th>Có thể bán</th>
                                 <th>Trạng thái</th>
                             </tr>
@@ -175,7 +173,7 @@
                                 @php
                                     $variant = $inventory->variant;
                                     $product = $variant?->product;
-                                    $available = (int) $inventory->quantity - (int) $inventory->reserved_quantity;
+                                    $available = (int) $inventory->quantity;
                                     [$stateText, $stateClass] = $stockState($available, $inventory->min_stock_level);
                                 @endphp
                                 <tr>
@@ -199,12 +197,11 @@
                                     </td>
                                     <td>{{ $inventory->warehouse->name ?? '-' }}</td>
                                     <td class="wa-number">{{ $num($inventory->quantity) }}</td>
-                                    <td class="wa-number">{{ $num($inventory->reserved_quantity) }}</td>
                                     <td class="wa-number">{{ $num($available) }}</td>
                                     <td><span class="wa-badge {{ $stateClass }}">{{ $stateText }}</span></td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="wa-empty">Không có dòng tồn kho phù hợp.</td></tr>
+                                <tr><td colspan="6" class="wa-empty">Không có dòng tồn kho phù hợp.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

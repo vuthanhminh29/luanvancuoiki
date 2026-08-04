@@ -72,7 +72,14 @@
                             <td class="text-end"><strong>{{ $money($product->display_price) }}</strong></td>
                             <td><span class="pa-pill {{ $statusClass }}">{{ $statusText }}</span></td>
                             <td class="text-end">
-                                <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.products.edit', $product) }}"><i class="fas fa-edit"></i></a>
+                                <div class="btn-group">
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.products.edit', $product) }}"><i class="fas fa-edit"></i></a>
+                                    <form method="post" action="{{ route('admin.products.restore', $product) }}" onsubmit="return confirm('Khôi phục sản phẩm này về trạng thái đang bán?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button class="btn btn-sm btn-outline-success" type="submit" title="Khôi phục"><i class="fas fa-undo"></i></button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
-    // CÃ¡c thÃ´ng tin Ä‘Æ¡n hÃ ng Ä‘Æ°á»£c phÃ©p lÆ°u tá»« checkout hoáº·c admin cáº­p nháº­t.
+    // Các thông tin đơn hàng được phép lưu từ checkout hoặc admin cập nhật.
     protected $fillable = [
         'order_code',
         'user_id',
@@ -31,7 +31,7 @@ class Order extends Model
         'cancel_confirmed_at',
     ];
 
-    // Ã‰p cÃ¡c cá»™t tiá»n vá» decimal vÃ  thá»i gian giao hÃ ng vá» datetime.
+    // Ép các cột tiền về decimal và thời gian giao hàng về datetime.
     protected $casts = [
         'subtotal_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
@@ -42,31 +42,31 @@ class Order extends Model
         'cancel_confirmed_at' => 'datetime',
     ];
 
-    // ÄÆ¡n hÃ ng thuá»™c vá» má»™t khÃ¡ch hÃ ng.
+    // Đơn hàng thuộc về một khách hàng.
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // Má»™t Ä‘Æ¡n hÃ ng cÃ³ nhiá»u dÃ²ng sáº£n pháº©m.
+    // Má»™t đơn hàng có nhiều dòng sản phẩm.
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    // Má»™t Ä‘Æ¡n hÃ ng cÃ³ thá»ƒ phÃ¡t sinh nhiá»u yÃªu cáº§u hoÃ n Ä‘á»•i.
+    // Má»™t đơn hàng có thể phát sinh nhiều yêu cầu hoàn đổi.
     public function returnRequests(): HasMany
     {
         return $this->hasMany(ReturnRequest::class);
     }
 
-    // Má»™t Ä‘Æ¡n hÃ ng cÃ³ thá»ƒ cÃ³ nhiá»u báº£n ghi thanh toÃ¡n, vÃ­ dá»¥ thanh toÃ¡n láº¡i hoáº·c IPN.
+    // Một đơn hàng có thể có nhiều bản ghi thanh toán, ví dụ thanh toán lại hoặc IPN.
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
     }
 
-    // ÄÆ¡n hÃ ng cÃ³ thá»ƒ Ã¡p dá»¥ng má»™t mÃ£ khuyáº¿n mÃ£i.
+    // Đơn hàng có thể áp dụng một mã khuyến mãi.
     public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class);

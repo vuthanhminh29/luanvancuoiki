@@ -30,17 +30,17 @@
     $order = $returnRequest->order;
     $customer = $returnRequest->user;
     $returnProgressSteps = [
-        'PENDING' => ['KhÃ¡ch gá»­i yÃªu cáº§u', 'fa-paper-plane', 'pending'],
-        'APPROVED' => ['Admin Ä‘Ã£ duyá»‡t', 'fa-clipboard-check', 'info'],
-        'RECEIVED' => ['ÄÃ£ nháº­n hÃ ng', 'fa-box-open', 'moving'],
-        'COMPLETED' => [$returnRequest->type === 'EXCHANGE' ? 'Äá»•i hÃ ng xong' : 'HoÃ n tráº£ xong', 'fa-check-circle', 'success'],
+        'PENDING' => ['Khách gửi yêu cầu', 'fa-paper-plane', 'pending'],
+        'APPROVED' => ['Admin đã duyệt', 'fa-clipboard-check', 'info'],
+        'RECEIVED' => ['Đã nhận hàng', 'fa-box-open', 'moving'],
+        'COMPLETED' => [$returnRequest->type === 'EXCHANGE' ? 'Đổi hàng xong' : 'Hoàn trả xong', 'fa-check-circle', 'success'],
     ];
     $returnProgressOrder = array_keys($returnProgressSteps);
     $returnProgressStatus = in_array($returnRequest->status, ['REJECTED', 'CANCELLED'], true) ? null : $returnRequest->status;
     $returnProgressIndex = $returnProgressStatus ? array_search($returnProgressStatus, $returnProgressOrder, true) : false;
     $returnEndMeta = [
-        'REJECTED' => ['YÃªu cáº§u bá»‹ tá»« chá»‘i', 'danger', 'fa-times-circle'],
-        'CANCELLED' => ['YÃªu cáº§u Ä‘Ã£ há»§y', 'dark', 'fa-ban'],
+        'REJECTED' => ['Yêu cầu bị từ chối', 'danger', 'fa-times-circle'],
+        'CANCELLED' => ['Yêu cầu đã hủy', 'dark', 'fa-ban'],
     ];
 @endphp
 
@@ -267,6 +267,9 @@
                                     <option value="{{ $value }}" @selected($returnRequest->status === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>
+                            @error('status')
+                                <div class="text-danger small fw-bold mt-1">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="rr-form-row">

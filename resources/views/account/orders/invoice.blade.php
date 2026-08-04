@@ -1,17 +1,17 @@
 @php
     $invoiceCode = $order->order_code ?: ('DH' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT));
-    $paymentMap = ['COD' => 'Thanh toÃ¡n khi nháº­n hÃ ng', 'VNPAY' => 'VNPay'];
+    $paymentMap = ['COD' => 'Thanh toán khi nhận hàng', 'VNPAY' => 'VNPay'];
     $statusMap = [
-        'PENDING' => 'Chá» xÃ¡c nháº­n',
-        'AWAITING_PAYMENT' => 'Chá» thanh toÃ¡n',
-        'CONFIRMED' => 'ÄÃ£ xÃ¡c nháº­n',
-        'DELIVERING' => 'Äang giao',
-        'DELIVERED' => 'Giao thÃ nh cÃ´ng',
-        'CANCELLED' => 'ÄÃ£ há»§y',
-        'RETURN_PENDING' => 'Chá» hoÃ n/Ä‘á»•i',
-        'RETURNED' => 'ÄÃ£ hoÃ n tráº£',
-        'EXCHANGED' => 'ÄÃ£ Ä‘á»•i hÃ ng',
-        'LOST_IN_TRANSIT' => 'Máº¥t hÃ ng khi giao',
+        'PENDING' => 'Chờ xác nhận',
+        'AWAITING_PAYMENT' => 'Chờ thanh toán',
+        'CONFIRMED' => 'Đã xác nhận',
+        'DELIVERING' => 'Đang giao',
+        'DELIVERED' => 'Giao thành công',
+        'CANCELLED' => 'Đã hủy',
+        'RETURN_PENDING' => 'Chờ hoàn/đổi',
+        'RETURNED' => 'Đã hoàn trả',
+        'EXCHANGED' => 'Đã đổi hàng',
+        'LOST_IN_TRANSIT' => 'Mất hàng khi giao',
     ];
 @endphp
 <!doctype html>
@@ -19,7 +19,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>HÃ³a Ä‘Æ¡n {{ $invoiceCode }}</title>
+    <title>Hóa đơn {{ $invoiceCode }}</title>
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; background: #eef2f7; color: #111827; font-family: Arial, Helvetica, sans-serif; }
@@ -60,45 +60,45 @@
 </head>
 <body>
     <div class="toolbar">
-        <button class="btn primary" type="button" onclick="window.print()">In / Táº£i PDF</button>
-        <a class="btn" href="{{ $backUrl }}">Quay láº¡i Ä‘Æ¡n hÃ ng</a>
+        <button class="btn primary" type="button" onclick="window.print()">In / Tải PDF</button>
+        <a class="btn" href="{{ $backUrl }}">Quay lại đơn hàng</a>
     </div>
 
     @isset($invoiceEmailSent)
         <div class="mail-status {{ $invoiceEmailSent ? '' : 'error' }}">
-            {{ $invoiceEmailSent ? 'HÃ³a Ä‘Æ¡n Ä‘Ã£ Ä‘Æ°á»£c gá»­i vá» email cá»§a báº¡n.' : 'ChÆ°a gá»­i Ä‘Æ°á»£c email hÃ³a Ä‘Æ¡n, báº¡n váº«n cÃ³ thá»ƒ in hoáº·c táº£i PDF táº¡i trang nÃ y.' }}
+            {{ $invoiceEmailSent ? 'Hóa đơn đã được gá»­i về email của bạn.' : 'Chưa gửi được email hóa đơn, bạn vẫn có thể in hoặc tải PDF tại trang này.' }}
         </div>
     @endisset
 
     <main class="page">
         <section class="top">
             <div class="brand">
-                <h1>{{ config('app.name', 'Cá»­a hÃ ng') }}</h1>
-                <p>HÃ³a Ä‘Æ¡n bÃ¡n hÃ ng Ä‘Æ°á»£c xuáº¥t tá»« há»‡ thá»‘ng quáº£n lÃ½ Ä‘Æ¡n hÃ ng.</p>
-                <p>NgÃ y xuáº¥t: {{ now()->format('d/m/Y H:i') }}</p>
+                <h1>{{ config('app.name', 'Cửa hàng') }}</h1>
+                <p>Hóa đơn bán hàng được xuất từ hệ thống quản lý đơn hàng.</p>
+                <p>Ngày xuất: {{ now()->format('d/m/Y H:i') }}</p>
             </div>
             <div class="invoice-title">
-                <h2>HÃ“A ÄÆ N</h2>
+                <h2>HÓA ĐƠN</h2>
                 <strong>#{{ $invoiceCode }}</strong>
                 <div class="invoice-meta">
-                    <p>NgÃ y Ä‘áº·t: {{ $order->created_at?->format('d/m/Y H:i') }}</p>
-                    <p>Tráº¡ng thÃ¡i: {{ $statusMap[$order->status] ?? $order->status }}</p>
+                    <p>Ngày đặt: {{ $order->created_at?->format('d/m/Y H:i') }}</p>
+                    <p>Trạng thái: {{ $statusMap[$order->status] ?? $order->status }}</p>
                 </div>
             </div>
         </section>
 
         <section class="grid">
             <div class="box">
-                <h3>ThÃ´ng tin khÃ¡ch hÃ ng</h3>
-                <div class="line"><span>KhÃ¡ch hÃ ng</span><strong>{{ $order->user->full_name ?? $order->recipient_name }}</strong></div>
-                <div class="line"><span>Email</span><strong>{{ $order->user->email ?? 'KhÃ´ng cÃ³' }}</strong></div>
-                <div class="line"><span>Sá»‘ Ä‘iá»‡n thoáº¡i</span><strong>{{ $order->recipient_phone }}</strong></div>
+                <h3>Thông tin khách hàng</h3>
+                <div class="line"><span>Khách hàng</span><strong>{{ $order->user->full_name ?? $order->recipient_name }}</strong></div>
+                <div class="line"><span>Email</span><strong>{{ $order->user->email ?? 'Không có' }}</strong></div>
+                <div class="line"><span>Số điện thoại</span><strong>{{ $order->recipient_phone }}</strong></div>
             </div>
             <div class="box">
-                <h3>ThÃ´ng tin nháº­n hÃ ng</h3>
-                <div class="line"><span>NgÆ°á»i nháº­n</span><strong>{{ $order->recipient_name }}</strong></div>
-                <div class="line"><span>Äá»‹a chá»‰</span><strong>{{ $order->shipping_address }}</strong></div>
-                <div class="line"><span>Thanh toÃ¡n</span><strong>{{ $paymentMap[$order->payment_method] ?? 'PhÆ°Æ¡ng thá»©c khÃ¡c' }}</strong></div>
+                <h3>Thông tin nhận hàng</h3>
+                <div class="line"><span>Người nhận</span><strong>{{ $order->recipient_name }}</strong></div>
+                <div class="line"><span>Địa chỉ</span><strong>{{ $order->shipping_address }}</strong></div>
+                <div class="line"><span>Thanh toán</span><strong>{{ $paymentMap[$order->payment_method] ?? 'Phương thức khác' }}</strong></div>
             </div>
         </section>
 
@@ -106,10 +106,10 @@
             <thead>
                 <tr>
                     <th style="width: 44px;">STT</th>
-                    <th>Sáº£n pháº©m</th>
-                    <th class="num">ÄÆ¡n giÃ¡</th>
+                    <th>Sản phẩm</th>
+                    <th class="num">Đơn giá</th>
                     <th class="num">SL</th>
-                    <th class="num">ThÃ nh tiá»n</th>
+                    <th class="num">Thành tiền</th>
                 </tr>
             </thead>
             <tbody>
@@ -121,30 +121,30 @@
                             @if ($item->sku || $item->color_name || $item->lens_size_name)
                                 <div class="muted">
                                     @if ($item->sku) SKU: {{ $item->sku }} @endif
-                                    @if ($item->color_name) | MÃ u: {{ $item->color_name }} @endif
+                                    @if ($item->color_name) | Màu: {{ $item->color_name }} @endif
                                     @if ($item->lens_size_name) | Size: {{ $item->lens_size_name }} @endif
                                 </div>
                             @endif
                         </td>
-                        <td class="num">{{ number_format((float) $item->unit_price, 0, ',', '.') }}Ä‘</td>
+                        <td class="num">{{ number_format((float) $item->unit_price, 0, ',', '.') }}đ</td>
                         <td class="num">{{ $item->quantity }}</td>
-                        <td class="num">{{ number_format((float) $item->total_price, 0, ',', '.') }}Ä‘</td>
+                        <td class="num">{{ number_format((float) $item->total_price, 0, ',', '.') }}đ</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
 
         <section class="totals">
-            <div class="line"><span>Tá»•ng tiá»n hÃ ng</span><strong>{{ number_format((float) $order->subtotal_amount, 0, ',', '.') }}Ä‘</strong></div>
-            <div class="line"><span>PhÃ­ váº­n chuyá»ƒn</span><strong>{{ (float) $order->shipping_fee > 0 ? number_format((float) $order->shipping_fee, 0, ',', '.') . 'Ä‘' : 'Miá»…n phÃ­' }}</strong></div>
+            <div class="line"><span>Tổng tiền hàng</span><strong>{{ number_format((float) $order->subtotal_amount, 0, ',', '.') }}đ</strong></div>
+            <div class="line"><span>Phí vận chuyển</span><strong>{{ (float) $order->shipping_fee > 0 ? number_format((float) $order->shipping_fee, 0, ',', '.') . 'đ' : 'Miễn phí' }}</strong></div>
             @if ((float) $order->discount_amount > 0)
-                <div class="line"><span>Giáº£m giÃ¡</span><strong>-{{ number_format((float) $order->discount_amount, 0, ',', '.') }}Ä‘</strong></div>
+                <div class="line"><span>Giảm giá</span><strong>-{{ number_format((float) $order->discount_amount, 0, ',', '.') }}đ</strong></div>
             @endif
-            <div class="line grand"><span>Tá»•ng thanh toÃ¡n</span><strong>{{ number_format((float) $order->total_amount, 0, ',', '.') }}Ä‘</strong></div>
+            <div class="line grand"><span>Tổng thanh toán</span><strong>{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</strong></div>
         </section>
 
         @if (trim((string) $order->note) !== '')
-            <div class="note"><strong>Ghi chÃº:</strong> {{ $order->note }}</div>
+            <div class="note"><strong>Ghi chú:</strong> {{ $order->note }}</div>
         @endif
 
     </main>

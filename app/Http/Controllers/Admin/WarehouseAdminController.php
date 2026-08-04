@@ -56,13 +56,13 @@ class WarehouseAdminController extends Controller
             })
             ->when($request->filled('inventory_stock_state'), function ($query) use ($request) {
                 match ($request->inventory_stock_state) {
-                    'OUT' => $query->whereRaw('(quantity - reserved_quantity) <= 0'),
-                    'LOW' => $query->whereRaw('(quantity - reserved_quantity) > 0')->whereRaw('(quantity - reserved_quantity) <= COALESCE(min_stock_level, 10)'),
-                    'OK' => $query->whereRaw('(quantity - reserved_quantity) > COALESCE(min_stock_level, 10)'),
+                    'OUT' => $query->whereRaw('quantity <= 0'),
+                    'LOW' => $query->whereRaw('quantity > 0')->whereRaw('quantity <= COALESCE(min_stock_level, 10)'),
+                    'OK' => $query->whereRaw('quantity > COALESCE(min_stock_level, 10)'),
                     default => null,
                 };
             })
-            ->orderByRaw('(quantity - reserved_quantity) asc')
+            ->orderBy('quantity')
             ->orderByDesc('updated_at')
             ->limit($inventoryLimit)
             ->get();
@@ -92,9 +92,8 @@ class WarehouseAdminController extends Controller
             ->selectRaw('COUNT(DISTINCT warehouse_id) as warehouse_count')
             ->selectRaw('COUNT(DISTINCT variant_id) as variant_count')
             ->selectRaw('COALESCE(SUM(quantity), 0) as total_stock')
-            ->selectRaw('COALESCE(SUM(reserved_quantity), 0) as reserved_stock')
-            ->selectRaw('COALESCE(SUM(quantity - reserved_quantity), 0) as available_stock')
-            ->selectRaw('SUM(CASE WHEN (quantity - reserved_quantity) <= COALESCE(min_stock_level, 10) THEN 1 ELSE 0 END) as low_stock_rows')
+            ->selectRaw('COALESCE(SUM(quantity), 0) as available_stock')
+            ->selectRaw('SUM(CASE WHEN quantity <= COALESCE(min_stock_level, 10) THEN 1 ELSE 0 END) as low_stock_rows')
             ->first();
 
         $activeTab = $request->input('warehouse_tab', 'stock');
@@ -168,7 +167,7 @@ class WarehouseAdminController extends Controller
                 'c.hex_code as color_hex',
                 'ls.name as lens_size_name',
             ])
-            ->selectRaw('COALESCE(SUM(i.quantity - i.reserved_quantity), 0) as available_stock')
+            ->selectRaw('COALESCE(SUM(i.quantity), 0) as available_stock')
             ->groupBy(
                 'pv.id',
                 'pv.sku',
@@ -331,7 +330,6 @@ class WarehouseAdminController extends Controller
             'warehouse_id' => $warehouseId,
             'variant_id' => $variantId,
             'quantity' => $quantity,
-            'reserved_quantity' => 0,
             'min_stock_level' => Warehouse::whereKey($warehouseId)->value('min_stock_level') ?? 10,
         ]);
     }
@@ -344,7 +342,7 @@ class WarehouseAdminController extends Controller
             ->lockForUpdate()
             ->first();
 
-        $available = $inventory ? max(0, (int) $inventory->quantity - (int) $inventory->reserved_quantity) : 0;
+        $available = $inventory ? max(0, (int) $inventory->quantity) : 0;
 
         if ($available < $quantity) {
             throw ValidationException::withMessages([

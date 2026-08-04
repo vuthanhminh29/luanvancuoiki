@@ -54,7 +54,7 @@
                                     </span>
                                     <span class="blog-card-admin flex items-center gap-1">
                                         <i class="fas fa-user"></i>
-                                        Quáº£n trá»‹ viÃªn
+                                        Quản trị viên
                                     </span>
                                 </div>
 

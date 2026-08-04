@@ -129,7 +129,7 @@
                 <div class="od-card-body">
                     @foreach ($order->items as $item)
                         <div class="od-product">
-                            <img src="{{ $item->product->image_url ?? asset('upload/no-image.png') }}" alt="{{ $item->product_name }}">
+                            <img src="{{ $item->product->image_url ?? asset('upload/no-image.jpg') }}" alt="{{ $item->product_name }}">
                             <div>
                                 <p class="od-product-name">{{ $item->product_name }}</p>
                                 <div class="od-product-meta">

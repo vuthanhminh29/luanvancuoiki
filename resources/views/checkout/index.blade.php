@@ -19,14 +19,14 @@
             $formatPromotionNumber = fn ($value) => rtrim(rtrim(number_format((float) $value, 2, ',', '.'), '0'), ',');
             $discountText = $appliedPromotion->discount_type === 'PERCENT'
                 ? $formatPromotionNumber($appliedPromotion->discount_value) . '%'
-                : number_format((float) $appliedPromotion->discount_value, 0, ',', '.') . 'Ä‘';
+                : number_format((float) $appliedPromotion->discount_value, 0, ',', '.') . 'đ';
             $conditionText = (float) $appliedPromotion->min_order_amount > 0
-                ? ' cho Ä‘Æ¡n hÃ ng tá»« ' . number_format((float) $appliedPromotion->min_order_amount, 0, ',', '.') . 'Ä‘'
-                : ' cho Ä‘Æ¡n hÃ ng nÃ y';
+                ? ' cho đơn hàng từ ' . number_format((float) $appliedPromotion->min_order_amount, 0, ',', '.') . 'đ'
+                : ' cho đơn hàng này';
             $maxDiscountText = (float) ($appliedPromotion->max_discount_amount ?? 0) > 0
-                ? ' Tá»‘i Ä‘a ' . number_format((float) $appliedPromotion->max_discount_amount, 0, ',', '.') . 'Ä‘.'
+                ? ' Tối đa ' . number_format((float) $appliedPromotion->max_discount_amount, 0, ',', '.') . 'đ.'
                 : '';
-            $promotionExplanation = 'Giáº£m ' . $discountText . $conditionText . '.' . $maxDiscountText;
+            $promotionExplanation = 'Giảm ' . $discountText . $conditionText . '.' . $maxDiscountText;
         }
         $user = auth()->user();
         $defaultAddress = $defaultAddress ?? null;
@@ -254,8 +254,8 @@
                             </div>
 
                             <div class="coupon-helper">
-                                <strong>Gá»£i Ã½ mÃ£ giáº£m giÃ¡:</strong>
-                                Nháº­p mÃ£ <span>HELLO</span> Ä‘á»ƒ giáº£m 20% cho Ä‘Æ¡n tá»« 500.000Ä‘, tá»‘i Ä‘a 1.000.000Ä‘.
+                                <strong>Gợi ý mã giảm giá:</strong>
+                                Nhập mã <span>HELLO</span> để giảm 20% cho đơn từ 500.000đ, tối đa 1.000.000đ.
                             </div>
                             <div class="discount-box">
                                 <input type="text" name="promotion_code" value="{{ old('promotion_code', $appliedPromotion->promotion_code ?? '') }}" placeholder="Mã giảm giá" maxlength="20" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
@@ -299,7 +299,7 @@
 
                             @if ($items->isNotEmpty())
                                 <div class="payment-method">
-                                    <div class="payment-badge payment-badge-cod" id="checkout-payment-summary">
+                                    <div class="payment-badge payment-badge-vnpay" id="checkout-payment-summary">
                                         <i class="fa fa-credit-card"></i>
                                         <span>Thanh toán online qua VNPay</span>
                                     </div>
@@ -311,7 +311,7 @@
 
                                 <div class="order-security">
                                     <i class="fa fa-shield"></i>
-                                    <span>Giao dịch được bảo mật - hỗ trợ thanh toán online</span>
+                                    <span id="checkout-security-text">Thanh toán online an toàn qua VNPay</span>
                                 </div>
 
                                 <div class="modal fade view-checkout-inline-1" id="thanh-toan-1" tabindex="-1" role="dialog"
@@ -325,7 +325,7 @@
                                                 </button>
                                             </div>
                                             <div class="modal-body">
-                                                <div class="confirm-icon confirm-icon-cod">
+                                                <div class="confirm-icon confirm-icon-vnpay" id="checkout-confirm-icon">
                                                     <i class="fa fa-credit-card"></i>
                                                 </div>
                                                 <p id="checkout-confirm-message">Bạn sẽ được chuyển sang VNPay sandbox.</p>
@@ -337,7 +337,7 @@
                                                 <button type="button" class="btn-modal-cancel" data-dismiss="modal">
                                                     Hủy bỏ
                                                 </button>
-                                                <button type="submit" name="checkout" class="btn-modal-confirm btn-modal-confirm-cod">
+                                                <button type="submit" name="checkout" class="btn-modal-confirm btn-modal-confirm-vnpay" id="checkout-confirm-submit">
                                                     Xác nhận thanh toán
                                                 </button>
                                             </div>
@@ -395,26 +395,26 @@
                 setFieldError(recipientPhone, 'recipient_phone', '');
 
                 if (!addressValue) {
-                    setFieldError(addressDetail, 'address_detail', 'Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ chi tiáº¿t.');
+                    setFieldError(addressDetail, 'address_detail', 'Vui lòng nhập địa chỉ chi tiết.');
                     firstInvalid = firstInvalid || addressDetail;
                 }
 
                 if (!cityValue) {
-                    setFieldError(city, 'city', 'Vui lÃ²ng chá»n Tá»‰nh/ThÃ nh phá»‘.');
+                    setFieldError(city, 'city', 'Vui lòng chọn Tỉnh/Thành phố.');
                     firstInvalid = firstInvalid || city;
                 }
 
                 if (!phoneValue) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại không được để trống.');
                     firstInvalid = firstInvalid || recipientPhone;
                 } else if (!/^[0-9]+$/.test(phoneValue)) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i chá»‰ Ä‘Æ°á»£c nháº­p sá»‘.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại chỉ được nhập số.');
                     firstInvalid = firstInvalid || recipientPhone;
                 } else if (phoneValue.length !== 10) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i báº¯t buá»™c 10 sá»‘.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại bắt buộc 10 số.');
                     firstInvalid = firstInvalid || recipientPhone;
                 } else if (!phoneValue.startsWith('0')) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i báº¯t Ä‘áº§u báº±ng sá»‘ 0.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại phải bắt đầu bằng số 0.');
                     firstInvalid = firstInvalid || recipientPhone;
                 }
 
@@ -453,26 +453,26 @@
                 setFieldError(recipientPhone, 'recipient_phone', '');
 
                 if (!addressValue) {
-                    setFieldError(addressDetail, 'address_detail', 'Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ chi tiáº¿t.');
+                    setFieldError(addressDetail, 'address_detail', 'Vui lòng nhập địa chỉ chi tiết.');
                     firstInvalid = firstInvalid || addressDetail;
                 }
 
                 if (!cityValue) {
-                    setFieldError(city, 'city', 'Vui lÃ²ng chá»n Tá»‰nh/ThÃ nh phá»‘.');
+                    setFieldError(city, 'city', 'Vui lòng chọn Tỉnh/Thành phố.');
                     firstInvalid = firstInvalid || city;
                 }
 
                 if (!phoneValue) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại không được để trống.');
                     firstInvalid = firstInvalid || recipientPhone;
                 } else if (!/^[0-9]+$/.test(phoneValue)) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i chá»‰ Ä‘Æ°á»£c nháº­p sá»‘.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại chỉ được nhập số.');
                     firstInvalid = firstInvalid || recipientPhone;
                 } else if (phoneValue.length !== 10) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i báº¯t buá»™c 10 sá»‘.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại bắt buộc 10 số.');
                     firstInvalid = firstInvalid || recipientPhone;
                 } else if (!phoneValue.startsWith('0')) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i báº¯t Ä‘áº§u báº±ng sá»‘ 0.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại phải bắt đầu bằng số 0.');
                     firstInvalid = firstInvalid || recipientPhone;
                 }
 
@@ -511,26 +511,26 @@
                 setFieldError(recipientPhone, 'recipient_phone', '');
 
                 if (!addressValue) {
-                    setFieldError(addressDetail, 'address_detail', 'Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ chi tiáº¿t.');
+                    setFieldError(addressDetail, 'address_detail', 'Vui lòng nhập địa chỉ chi tiết.');
                     firstInvalid = firstInvalid || addressDetail;
                 }
 
                 if (!cityValue) {
-                    setFieldError(city, 'city', 'Vui lÃ²ng chá»n Tá»‰nh/ThÃ nh phá»‘.');
+                    setFieldError(city, 'city', 'Vui lòng chọn Tỉnh/Thành phố.');
                     firstInvalid = firstInvalid || city;
                 }
 
                 if (!phoneValue) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại không được để trống.');
                     firstInvalid = firstInvalid || recipientPhone;
                 } else if (!/^[0-9]+$/.test(phoneValue)) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i chá»‰ Ä‘Æ°á»£c nháº­p sá»‘.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại chỉ được nhập số.');
                     firstInvalid = firstInvalid || recipientPhone;
                 } else if (phoneValue.length !== 10) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i báº¯t buá»™c 10 sá»‘.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại bắt buộc 10 số.');
                     firstInvalid = firstInvalid || recipientPhone;
                 } else if (!phoneValue.startsWith('0')) {
-                    setFieldError(recipientPhone, 'recipient_phone', 'Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i báº¯t Ä‘áº§u báº±ng sá»‘ 0.');
+                    setFieldError(recipientPhone, 'recipient_phone', 'Số điện thoại phải bắt đầu bằng số 0.');
                     firstInvalid = firstInvalid || recipientPhone;
                 }
 
@@ -570,6 +570,8 @@
             const paymentCards = document.querySelectorAll('[data-payment-card]');
             const paymentSummary = document.getElementById('checkout-payment-summary');
             const confirmMessage = document.getElementById('checkout-confirm-message');
+            const confirmIcon = document.getElementById('checkout-confirm-icon');
+            const securityText = document.getElementById('checkout-security-text');
             const checkoutModal = document.getElementById('thanh-toan-1');
             const confirmSubmit = document.getElementById('checkout-confirm-submit');
 
@@ -653,12 +655,34 @@
                     paymentSummary.innerHTML = isVnPay
                         ? '<i class="fa fa-credit-card"></i><span>Thanh toán online qua VNPay</span>'
                         : '<i class="fa fa-money"></i><span>Thanh toán khi nhận hàng (COD)</span>';
+                    paymentSummary.classList.toggle('payment-badge-vnpay', isVnPay);
+                    paymentSummary.classList.toggle('payment-badge-cod', !isVnPay);
                 }
 
                 if (confirmMessage) {
                     confirmMessage.textContent = isVnPay
                         ? 'Bạn sẽ được chuyển sang VNPay sandbox.'
                         : 'Thanh toán khi nhận hàng - bạn chỉ trả tiền khi nhận được đơn.';
+                }
+
+                if (confirmIcon) {
+                    confirmIcon.innerHTML = isVnPay
+                        ? '<i class="fa fa-credit-card"></i>'
+                        : '<i class="fa fa-money"></i>';
+                    confirmIcon.classList.toggle('confirm-icon-vnpay', isVnPay);
+                    confirmIcon.classList.toggle('confirm-icon-cod', !isVnPay);
+                }
+
+                if (confirmSubmit) {
+                    confirmSubmit.textContent = isVnPay ? 'Xác nhận thanh toán' : 'Xác nhận đặt hàng';
+                    confirmSubmit.classList.toggle('btn-modal-confirm-vnpay', isVnPay);
+                    confirmSubmit.classList.toggle('btn-modal-confirm-cod', !isVnPay);
+                }
+
+                if (securityText) {
+                    securityText.textContent = isVnPay
+                        ? 'Thanh toán online an toàn qua VNPay'
+                        : 'Đặt hàng an toàn - thanh toán khi nhận hàng';
                 }
             }
 

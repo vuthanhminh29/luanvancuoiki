@@ -392,6 +392,14 @@ select.form-control {
     color: #0f766e;
 }
 
+.payment-badge-vnpay {
+    background: linear-gradient(135deg, #dbeafe 0%, #eef2ff 100%);
+}
+
+.payment-badge-vnpay i {
+    color: #1d4ed8;
+}
+
 .payment-badge span {
     font-size: 0.875rem;
     color: #374151;
@@ -503,6 +511,14 @@ select.form-control {
     color: #0f766e;
 }
 
+.confirm-icon-vnpay {
+    background: linear-gradient(135deg, #dbeafe 0%, #eef2ff 100%);
+}
+
+.confirm-icon-vnpay i {
+    color: #1d4ed8;
+}
+
 .checkout-modal .modal-body p {
     font-size: 1rem;
     color: #374151;
@@ -570,6 +586,14 @@ select.form-control {
 
 .btn-modal-confirm-cod:hover {
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+}
+
+.btn-modal-confirm-vnpay {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+}
+
+.btn-modal-confirm-vnpay:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 
 /* Login Required Section */
