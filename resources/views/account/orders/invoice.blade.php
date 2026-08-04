@@ -11,7 +11,7 @@
         'RETURN_PENDING' => 'Chờ hoàn/đổi',
         'RETURNED' => 'Đã hoàn trả',
         'EXCHANGED' => 'Đã đổi hàng',
-        'LOST_IN_TRANSIT' => 'Mất hàng khi giao',
+        'LOST_IN_TRANSIT' => 'Không hoàn tất',
     ];
 @endphp
 <!doctype html>
