@@ -25,21 +25,21 @@
         .sidebar { width: 280px; background: #111827 !important; box-shadow: inset -1px 0 0 rgba(255,255,255,.06); }
         .content { margin-left: 280px; background: #f3f6fa; }
         .sidebar, .sidebar .navbar { background: #111827 !important; }
-        .sidebar .navbar { align-items: flex-start; padding: 18px 0 24px; }
-        .sidebar .navbar-brand { margin-left: 26px !important; margin-bottom: 22px !important; }
-        .sidebar .navbar-brand h3 { color: #fff !important; font-size: 24px; font-weight: 800; letter-spacing: 0; margin: 0; }
+        .sidebar .navbar { align-items: flex-start; padding: 12px 0 14px; }
+        .sidebar .navbar-brand { margin-left: 26px !important; margin-bottom: 14px !important; }
+        .sidebar .navbar-brand h3 { color: #fff !important; font-size: 23px; font-weight: 800; letter-spacing: 0; margin: 0; }
         .sidebar .navbar .navbar-nav .nav-link {
             align-items: center;
             border-left: 0 !important;
             border-radius: 0 28px 28px 0;
             color: #cbd5e1 !important;
             display: flex;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             gap: 12px;
-            margin: 3px 26px 3px 0;
-            min-height: 54px;
-            padding: 0 22px 0 34px;
+            margin: 2px 22px 2px 0;
+            min-height: 45px;
+            padding: 0 20px 0 32px;
             position: relative;
         }
         .sidebar .navbar .navbar-nav .nav-link i {
@@ -60,9 +60,9 @@
         .sidebar .dropdown-item.active { color: #fff !important; background: #2563eb !important; border-left: 0 !important; }
         .sidebar .navbar .nav-link:hover i,
         .sidebar .navbar .nav-link.active i { background: transparent !important; }
-        .sidebar .navbar .dropdown-toggle::after { top: 19px; right: 16px; }
-        .sidebar .dropdown-menu { background: #0f172a !important; }
-        .sidebar .dropdown-item { color: #cbd5e1 !important; font-weight: 700; padding: 9px 24px 9px 68px; }
+        .sidebar .navbar .dropdown-toggle::after { top: 15px; right: 16px; }
+        .sidebar .dropdown-menu { background: #0f172a !important; margin: 0 22px 4px 0; padding: 4px 0; }
+        .sidebar .dropdown-item { color: #cbd5e1 !important; font-size: 13px; font-weight: 700; min-height: 30px; padding: 6px 22px 6px 64px; }
         .sidebar .dropdown-item:hover { color: #fff !important; background: #1d4ed8 !important; }
         .content .navbar { min-height: 72px; background: #fff !important; border-bottom: 1px solid #e5e7eb; box-shadow: none; }
         .content .navbar .form-control { min-height: 42px; min-width: 230px; border-radius: 6px; }
@@ -148,15 +148,6 @@
                 <a href="{{ route('admin.dashboard') }}" class="nav-item nav-link {{ $isRoute('admin.dashboard') ? 'active' : '' }}"><i class="fa fa-tachometer-alt me-2"></i>Tổng quan</a>
 
                 <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.orders.*', 'admin.returns.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fa fa-shopping-basket me-2"></i>Đơn hàng</a>
-                    <div class="dropdown-menu bg-transparent border-0">
-                        <a href="{{ route('admin.orders.index') }}" class="dropdown-item {{ $isRoute('admin.orders.index', 'admin.orders.show') ? 'active' : '' }}">Tất cả đơn</a>
-                        <a href="{{ route('admin.orders.unconfirmed') }}" class="dropdown-item {{ $isRoute('admin.orders.unconfirmed') ? 'active' : '' }}">Đơn chờ xác nhận</a>
-                        <a href="{{ route('admin.returns.index') }}" class="dropdown-item {{ $isRoute('admin.returns.*') ? 'active' : '' }}">Hoàn/Đổi hàng</a>
-                    </div>
-                </div>
-
-                <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.categories.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fa fa-th me-2"></i>Danh mục</a>
                     <div class="dropdown-menu bg-transparent border-0">
                         <a href="{{ route('admin.categories.create') }}" class="dropdown-item {{ $isRoute('admin.categories.create') ? 'active' : '' }}">Thêm mới</a>
@@ -170,15 +161,6 @@
                         <a href="{{ route('admin.products.create') }}" class="dropdown-item {{ $isRoute('admin.products.create') ? 'active' : '' }}">Thêm mới</a>
                         <a href="{{ route('admin.products.index') }}" class="dropdown-item {{ $isRoute('admin.products.index', 'admin.products.edit') ? 'active' : '' }}">Tất cả</a>
                         <a href="{{ route('admin.products.recycle') }}" class="dropdown-item {{ $isRoute('admin.products.recycle') ? 'active' : '' }}">Thùng rác</a>
-                    </div>
-                </div>
-
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.posts.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fas fa-book me-2"></i>Bài viết</a>
-                    <div class="dropdown-menu bg-transparent border-0">
-                        <a href="{{ route('admin.posts.index') }}" class="dropdown-item {{ $isRoute('admin.posts.index', 'admin.posts.edit') ? 'active' : '' }}">Tất cả</a>
-                        <a href="{{ route('admin.posts.create') }}" class="dropdown-item {{ $isRoute('admin.posts.create') ? 'active' : '' }}">Thêm bài viết</a>
-                        <a href="{{ route('admin.posts.categories') }}" class="dropdown-item {{ $isRoute('admin.posts.categories', 'admin.posts.categories.edit') ? 'active' : '' }}">Chuyên mục</a>
                     </div>
                 </div>
 
@@ -197,25 +179,11 @@
                 @endif
                 <a href="{{ route('admin.warehouses.index') }}" class="nav-item nav-link {{ $isRoute('admin.warehouses.*') ? 'active' : '' }}"><i class="fas fa-warehouse me-2"></i>Quản lý kho</a>
                 @if ($isAdminUser)
-                <a href="{{ route('admin.business.index') }}" class="nav-item nav-link {{ $isRoute('admin.business.*') ? 'active' : '' }}"><i class="fas fa-briefcase me-2"></i>Nghiệp vụ</a>
                 <a href="{{ route('admin.promotions.index') }}" class="nav-item nav-link {{ $isRoute('admin.promotions.*') ? 'active' : '' }}"><i class="fas fa-tags me-2"></i>Khuyến mãi</a>
                 <a href="{{ route('admin.customers.index') }}" class="nav-item nav-link {{ $isRoute('admin.customers.*') ? 'active' : '' }}"><i class="fas fa-users me-2"></i>Thành viên</a>
                 <a href="{{ route('admin.tryon-snapshots.index') }}" class="nav-item nav-link {{ $isRoute('admin.tryon-snapshots.*') ? 'active' : '' }}"><i class="fas fa-camera-retro me-2"></i>Thử kính</a>
                 @endif
                 <a href="{{ route('admin.reviews.index') }}" class="nav-item nav-link {{ $isRoute('admin.reviews.*') ? 'active' : '' }}"><i class="fas fa-comment me-2"></i>Bình luận</a>
-
-                @if ($isAdminUser)
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.banners.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fa fa-image me-2"></i>Banner</a>
-                    <div class="dropdown-menu bg-transparent border-0">
-                        <a href="{{ route('admin.banners.create') }}" class="dropdown-item {{ $isRoute('admin.banners.create') ? 'active' : '' }}">Thêm mới</a>
-                        <a href="{{ route('admin.banners.index') }}" class="dropdown-item {{ $isRoute('admin.banners.index', 'admin.banners.edit') ? 'active' : '' }}">Tất cả</a>
-                    </div>
-                </div>
-
-                <a href="{{ route('admin.home-layout.index') }}" class="nav-item nav-link {{ $isRoute('admin.home-layout.*') ? 'active' : '' }}"><i class="fa fa-th me-2"></i>Bố cục trang</a>
-                @endif
-                <a href="{{ route('home') }}" class="nav-item nav-link"><i class="fa fa-home me-2"></i>Về website</a>
             </div>
         </nav>
     </div>
