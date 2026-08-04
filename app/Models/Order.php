@@ -71,4 +71,9 @@ class Order extends Model
     {
         return $this->belongsTo(Promotion::class);
     }
+
+    public function hasReturnableStatus(): bool
+    {
+        return in_array($this->status, ['DELIVERED', 'RETURN_PENDING', 'RETURNED', 'EXCHANGED'], true);
+    }
 }

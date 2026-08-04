@@ -51,6 +51,8 @@ class AccountController extends Controller
 
         return view('account.orders.show', [
             'order' => $order->load(['items.product', 'returnRequests.reason', 'returnRequests.items']),
+            'countedReturnStatuses' => ['PENDING', 'APPROVED', 'RECEIVED', 'COMPLETED'],
+            'isReturnWindowOpen' => $order->delivered_at === null || $order->delivered_at->gte(now()->subDays(7)),
         ]);
     }
 
