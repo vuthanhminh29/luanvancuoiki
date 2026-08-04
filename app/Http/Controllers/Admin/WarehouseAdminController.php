@@ -129,7 +129,7 @@ class WarehouseAdminController extends Controller
     {
         return view('admin.shared.table', [
             'title' => 'Danh sách kho',
-            'subtitle' => 'Phiếu nhập/xuất/chuyển kho',
+            'subtitle' => 'Phiếu nhập/xuất kho',
             'headers' => ['Mã phiếu', 'Loại', 'Kho nguồn', 'Kho đích', 'Trạng thái'],
             'createRoute' => route('admin.warehouses.create-transaction'),
             'rows' => StockTransaction::with(['sourceWarehouse', 'targetWarehouse'])
@@ -206,7 +206,7 @@ class WarehouseAdminController extends Controller
     {
         $data = $request->validate([
             'transaction_code' => ['nullable', 'string', 'max:50', 'unique:stock_transactions,transaction_code'],
-            'type' => ['required', 'in:IMPORT,EXPORT,TRANSFER,ADJUST'],
+            'type' => ['required', 'in:IMPORT,EXPORT'],
             'source_warehouse_id' => ['nullable', 'exists:warehouses,id'],
             'target_warehouse_id' => ['nullable', 'exists:warehouses,id'],
             'expected_date' => ['nullable', 'date'],
@@ -214,7 +214,7 @@ class WarehouseAdminController extends Controller
             'variant_id' => ['required', 'array', 'min:1'],
             'variant_id.*' => ['required', 'integer', 'exists:product_variants,id'],
             'quantity' => ['required', 'array', 'min:1'],
-            'quantity.*' => ['required', 'integer', 'min:0'],
+            'quantity.*' => ['required', 'integer', 'min:1'],
             'unit_cost' => ['nullable', 'array'],
             'unit_cost.*' => ['nullable', 'numeric', 'min:0'],
         ]);
@@ -223,7 +223,7 @@ class WarehouseAdminController extends Controller
         $sourceWarehouseId = filled($data['source_warehouse_id'] ?? null) ? (int) $data['source_warehouse_id'] : null;
         $targetWarehouseId = filled($data['target_warehouse_id'] ?? null) ? (int) $data['target_warehouse_id'] : null;
 
-        if (in_array($type, ['IMPORT', 'ADJUST'], true)) {
+        if ($type === 'IMPORT') {
             $sourceWarehouseId = null;
         }
 
@@ -237,21 +237,6 @@ class WarehouseAdminController extends Controller
 
         if ($type === 'EXPORT') {
             $this->assertActiveWarehouse($sourceWarehouseId, 'Phiếu xuất cần chọn kho xuất hàng.', 'source_warehouse_id');
-        }
-
-        if ($type === 'TRANSFER') {
-            $this->assertActiveWarehouse($sourceWarehouseId, 'Phiếu chuyển cần chọn kho nguồn.', 'source_warehouse_id');
-            $this->assertActiveWarehouse($targetWarehouseId, 'Phiếu chuyển cần chọn kho đích.', 'target_warehouse_id');
-        }
-
-        if ($type === 'ADJUST') {
-            $this->assertActiveWarehouse($targetWarehouseId, 'Cập nhật tồn kho cần chọn kho cần cập nhật.', 'target_warehouse_id');
-        }
-
-        if ($type === 'TRANSFER' && $sourceWarehouseId && $targetWarehouseId && $sourceWarehouseId === $targetWarehouseId) {
-            throw ValidationException::withMessages([
-                'target_warehouse_id' => 'Kho nguồn và kho đích phải khác nhau.',
-            ]);
         }
 
         $items = collect($data['variant_id'])
@@ -277,31 +262,22 @@ class WarehouseAdminController extends Controller
             ]);
         }
 
-        if ($type !== 'ADJUST' && $items->contains(fn ($item) => $item['quantity'] < 1)) {
+        if ($items->contains(fn ($item) => $item['quantity'] < 1)) {
             throw ValidationException::withMessages([
-                'quantity' => 'Số lượng nhập, xuất hoặc chuyển kho phải tối thiểu là 1.',
+                'quantity' => 'Số lượng nhập hoặc xuất kho phải tối thiểu là 1.',
             ]);
         }
 
         $transaction = DB::transaction(function () use ($data, $items, $sourceWarehouseId, $targetWarehouseId, $type) {
-            $adjustedOldQuantities = [];
-
-            if (in_array($type, ['EXPORT', 'TRANSFER'], true)) {
+            if ($type === 'EXPORT') {
                 foreach ($items as $item) {
                     $this->subtractVariantInventory($sourceWarehouseId, $item['variant_id'], $item['quantity']);
                 }
             }
 
-            if (in_array($type, ['IMPORT', 'TRANSFER'], true)) {
+            if ($type === 'IMPORT') {
                 foreach ($items as $item) {
                     $this->addVariantInventory($targetWarehouseId, $item['variant_id'], $item['quantity']);
-                    $this->activateVariantProduct($item['variant_id']);
-                }
-            }
-
-            if ($type === 'ADJUST') {
-                foreach ($items as $item) {
-                    $adjustedOldQuantities[$item['variant_id']] = $this->adjustVariantInventory($targetWarehouseId, $item['variant_id'], $item['quantity']);
                     $this->activateVariantProduct($item['variant_id']);
                 }
             }
@@ -322,22 +298,12 @@ class WarehouseAdminController extends Controller
             ]);
 
             foreach ($items as $item) {
-                $itemNote = $data['note'] ?? null;
-
-                if ($type === 'ADJUST') {
-                    $oldQuantity = (int) ($adjustedOldQuantities[$item['variant_id']] ?? 0);
-                    $adjustNote = 'Tồn cũ: ' . $oldQuantity . '; tồn mới: ' . $item['quantity'];
-                    $itemNote = trim((string) $itemNote) === '' ? $adjustNote : $itemNote . ' | ' . $adjustNote;
-                }
-
                 $transaction->items()->create([
                     'variant_id' => $item['variant_id'],
-                    'ordered_quantity' => $type === 'ADJUST'
-                        ? (int) ($adjustedOldQuantities[$item['variant_id']] ?? 0)
-                        : $item['quantity'],
+                    'ordered_quantity' => $item['quantity'],
                     'actual_quantity' => $item['quantity'],
                     'unit_cost' => $item['unit_cost'],
-                    'note' => $itemNote,
+                    'note' => $data['note'] ?? null,
                 ]);
             }
 
@@ -346,7 +312,7 @@ class WarehouseAdminController extends Controller
 
         return redirect()
             ->route('admin.warehouses.index', ['warehouse_tab' => 'transactions'])
-            ->with('success', 'Đã tạo phiếu kho ' . $transaction->transaction_code . ' và cập nhật tồn kho.');
+            ->with('success', 'Đã tạo phiếu kho ' . $transaction->transaction_code . ' và ghi nhận tồn kho.');
     }
 
     private function assertActiveWarehouse(?int $warehouseId, string $message, string $field): void
@@ -396,31 +362,6 @@ class WarehouseAdminController extends Controller
         $inventory->decrement('quantity', $quantity);
     }
 
-    private function adjustVariantInventory(int $warehouseId, int $variantId, int $newQuantity): int
-    {
-        $inventory = Inventory::query()
-            ->where('warehouse_id', $warehouseId)
-            ->where('variant_id', $variantId)
-            ->lockForUpdate()
-            ->first();
-
-        if (! $inventory) {
-            Inventory::create([
-                'warehouse_id' => $warehouseId,
-                'variant_id' => $variantId,
-                'quantity' => $newQuantity,
-                'min_stock_level' => Warehouse::whereKey($warehouseId)->value('min_stock_level') ?? 10,
-            ]);
-
-            return 0;
-        }
-
-        $oldQuantity = (int) $inventory->quantity;
-        $inventory->update(['quantity' => $newQuantity]);
-
-        return $oldQuantity;
-    }
-
     private function activateVariantProduct(int $variantId): void
     {
         ProductVariant::whereKey($variantId)->update(['status' => 'ACTIVE']);
@@ -437,8 +378,6 @@ class WarehouseAdminController extends Controller
         $prefix = [
             'IMPORT' => 'PN',
             'EXPORT' => 'PX',
-            'TRANSFER' => 'DC',
-            'ADJUST' => 'KK',
         ][$type] ?? 'STK';
 
         return $prefix . now()->format('YmdHis') . random_int(10, 99);

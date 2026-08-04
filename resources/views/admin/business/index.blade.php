@@ -26,8 +26,6 @@
     $stockType = fn ($type) => match ($type) {
         'IMPORT' => 'Nhập kho',
         'EXPORT' => 'Xuất kho',
-        'TRANSFER' => 'Chuyển kho',
-        'ADJUST' => 'Điều chỉnh',
         'RETURN_IN' => 'Nhập hoàn',
         'SALE_OUT' => 'Xuất bán',
         default => $type ?: '-',
