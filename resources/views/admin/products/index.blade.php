@@ -27,6 +27,7 @@
             <p class="pa-subtitle">Quản lý sản phẩm, biến thể màu/size, giá bán và tồn kho khả dụng.</p>
         </div>
         <div class="pa-actions">
+            <a class="pa-btn" href="{{ route('admin.products.export-excel') }}"><i class="fas fa-file-excel"></i> Xuất Excel</a>
             <a class="pa-btn" href="{{ route('admin.products.recycle') }}"><i class="fas fa-archive"></i> Thùng lưu trữ ({{ $int($totalRecycle) }})</a>
             <a class="pa-btn primary" href="{{ route('admin.products.create') }}"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
         </div>

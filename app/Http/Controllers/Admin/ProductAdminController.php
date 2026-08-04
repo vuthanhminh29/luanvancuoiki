@@ -17,6 +17,7 @@ use App\Models\ProductVariant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -100,6 +101,62 @@ class ProductAdminController extends Controller
 
         return view('admin.products.recycle', [
             'products' => $products,
+        ]);
+    }
+
+    public function exportExcel(): Response
+    {
+        $rows = DB::table('products as p')
+            ->leftJoin('categories as c', 'c.id', '=', 'p.category_id')
+            ->leftJoin('brands as b', 'b.id', '=', 'p.brand_id')
+            ->leftJoin('frame_shapes as fs', 'fs.id', '=', 'p.frame_shape_id')
+            ->leftJoin('frame_materials as fm', 'fm.id', '=', 'p.frame_material_id')
+            ->leftJoin('product_variants as pv', 'pv.product_id', '=', 'p.id')
+            ->leftJoin('colors as co', 'co.id', '=', 'pv.color_id')
+            ->leftJoin('lens_sizes as ls', 'ls.id', '=', 'pv.lens_size_id')
+            ->select([
+                'p.name',
+                'c.name as category_name',
+                'b.name as brand_name',
+                'fs.name as frame_shape_name',
+                'fm.name as frame_material_name',
+                'p.uv_protection',
+                'p.import_price',
+                'p.base_price',
+                'p.sale_price',
+                'p.status',
+                'p.view_count',
+                'p.description',
+                'p.created_at',
+                'p.updated_at',
+                'co.name as color_name',
+                'ls.name as lens_size_name',
+                'pv.variant_price',
+                'pv.status as variant_status',
+            ])
+            ->selectRaw('(SELECT COALESCE(SUM(i.quantity), 0) FROM inventories i WHERE i.variant_id = pv.id) as stock_quantity')
+            ->selectRaw("(SELECT COALESCE(SUM(oi.quantity), 0)
+                FROM order_items oi
+                JOIN orders o ON o.id = oi.order_id
+                WHERE oi.product_id = p.id
+                  AND o.status <> 'CANCELLED'
+                  AND ((pv.id IS NULL AND oi.variant_id IS NULL) OR oi.variant_id = pv.id)
+            ) as sold_quantity")
+            ->orderByDesc('p.id')
+            ->orderBy('pv.id')
+            ->get();
+
+        $fileName = 'danh-sach-san-pham-' . now()->format('Ymd-His') . '.xls';
+        $content = view('admin.products.export-excel', [
+            'rows' => $rows,
+            'generatedAt' => now(),
+        ])->render();
+
+        return response("\xEF\xBB\xBF" . $content, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Cache-Control' => 'max-age=0, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma' => 'public',
         ]);
     }
 
