@@ -24,6 +24,7 @@
         * { box-sizing: border-box; }
         body { margin: 0; background: #eef2f7; color: #111827; font-family: Arial, Helvetica, sans-serif; }
         .toolbar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: center; gap: 10px; padding: 14px; background: rgba(238, 242, 247, .94); border-bottom: 1px solid #dbe3ef; }
+        .toolbar form { margin: 0; }
         .btn { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0 14px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #1f2937; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; }
         .btn.primary { background: #111827; color: #fff; border-color: #111827; }
         .mail-status { width: 210mm; margin: 14px auto 0; padding: 10px 14px; border-radius: 8px; border: 1px solid #dbeafe; background: #eff6ff; color: #1d4ed8; font-size: 13px; font-weight: 700; }
@@ -61,6 +62,10 @@
 <body>
     <div class="toolbar">
         <button class="btn primary" type="button" onclick="window.print()">In / Tải PDF</button>
+        <form action="{{ route('account.orders.invoice.email', $order) }}" method="post">
+            @csrf
+            <button class="btn" type="submit">Gửi về email</button>
+        </form>
         <a class="btn" href="{{ $backUrl }}">Quay lại đơn hàng</a>
     </div>
 

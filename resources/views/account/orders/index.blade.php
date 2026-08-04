@@ -121,6 +121,9 @@
                                 <span>Thành tiền</span>
                                 <strong>{{ number_format($order->total_amount, 0, ',', '.') }}đ</strong>
                             </div>
+                            <a href="{{ route('account.orders.invoice', $order) }}" class="orders-btn light" target="_blank" rel="noopener">
+                                Hóa đơn <i class="fas fa-file-invoice"></i>
+                            </a>
                             <a href="{{ route('account.orders.show', $order) }}" class="orders-btn primary">
                                 Xem chi tiết <i class="fas fa-arrow-right"></i>
                             </a>
