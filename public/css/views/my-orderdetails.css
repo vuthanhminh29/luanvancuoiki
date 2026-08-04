@@ -41,13 +41,14 @@
 .od-badge.dark { color:#374151; background:#f3f4f6; border-color:#d1d5db; }
 .od-progress { margin-top:16px; position:relative; display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; }
 .od-progress:before { content:""; position:absolute; left:7%; right:7%; top:18px; height:2px; background:#e5e7eb; }
-.od-step { --step-color:#9ca3af; --step-bg:#f9fafb; --step-border:#d1d5db; position:relative; z-index:1; text-align:center; color:var(--step-color); font-size:12px; font-weight:700; }
+.od-step { --step-color:#9ca3af; --step-bg:#f9fafb; --step-border:#d1d5db; position:relative; z-index:1; text-align:center; color:#9ca3af; font-size:12px; font-weight:700; }
 .od-step.payment { --step-color:#c2410c; --step-bg:#fff7ed; --step-border:#fed7aa; }
 .od-step.pending { --step-color:#92400e; --step-bg:#fffbeb; --step-border:#fde68a; }
 .od-step.confirmed { --step-color:#1d4ed8; --step-bg:#eff6ff; --step-border:#bfdbfe; }
 .od-step.shipping { --step-color:#6d28d9; --step-bg:#f5f3ff; --step-border:#ddd6fe; }
 .od-step.success { --step-color:#047857; --step-bg:#ecfdf5; --step-border:#a7f3d0; }
-.od-step-icon { width:36px; height:36px; border-radius:50%; margin:0 auto 7px; background:var(--step-bg); border:2px solid var(--step-border); display:flex; align-items:center; justify-content:center; color:var(--step-color); }
+.od-step-icon { width:36px; height:36px; border-radius:50%; margin:0 auto 7px; background:#fff; border:2px solid #d1d5db; display:flex; align-items:center; justify-content:center; color:#9ca3af; }
+.od-step.active { color:var(--step-color); }
 .od-step.active .od-step-icon { background:var(--step-color); border-color:var(--step-color); color:#fff; }
 .od-alert { padding:12px 14px; border-radius:8px; display:flex; align-items:center; gap:10px; font-weight:700; line-height:1.5; }
 .od-alert.danger { background:#fef2f2; color:#991b1b; }

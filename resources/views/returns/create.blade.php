@@ -22,19 +22,25 @@
 </div>
 
 @php
-    $firstItem = $order->items->first();
+    $items = collect($returnableItems ?? $order->items);
+    $remaining = collect($remainingQuantities ?? []);
+    $firstItem = $items->first();
+    $selectedItemId = (int) old('order_item_id', $selectedOrderItemId ?? ($firstItem?->id ?? 0));
+    $selectedItem = $items->firstWhere('id', $selectedItemId) ?? $firstItem;
+    $firstMax = $selectedItem ? max(1, (int) ($remaining[$selectedItem->id] ?? $selectedItem->quantity)) : 1;
 @endphp
 
 <section class="view-return-request-inline-2">
     <div class="container view-return-request-inline-3">
-        @if ($firstItem)
-            <div class="view-return-request-inline-4">
+        @if ($selectedItem)
+            <div class="view-return-request-inline-4" data-return-item-card>
                 <div class="view-return-request-inline-5">
-                    <img src="{{ $firstItem->product->image_url ?? asset('upload/no-image.jpg') }}" alt="" class="view-return-request-inline-13">
+                    <img src="{{ $selectedItem->product->image_url ?? asset('upload/no-image.jpg') }}" alt="" class="view-return-request-inline-13" data-return-item-image>
                     <div>
-                        <h4 class="view-return-request-inline-6">{{ $firstItem->product_name }}</h4>
-                        <div class="view-return-request-inline-7">Số lượng đã mua: {{ $firstItem->quantity }}</div>
-                        <div class="view-return-request-inline-8">{{ number_format($firstItem->unit_price, 0, ',', '.') }}d</div>
+                        <h4 class="view-return-request-inline-6" data-return-item-name>{{ $selectedItem->product_name }}</h4>
+                        <div class="view-return-request-inline-7">Số lượng đã mua: <span data-return-item-purchased>{{ $selectedItem->quantity }}</span></div>
+                        <div class="view-return-request-inline-7">Còn có thể yêu cầu: <span data-return-item-remaining>{{ $firstMax }}</span></div>
+                        <div class="view-return-request-inline-8" data-return-item-price>{{ number_format($selectedItem->unit_price, 0, ',', '.') }}đ</div>
                     </div>
                 </div>
             </div>
@@ -52,10 +58,21 @@
 
             <div class="form-group">
                 <label>Sản phẩm</label>
-                <select name="order_item_id" class="form-control" required>
-                    @foreach ($order->items as $item)
-                        <option value="{{ $item->id }}" @selected(old('order_item_id') == $item->id)>
-                            {{ $item->product_name }} x {{ $item->quantity }}
+                <select name="order_item_id" class="form-control" data-return-item-select required>
+                    @foreach ($items as $item)
+                        @php
+                            $maxQuantity = max(1, (int) ($remaining[$item->id] ?? $item->quantity));
+                        @endphp
+                        <option
+                            value="{{ $item->id }}"
+                            data-max="{{ $maxQuantity }}"
+                            data-name="{{ $item->product_name }}"
+                            data-purchased="{{ $item->quantity }}"
+                            data-price="{{ number_format($item->unit_price, 0, ',', '.') }}đ"
+                            data-image="{{ $item->product->image_url ?? asset('upload/no-image.jpg') }}"
+                            @selected($selectedItemId === (int) $item->id)
+                        >
+                            {{ $item->product_name }} - còn có thể yêu cầu {{ $maxQuantity }}/{{ $item->quantity }}
                         </option>
                     @endforeach
                 </select>
@@ -73,7 +90,7 @@
 
             <div class="form-group">
                 <label>Số lượng</label>
-                <input type="number" name="quantity" min="1" value="{{ old('quantity', 1) }}" class="form-control" required>
+                <input type="number" name="quantity" min="1" max="{{ $firstMax }}" value="{{ old('quantity', 1) }}" class="form-control" data-return-quantity required>
             </div>
 
             <div class="form-group">
@@ -94,3 +111,54 @@
     </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var itemSelect = document.querySelector('[data-return-item-select]');
+    var quantityInput = document.querySelector('[data-return-quantity]');
+    var itemImage = document.querySelector('[data-return-item-image]');
+    var itemName = document.querySelector('[data-return-item-name]');
+    var itemPurchased = document.querySelector('[data-return-item-purchased]');
+    var itemRemaining = document.querySelector('[data-return-item-remaining]');
+    var itemPrice = document.querySelector('[data-return-item-price]');
+
+    function syncReturnItem() {
+        if (!itemSelect || !quantityInput) {
+            return;
+        }
+
+        var selected = itemSelect.options[itemSelect.selectedIndex];
+        var max = parseInt(selected ? selected.dataset.max : quantityInput.max, 10) || 1;
+        quantityInput.max = String(max);
+
+        if (parseInt(quantityInput.value, 10) > max) {
+            quantityInput.value = String(max);
+        }
+
+        if (selected) {
+            if (itemImage) {
+                itemImage.src = selected.dataset.image || itemImage.src;
+            }
+            if (itemName) {
+                itemName.textContent = selected.dataset.name || '';
+            }
+            if (itemPurchased) {
+                itemPurchased.textContent = selected.dataset.purchased || '';
+            }
+            if (itemRemaining) {
+                itemRemaining.textContent = String(max);
+            }
+            if (itemPrice) {
+                itemPrice.textContent = selected.dataset.price || '';
+            }
+        }
+    }
+
+    if (itemSelect) {
+        itemSelect.addEventListener('change', syncReturnItem);
+        syncReturnItem();
+    }
+});
+</script>
+@endpush

@@ -9,19 +9,19 @@ use Illuminate\View\View;
 
 class TryOnSnapshotAdminController extends Controller
 {
-    // Hiá»ƒn thá»‹ danh sÃ¡ch káº¿t quáº£ thá»­ kÃ­nh trong admin.
+    // Hiển thị danh sách kết quả thử kính trong admin.
     // Route: GET /admin/thu-kinh.
     public function index(Request $request): View
     {
-        // Tá»« khÃ³a dÃ¹ng Ä‘á»ƒ lá»c theo tÃªn khÃ¡ch, email, tÃªn kÃ­nh hoáº·c mÃ£ model.
+        // Từ khóa dùng để lọc theo tên khách, email, tên kính hoặc mã model.
         $keyword = trim((string) $request->query('keyword'));
 
-        // Query láº¥y lá»‹ch sá»­ thá»­ kÃ­nh má»›i nháº¥t trÆ°á»›c, kÃ¨m user/product Ä‘á»ƒ sau nÃ y cáº§n má»Ÿ rá»™ng váº«n cÃ³ dá»¯ liá»‡u.
+        // Query lấy lịch sử thử kính mới nhất trước, kèm user/product để sau này cần mở rộng vẫn có dữ liệu.
         $snapshotsQuery = TryOnSnapshot::query()
             ->with(['product', 'user'])
             ->latest('id');
 
-        // Náº¿u admin nháº­p Ã´ tÃ¬m kiáº¿m thÃ¬ gom Ä‘iá»u kiá»‡n vÃ o má»™t nhÃ³m where.
+        // Nếu admin nhập ô tìm kiếm thì gom điều kiện vào một nhóm where.
         if ($keyword !== '') {
             $like = "%{$keyword}%";
 
@@ -33,11 +33,11 @@ class TryOnSnapshotAdminController extends Controller
             });
         }
 
-        // PhÃ¢n trang Ä‘á»ƒ danh sÃ¡ch áº£nh khÃ´ng bá»‹ quÃ¡ dÃ i khi cÃ³ nhiá»u lÆ°á»£t thá»­ kÃ­nh.
-        // PhÃ¢n trang 10 hÃ¬nh má»—i trang Ä‘á»ƒ admin xem áº£nh thá»­ kÃ­nh gá»n hÆ¡n.
+        // Phân trang để danh sách ảnh không bị quá dài khi có nhiều lượt thử kính.
+        // Phân trang 10 hình má»—i trang để admin xem ảnh thá»­ kính gọn hơn.
         $snapshots = $snapshotsQuery->paginate(10)->withQueryString();
 
-        // CÃ¡c sá»‘ liá»‡u nhá» á»Ÿ Ä‘áº§u trang giÃºp tháº§y/admin nhÃ¬n nhanh tá»•ng quan.
+        // Các số liệu nhỏ ở đầu trang giúp thầy/admin nhìn nhanh tổng quan.
         $summary = [
             'total' => TryOnSnapshot::count(),
             'users' => TryOnSnapshot::distinct('user_email')->count('user_email'),

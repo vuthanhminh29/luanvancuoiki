@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\Log;
 
 class OrderConfirmationEmailService
 {
-    // Gá»­i email xÃ¡c nháº­n Ä‘Æ¡n hÃ ng thÃ nh cÃ´ng cho cáº£ COD vÃ  VNPay.
-    // Email nÃ y chá»‰ thÃ´ng bÃ¡o thÃ´ng tin Ä‘Æ¡n hÃ ng, khÃ´ng cÃ³ link xÃ¡c nháº­n hay link thao tÃ¡c.
+    // Gửi email xác nhận đơn hàng thành công cho cả COD và VNPay.
+    // Email này chỉ thông báo thông tin đơn hàng, không có link xác nhận hay link thao tác.
     public function send(Order $order): bool
     {
         return DB::transaction(function () use ($order): bool {
-            // KhÃ³a order Ä‘á»ƒ VNPay return vÃ  IPN khÃ´ng gá»­i trÃ¹ng email cÃ¹ng lÃºc.
+            // Khóa order để VNPay return và IPN không gửi trùng email cùng lúc.
             $lockedOrder = Order::query()
                 ->with(['user', 'items'])
                 ->lockForUpdate()
@@ -24,13 +24,13 @@ class OrderConfirmationEmailService
                 return false;
             }
 
-            // Náº¿u Ä‘Ã£ gá»­i rá»“i thÃ¬ bá» qua, coi nhÆ° thÃ nh cÃ´ng.
+            // Nếu đã gá»­i rồi thì bỏ qua, coi như thành công.
             if ($lockedOrder->order_confirmation_email_sent_at !== null) {
                 return true;
             }
 
-            // Láº¥y email tá»« tÃ i khoáº£n user gáº¯n vá»›i Ä‘Æ¡n hÃ ng.
-            // ÄÆ¡n hÃ ng checkout báº¯t buá»™c Ä‘Äƒng nháº­p nÃªn user thÆ°á»ng luÃ´n cÃ³ email.
+            // Lấy email từ tài khoản user gắn với đơn hàng.
+            // Đơn hàng checkout bắt buá»™c đăng nhập nên user thường luôn có email.
             $email = $this->customerEmail($lockedOrder);
 
             if ($email === null) {
@@ -46,10 +46,10 @@ class OrderConfirmationEmailService
                     $this->emailBody($lockedOrder),
                     fn ($message) => $message
                         ->to($email)
-                        ->subject('XÃ¡c nháº­n Ä‘Æ¡n hÃ ng thÃ nh cÃ´ng ' . ($lockedOrder->order_code ?: '#' . $lockedOrder->id))
+                        ->subject('Xác nhận đơn hàng thành công ' . ($lockedOrder->order_code ?: '#' . $lockedOrder->id))
                 );
             } catch (\Throwable $exception) {
-                // KhÃ´ng rollback Ä‘Æ¡n hÃ ng náº¿u mail lá»—i; chá»‰ log Ä‘á»ƒ admin kiá»ƒm tra SMTP.
+                // Không rollback đơn hàng nếu mail lỗi; chỉ log để admin kiểm tra SMTP.
                 Log::error('Order confirmation email could not be sent.', [
                     'order_id' => $lockedOrder->id,
                     'email' => $email,
@@ -59,7 +59,7 @@ class OrderConfirmationEmailService
                 return false;
             }
 
-            // ÄÃ¡nh dáº¥u Ä‘Ã£ gá»­i email Ä‘á»ƒ cÃ¡c láº§n gá»i sau khÃ´ng gá»­i láº¡i.
+            // Đánh dấu đã gá»­i email để các lần gọi sau không gửi lại.
             $lockedOrder->forceFill([
                 'order_confirmation_email_sent_at' => now(),
             ])->save();
@@ -70,7 +70,7 @@ class OrderConfirmationEmailService
 
     private function customerEmail(Order $order): ?string
     {
-        // Trim Ä‘á»ƒ trÃ¡nh trÆ°á»ng há»£p email chá»‰ toÃ n khoáº£ng tráº¯ng.
+        // Trim để tránh trường hợp email chỉ toàn khoảng trắng.
         $email = trim((string) ($order->user?->email ?? ''));
 
         return $email === '' ? null : $email;
@@ -78,28 +78,28 @@ class OrderConfirmationEmailService
 
     private function emailBody(Order $order): string
     {
-        // Ná»™i dung email gá»“m Ä‘áº§y Ä‘á»§ snapshot Ä‘Æ¡n hÃ ng.
-        // Snapshot láº¥y tá»« order_items nÃªn sáº£n pháº©m Ä‘á»•i tÃªn/giÃ¡ sau nÃ y cÅ©ng khÃ´ng lÃ m email sai.
+        // Nội dung email gồm đầy đủ snapshot đơn hàng.
+        // Snapshot lấy từ order_items nên sản phẩm đổi tên/giá sau này cũng không làm email sai.
         $lines = [
-            'Xin chÃ o ' . ($order->user?->full_name ?: $order->recipient_name) . ',',
+            'Xin chào ' . ($order->user?->full_name ?: $order->recipient_name) . ',',
             '',
-            'ÄÆ¡n hÃ ng cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c ghi nháº­n thÃ nh cÃ´ng táº¡i ' . config('app.name') . '.',
-            'DÆ°á»›i Ä‘Ã¢y lÃ  toÃ n bá»™ thÃ´ng tin Ä‘Æ¡n hÃ ng:',
+            'Đơn hàng của bạn đã được ghi nhận thành công tại ' . config('app.name') . '.',
+            'Dưới đây là toàn bộ thông tin đơn hàng:',
             '',
-            'THÃ”NG TIN ÄÆ N HÃ€NG',
-            'MÃ£ Ä‘Æ¡n: ' . ($order->order_code ?: '#' . $order->id),
-            'NgÃ y Ä‘áº·t: ' . $order->created_at?->format('d/m/Y H:i'),
-            'Tráº¡ng thÃ¡i Ä‘Æ¡n: ' . $this->statusLabel($order->status),
-            'PhÆ°Æ¡ng thá»©c thanh toÃ¡n: ' . $this->paymentLabel($order->payment_method),
-            'Tráº¡ng thÃ¡i thanh toÃ¡n: ' . $this->paymentStatusLabel($order->payment_status),
+            'THÔNG TIN ĐƠN HÀNG',
+            'Mã đơn: ' . ($order->order_code ?: '#' . $order->id),
+            'Ngày đặt: ' . $order->created_at?->format('d/m/Y H:i'),
+            'Trạng thái đơn: ' . $this->statusLabel($order->status),
+            'Phương thức thanh toán: ' . $this->paymentLabel($order->payment_method),
+            'Trạng thái thanh toán: ' . $this->paymentStatusLabel($order->payment_status),
             '',
-            'THÃ”NG TIN GIAO HÃ€NG',
-            'NgÆ°á»i nháº­n: ' . $order->recipient_name,
-            'Sá»‘ Ä‘iá»‡n thoáº¡i: ' . $order->recipient_phone,
-            'Äá»‹a chá»‰: ' . $order->shipping_address,
-            'Ghi chÃº: ' . ($order->note ?: '-'),
+            'THÔNG TIN GIAO HÀNG',
+            'Người nhận: ' . $order->recipient_name,
+            'Số điện thoại: ' . $order->recipient_phone,
+            'Địa chỉ: ' . $order->shipping_address,
+            'Ghi chú: ' . ($order->note ?: '-'),
             '',
-            'Sáº¢N PHáº¨M',
+            'SẢN PHẨM',
         ];
 
         foreach ($order->items as $item) {
@@ -111,37 +111,37 @@ class OrderConfirmationEmailService
             }
 
             if ($variant !== '') {
-                $lines[] = '  PhÃ¢n loáº¡i: ' . $variant;
+                $lines[] = '  Phân loại: ' . $variant;
             }
 
-            $lines[] = '  Sá»‘ lÆ°á»£ng: ' . $item->quantity;
-            $lines[] = '  ÄÆ¡n giÃ¡: ' . $this->money($item->unit_price);
-            $lines[] = '  ThÃ nh tiá»n: ' . $this->money($item->total_price);
+            $lines[] = '  Số lượng: ' . $item->quantity;
+            $lines[] = '  Đơn giá: ' . $this->money($item->unit_price);
+            $lines[] = '  Thành tiền: ' . $this->money($item->total_price);
         }
 
         return implode(\n, array_merge($lines, [
             '',
-            'THANH TOÃN',
-            'Tá»•ng tiá»n hÃ ng: ' . $this->money($order->subtotal_amount),
-            'Giáº£m giÃ¡: ' . $this->money($order->discount_amount),
-            'PhÃ­ váº­n chuyá»ƒn: ' . $this->money($order->shipping_fee),
-            'Tá»•ng thanh toÃ¡n: ' . $this->money($order->total_amount),
+            'THANH TOÁN',
+            'Tổng tiền hàng: ' . $this->money($order->subtotal_amount),
+            'Giảm giá: ' . $this->money($order->discount_amount),
+            'Phí vận chuyển: ' . $this->money($order->shipping_fee),
+            'Tổng thanh toán: ' . $this->money($order->total_amount),
             '',
-            'Cáº£m Æ¡n báº¡n Ä‘Ã£ mua hÃ ng táº¡i ' . config('app.name') . '.',
+            'Cảm ơn bạn đã mua hàng tại ' . config('app.name') . '.',
         ]));
     }
 
     private function money(mixed $amount): string
     {
-        // Äá»‹nh dáº¡ng tiá»n Viá»‡t Nam giá»‘ng cÃ¡c mÃ n hÃ¬nh Ä‘Æ¡n hÃ ng.
-        return number_format((float) $amount, 0, ',', '.') . 'Ä‘';
+        // Định dạng tiền Việt Nam giống các màn hình đơn hàng.
+        return number_format((float) $amount, 0, ',', '.') . 'đ';
     }
 
     private function paymentLabel(?string $method): string
     {
-        // Chuyá»ƒn mÃ£ phÆ°Æ¡ng thá»©c trong database thÃ nh chá»¯ dá»… hiá»ƒu trong email.
+        // Chuyển mã phương thức trong database thành chữ dễ hiểu trong email.
         return match ($method) {
-            'COD' => 'Thanh toÃ¡n khi nháº­n hÃ ng',
+            'COD' => 'Thanh toán khi nhận hàng',
             'VNPAY' => 'VNPay',
             default => $method ?: '-',
         };
@@ -149,28 +149,28 @@ class OrderConfirmationEmailService
 
     private function paymentStatusLabel(?string $status): string
     {
-        // COD lÃºc má»›i Ä‘áº·t lÃ  UNPAID, VNPay thÃ nh cÃ´ng lÃ  PAID.
+        // COD lúc mới đặt là UNPAID, VNPay thành công là PAID.
         return match ($status) {
-            'PAID' => 'ÄÃ£ thanh toÃ¡n',
-            'UNPAID' => 'ChÆ°a thanh toÃ¡n',
+            'PAID' => 'Đã thanh toán',
+            'UNPAID' => 'Chưa thanh toán',
             default => $status ?: '-',
         };
     }
 
     private function statusLabel(?string $status): string
     {
-        // Chuyá»ƒn mÃ£ tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng thÃ nh tiáº¿ng Viá»‡t Ä‘á»ƒ khÃ¡ch Ä‘á»c email dá»… hiá»ƒu.
+        // Chuyển mã trạng thái đơn hàng thành tiếng Việt để khách đọc email dễ hiểu.
         return match ($status) {
-            'PENDING' => 'Chá» xÃ¡c nháº­n',
-            'AWAITING_PAYMENT' => 'Chá» thanh toÃ¡n',
-            'CONFIRMED' => 'ÄÃ£ xÃ¡c nháº­n',
-            'DELIVERING' => 'Äang giao',
-            'DELIVERED' => 'Giao thÃ nh cÃ´ng',
-            'CANCELLED' => 'ÄÃ£ há»§y',
-            'RETURN_PENDING' => 'Chá» hoÃ n/Ä‘á»•i',
-            'RETURNED' => 'ÄÃ£ hoÃ n tráº£',
-            'EXCHANGED' => 'ÄÃ£ Ä‘á»•i hÃ ng',
-            'LOST_IN_TRANSIT' => 'Máº¥t hÃ ng khi giao',
+            'PENDING' => 'Chờ xác nhận',
+            'AWAITING_PAYMENT' => 'Chờ thanh toán',
+            'CONFIRMED' => 'Đã xác nhận',
+            'DELIVERING' => 'Đang giao',
+            'DELIVERED' => 'Giao thành công',
+            'CANCELLED' => 'Đã hủy',
+            'RETURN_PENDING' => 'Chờ hoàn/đổi',
+            'RETURNED' => 'Đã hoàn trả',
+            'EXCHANGED' => 'Đã đổi hàng',
+            'LOST_IN_TRANSIT' => 'Mất hàng khi giao',
             default => $status ?: '-',
         };
     }

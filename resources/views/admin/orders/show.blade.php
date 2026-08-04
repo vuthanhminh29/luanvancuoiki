@@ -4,10 +4,10 @@
 
 @php
     $statusLabels = [
-        'PENDING' => ['Chờ xác nhận', 'warning', 'fa-clock'],
-        'AWAITING_PAYMENT' => ['Chờ thanh toán', 'warning', 'fa-credit-card'],
-        'CONFIRMED' => ['Đã xác nhận', 'info', 'fa-clipboard-check'],
-        'DELIVERING' => ['Đang giao', 'moving', 'fa-truck'],
+        'PENDING' => ['Chờ xác nhận', 'pending', 'fa-clock'],
+        'AWAITING_PAYMENT' => ['Chờ thanh toán', 'payment', 'fa-credit-card'],
+        'CONFIRMED' => ['Đã xác nhận', 'confirmed', 'fa-clipboard-check'],
+        'DELIVERING' => ['Đang giao', 'shipping', 'fa-truck'],
         'DELIVERED' => ['Giao thành công', 'success', 'fa-check-circle'],
         'CANCELLED' => ['Đã hủy', 'danger', 'fa-times-circle'],
         'RETURN_PENDING' => ['Chờ hoàn/đổi', 'return', 'fa-rotate-left'],
@@ -21,11 +21,11 @@
     $canCancelOrder = ! in_array($order->status, $nonCancellableStatuses, true);
     $nextStatusOptions = $statusOptions ?? [];
     $progressSteps = [
-        'AWAITING_PAYMENT' => ['Chá» thanh toÃ¡n', 'fa-credit-card', 'payment'],
-        'PENDING' => ['Chá» xÃ¡c nháº­n', 'fa-clock', 'pending'],
-        'CONFIRMED' => ['ÄÃ£ xÃ¡c nháº­n', 'fa-clipboard-check', 'confirmed'],
-        'DELIVERING' => ['Äang giao', 'fa-truck', 'shipping'],
-        'DELIVERED' => ['Giao thÃ nh cÃ´ng', 'fa-check-circle', 'success'],
+        'AWAITING_PAYMENT' => ['Chờ thanh toán', 'fa-credit-card', 'payment'],
+        'PENDING' => ['Chờ xác nhận', 'fa-clock', 'pending'],
+        'CONFIRMED' => ['Đã xác nhận', 'fa-clipboard-check', 'confirmed'],
+        'DELIVERING' => ['Đang giao', 'fa-truck', 'shipping'],
+        'DELIVERED' => ['Giao thành công', 'fa-check-circle', 'success'],
     ];
     $progressOrder = array_keys($progressSteps);
     $progressCurrent = in_array($order->status, ['RETURN_PENDING', 'RETURNED', 'EXCHANGED'], true) ? 'DELIVERED' : $order->status;

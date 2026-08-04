@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\TryOnSnapshot;
 use App\Models\UserAddress;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,11 @@ class AccountController extends Controller
             'user' => $user,
             'addresses' => $user->addresses()->orderByDesc('is_default')->latest()->get(),
             'orders' => $user->orders()->latest()->limit(5)->get(),
+            'tryOnSnapshots' => TryOnSnapshot::query()
+                ->where('user_id', $user->id)
+                ->latest('id')
+                ->paginate(6)
+                ->withQueryString(),
         ]);
     }
 
@@ -170,47 +176,47 @@ class AccountController extends Controller
         return redirect()->route('account.index')->with('success', 'Thêm địa chỉ thành công.');
     }
 
-    // Má»Ÿ form sá»­a Ä‘á»‹a chá»‰.
-    // Route gá»i hÃ m nÃ y: GET /tai-khoan/dia-chi/{address}/sua.
-    // Laravel tá»± láº¥y UserAddress theo id trÃªn URL vÃ  truyá»n vÃ o $address.
+    // Mở form sửa địa chỉ.
+    // Route gọi hàm này: GET /tai-khoan/dia-chi/{address}/sua.
+    // Laravel t? l?y UserAddress theo id tr?n URL v? truy?n v?o $address.
     public function editAddress(UserAddress $address): View
     {
-        // Kiá»ƒm tra Ä‘á»‹a chá»‰ nÃ y cÃ³ thuá»™c user Ä‘ang Ä‘Äƒng nháº­p khÃ´ng.
-        // Náº¿u khÃ´ng kiá»ƒm tra, khÃ¡ch cÃ³ thá»ƒ sá»­a URL Ä‘á»ƒ sá»­a Ä‘á»‹a chá»‰ cá»§a ngÆ°á»i khÃ¡c.
+        // Kiểm tra địa chỉ này có thuộc user đang đăng nhập không.
+        // N?u kh?ng ki?m tra, kh?ch c? th? s?a URL ?? s?a ??a ch? c?a ng??i kh?c.
         $this->ensureOwnAddress($address);
 
         return view('account.address-form', [
-            // Gá»­i Ä‘á»‹a chá»‰ hiá»‡n táº¡i sang view Ä‘á»ƒ form Ä‘iá»n sáºµn.
+            // G?i ??a ch? hi?n t?i sang view ?? form ?i?n s?n.
             'address' => $address,
             'cities' => $this->cities(),
 
-            // mode=edit giÃºp view biáº¿t pháº£i gá»­i PUT update thay vÃ¬ POST create.
+            // mode=edit giúp view biết phải gửi PUT update thay vì POST create.
             'mode' => 'edit',
         ]);
     }
 
-    // LÆ°u thay Ä‘á»•i Ä‘á»‹a chá»‰.
-    // Route gá»i hÃ m nÃ y: PUT /tai-khoan/dia-chi/{address}.
+    // Lưu thay đổi địa chỉ.
+    // Route gọi hàm này: PUT /tai-khoan/dia-chi/{address}.
     public function updateAddress(Request $request, UserAddress $address): RedirectResponse
     {
-        // Chá»‰ chá»§ Ä‘á»‹a chá»‰ má»›i Ä‘Æ°á»£c cáº­p nháº­t Ä‘á»‹a chá»‰ nÃ y.
+        // Chỉ chủ địa chỉ mới được cập nhật địa chỉ này.
         $this->ensureOwnAddress($address);
 
-        // Validate dá»¯ liá»‡u Ä‘á»‹a chá»‰.
+        // Validate dữ liệu địa chỉ.
         $data = $this->validateAddress($request);
 
-        // Náº¿u ngÆ°á»i dÃ¹ng tick máº·c Ä‘á»‹nh thÃ¬ $makeDefault = true.
-        // Náº¿u Ä‘Ã¢y lÃ  Ä‘á»‹a chá»‰ duy nháº¥t cÃ²n láº¡i thÃ¬ cÅ©ng báº¯t buá»™c lÃ m máº·c Ä‘á»‹nh.
-        // whereKeyNot($address->id) nghÄ©a lÃ  tÃ¬m Ä‘á»‹a chá»‰ khÃ¡c id hiá»‡n táº¡i.
+        // Nếu người dùng tick mặc định thì $makeDefault = true.
+        // Nếu đây là địa chỉ duy nhất còn lại thì cũng bắt buộc làm mặc định.
+        // whereKeyNot($address->id) nghĩa là tìm địa chỉ khác id hiện tại.
         $makeDefault = $request->boolean('is_default') || ! Auth::user()->addresses()->whereKeyNot($address->id)->exists();
 
         DB::transaction(function () use ($address, $data, $makeDefault): void {
-            // Náº¿u Ä‘á»‹a chá»‰ Ä‘ang sá»­a Ä‘Æ°á»£c Ä‘áº·t máº·c Ä‘á»‹nh, cÃ¡c Ä‘á»‹a chá»‰ khÃ¡c cá»§a user bá»‹ bá» máº·c Ä‘á»‹nh.
+            // N?u ??a ch? ?ang s?a ???c ??t m?c ??nh, c?c ??a ch? kh?c c?a user b? b? m?c ??nh.
             if ($makeDefault) {
                 Auth::user()->addresses()->whereKeyNot($address->id)->update(['is_default' => false]);
             }
 
-            // Cáº­p nháº­t dá»¯ liá»‡u Ä‘á»‹a chá»‰ hiá»‡n táº¡i.
+            // Cập nhật dữ liệu địa chỉ hiện tại.
             $address->update([
                 'recipient_name' => $data['recipient_name'],
                 'phone' => $data['phone'],
@@ -223,27 +229,27 @@ class AccountController extends Controller
         return redirect()->route('account.index')->with('success', 'Cập nhật địa chỉ thành công.');
     }
 
-    // XÃ³a Ä‘á»‹a chá»‰.
-    // Route gá»i hÃ m nÃ y: DELETE /tai-khoan/dia-chi/{address}.
+    // Xóa địa chỉ.
+    // Route gọi hàm này: DELETE /tai-khoan/dia-chi/{address}.
     public function destroyAddress(UserAddress $address): RedirectResponse
     {
-        // Cháº·n xÃ³a Ä‘á»‹a chá»‰ cá»§a ngÆ°á»i khÃ¡c.
+        // Ch?n x?a ??a ch? c?a ng??i kh?c.
         $this->ensureOwnAddress($address);
 
         DB::transaction(function () use ($address): void {
-            // Ghi nhá»› Ä‘á»‹a chá»‰ sáº¯p xÃ³a cÃ³ pháº£i Ä‘á»‹a chá»‰ máº·c Ä‘á»‹nh khÃ´ng.
+            // Ghi nhớ địa chỉ sắp xóa có phải địa chỉ mặc định không.
             $wasDefault = $address->is_default;
 
-            // XÃ³a Ä‘á»‹a chá»‰ khá»i database.
+            // X?a ??a ch? kh?i database.
             $address->delete();
 
-            // Náº¿u Ä‘á»‹a chá»‰ bá»‹ xÃ³a lÃ  máº·c Ä‘á»‹nh thÃ¬ pháº£i chá»n má»™t Ä‘á»‹a chá»‰ khÃ¡c lÃ m máº·c Ä‘á»‹nh.
+            // N?u ??a ch? b? x?a l? m?c ??nh th? ph?i ch?n m?t ??a ch? kh?c l?m m?c ??nh.
             if ($wasDefault) {
-                // Láº¥y Ä‘á»‹a chá»‰ cÃ²n láº¡i má»›i nháº¥t cá»§a user.
+                // Lấy địa chỉ còn lại mới nhất của user.
                 $remaining = Auth::user()->addresses()->latest()->first();
 
-                // Dáº¥u ?-> nghÄ©a lÃ  náº¿u $remaining khÃ¡c null thÃ¬ má»›i update.
-                // Náº¿u khÃ´ng cÃ²n Ä‘á»‹a chá»‰ nÃ o thÃ¬ khÃ´ng lÃ m gÃ¬.
+                // Dấu ?-> nghĩa là nếu $remaining khác null thì mới update.
+                // Nếu không còn địa chỉ nào thì không làm gì.
                 $remaining?->update(['is_default' => true]);
             }
         });
@@ -251,21 +257,21 @@ class AccountController extends Controller
         return redirect()->route('account.index')->with('success', 'Xóa địa chỉ thành công.');
     }
 
-    // Helper validate Ä‘á»‹a chá»‰, dÃ¹ng chung cho storeAddress() vÃ  updateAddress().
+    // Helper validate địa chỉ, dùng chung cho storeAddress() và updateAddress().
     private function validateAddress(Request $request): array
     {
         return $request->validate([
-            // TÃªn ngÆ°á»i nháº­n báº¯t buá»™c, tá»‘i Ä‘a 100 kÃ½ tá»±.
+            // T?n ng??i nh?n b?t bu?c, t?i ?a 100 k? t?.
             'recipient_name' => ['required', 'string', 'max:100'],
 
-            // Sá»‘ Ä‘iá»‡n thoáº¡i báº¯t buá»™c, Ä‘Ãºng Ä‘áº§u sá»‘ di Ä‘á»™ng Viá»‡t Nam vÃ  Ä‘á»§ 10 sá»‘.
+            // Số điện thoại bắt buộc, đúng đầu số di động Việt Nam và đủ 10 số.
             'phone' => ['required', 'regex:/^(03|05|07|08|09)\d{8}$/'],
 
-            // Tá»‰nh/thÃ nh báº¯t buá»™c, tá»‘i Ä‘a 100 kÃ½ tá»±.
-            // Rule in:... chá»‰ cho chá»n tá»‰nh/thÃ nh náº±m trong danh sÃ¡ch cities().
+            // Tỉnh/thành bắt buộc, tối đa 100 ký tự.
+            // Rule in:... chỉ cho chọn tỉnh/thành nằm trong danh sách cities().
             'province_name' => ['required', 'string', 'max:100', 'in:' . implode(',', $this->cities())],
 
-            // Äá»‹a chá»‰ chi tiáº¿t báº¯t buá»™c, tá»‘i Ä‘a 255 kÃ½ tá»±.
+            // ??a ch? chi ti?t b?t bu?c, t?i ?a 255 k? t?.
             'address_detail' => ['required', 'string', 'max:255'],
         ], [
             'recipient_name.required' => 'Họ tên người nhận không được để trống.',
@@ -279,26 +285,26 @@ class AccountController extends Controller
         ]);
     }
 
-    // Helper kiá»ƒm tra quyá»n sá»Ÿ há»¯u Ä‘á»‹a chá»‰.
+    // Helper kiểm tra quyền sở hữu địa chỉ.
     private function ensureOwnAddress(UserAddress $address): void
     {
-        // Náº¿u address.user_id khÃ¡c user Ä‘ang Ä‘Äƒng nháº­p thÃ¬ tráº£ lá»—i 403.
+        // Nếu address.user_id khác user đang đăng nhập thì trả lỗi 403.
         abort_unless($address->user_id === Auth::id(), 403);
     }
 
-    // Helper kiá»ƒm tra máº­t kháº©u.
+    // Helper kiểm tra mật khẩu.
     private function passwordMatches(string $password, string $hash): bool
     {
         try {
-            // Hash::check() lÃ  cÃ¡ch chuáº©n cá»§a Laravel Ä‘á»ƒ so máº­t kháº©u thÃ´ vá»›i hash.
+            // Hash::check() là cách chuẩn của Laravel để so mật khẩu thô với hash.
             return Hash::check($password, $hash);
         } catch (\RuntimeException) {
-            // Fallback cho trÆ°á»ng há»£p dá»¯ liá»‡u cÅ© khÃ´ng Ä‘Ãºng format hash Laravel.
+            // Fallback cho trường hợp dữ liệu cũ không đúng format hash Laravel.
             return password_verify($password, $hash);
         }
     }
 
-    // Danh sÃ¡ch tá»‰nh/thÃ nh cho form Ä‘á»‹a chá»‰.
+    // Danh sách tỉnh/thành cho form địa chỉ.
     private function cities(): array
     {
         return [

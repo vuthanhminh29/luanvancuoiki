@@ -14,7 +14,7 @@ use Illuminate\View\View;
 
 class BusinessAdminController extends Controller
 {
-    // Hiá»ƒn thá»‹ mÃ n hÃ¬nh nghiá»‡p vá»¥: thÆ°Æ¡ng hiá»‡u, kho vÃ  cÃ¡c dá»¯ liá»‡u cáº¥u hÃ¬nh.
+    // Hiển thị màn hình nghiệp vụ: thương hiệu, kho và các dữ liệu cấu hình.
     public function index(Request $request): RedirectResponse|View
     {
         if ($request->query('tab') === 'promotions') {
@@ -148,7 +148,7 @@ class BusinessAdminController extends Controller
         return $this->redirectTab('warehouses', 'Đã lưu kho.');
     }
 
-    // Báº­t/táº¯t tráº¡ng thÃ¡i dá»¯ liá»‡u cáº¥u hÃ¬nh trong má»™t báº£ng cá»¥ thá»ƒ.
+    // Bật/tắt trạng thái dữ liệu cấu hình trong một bảng cụ thể.
     private function toggleTableStatus(Request $request, string $table, string $tab): RedirectResponse
     {
         $data = $request->validate([
@@ -165,7 +165,7 @@ class BusinessAdminController extends Controller
         return $this->redirectTab($tab, 'Đã cập nhật trạng thái.');
     }
 
-    // Tá»± sinh mÃ£ má»›i theo prefix vÃ  sá»‘ lá»›n nháº¥t hiá»‡n táº¡i trong báº£ng.
+    // Tự sinh mã mới theo prefix và số lớn nhất hiện tại trong bảng.
     private function nextCode(string $table, string $column, string $prefix): string
     {
         do {
@@ -175,7 +175,7 @@ class BusinessAdminController extends Controller
         return $code;
     }
 
-    // Redirect vá» Ä‘Ãºng tab nghiá»‡p vá»¥ sau khi lÆ°u.
+    // Redirect về đúng tab nghiệp vụ sau khi lưu.
     private function redirectTab(string $tab, string $message): RedirectResponse
     {
         return redirect()

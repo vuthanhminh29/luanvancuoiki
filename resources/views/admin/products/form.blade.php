@@ -245,6 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const row = template.cloneNode(true);
         row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
         row.querySelectorAll('select').forEach(function (select) { select.selectedIndex = 0; });
+        row.querySelectorAll('.pa-error').forEach(function (error) { error.remove(); });
         table.appendChild(row);
         refreshColorDot(row.querySelector('.color-select'));
     });

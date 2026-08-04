@@ -15,7 +15,10 @@
     <section id="vtoApp" data-tryon-app
         data-jeeliz-base-path="{{ asset('vendor/jeelizGlassesVTOWidget') }}"
         data-jeeliz-script-url="{{ asset('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js') }}"
-        data-jeeliz-model-check-url="{{ route('tryon.model-check') }}">
+        data-jeeliz-model-check-url="{{ route('tryon.model-check') }}"
+        data-snapshot-store-url="{{ route('tryon.snapshots.store') }}"
+        data-login-url="{{ route('login') }}"
+        data-authenticated="{{ auth()->check() ? 'true' : 'false' }}">
         <div class="vto-viewer">
             <div id="JeelizVTOWidget">
                 <canvas id="JeelizVTOWidgetCanvas"></canvas>
@@ -58,6 +61,10 @@
                 <span id="tryonCameraToggleText">Bật camera</span>
             </span>
             <span class="vto-status-message" id="tryonStatus">Sẵn sàng thử kính.</span>
+        </button>
+
+        <button type="button" class="vto-save-btn" id="tryonSaveSnapshot">
+            <i class="fas fa-camera-retro"></i> Chụp/Lưu kết quả
         </button>
 
         <div class="vto-products" id="tryonProductList"></div>

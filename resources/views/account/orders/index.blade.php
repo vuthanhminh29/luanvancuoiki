@@ -99,7 +99,7 @@
                         <div class="order-products">
                             @foreach ($order->items->take(3) as $item)
                                 <div class="order-product">
-                                    <img src="{{ $item->product->image_url ?? asset('upload/no-image.png') }}" alt="{{ $item->product_name }}">
+                                    <img src="{{ $item->product->image_url ?? asset('upload/no-image.jpg') }}" alt="{{ $item->product_name }}">
                                     <div>
                                         <p class="order-product-name">{{ $item->product_name }}</p>
                                         <div class="order-product-meta">

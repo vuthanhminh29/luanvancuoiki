@@ -11,6 +11,9 @@
 @section('content')
     @php
         $firstVariant = $product->variants->firstWhere('status', 'ACTIVE') ?? $product->variants->first();
+        $variantStock = collect($variantStock ?? []);
+        $selectedVariantId = $firstVariant ? (int) old('variant_id', $firstVariant->id) : 0;
+        $selectedVariantStock = $selectedVariantId > 0 ? max(1, (int) $variantStock->get($selectedVariantId, 0)) : 1;
         $discount = $product->sale_price ? max(0, round((($product->base_price - $product->sale_price) / max(1, $product->base_price)) * 100)) : 0;
         $firstTryOn = $tryOnPayload->first();
         $reviewCount = $reviewStats['count'] ?? $visibleReviews->count();
@@ -122,8 +125,8 @@
                                 <label class="watch-qty-label">Số lượng:</label>
                                 <div class="watch-qty-controls">
                                     <button type="button" class="watch-qty-btn" onclick="decreaseQty()">-</button>
-                                    <input type="number" name="quantity" id="productQty" value="1" min="1" max="20" class="watch-qty-input">
-                                    <button type="button" class="watch-qty-btn" onclick="increaseQty(20)">+</button>
+                                    <input type="number" name="quantity" id="productQty" value="1" min="1" max="{{ $selectedVariantStock }}" class="watch-qty-input">
+                                    <button type="button" class="watch-qty-btn" onclick="increaseQty({{ $selectedVariantStock }})">+</button>
                                 </div>
                                 <span class="watch-stock-text">Sản phẩm co san</span>
                             </div>
@@ -345,16 +348,16 @@
                     <div class="tryon-ai-products" id="tryonProductList" aria-hidden="true"></div>
 
                     <div class="tryon-upload-panel" id="tryonUploadPanel" aria-hidden="true">
-                        <h2>Step 1</h2>
+                        <h2>Bước 1</h2>
                         <div class="tryon-upload-card" id="tryonUploadDropzone">
                             <input type="file" id="tryonImageInput" accept="image/*">
-                            <h3>Upload an image</h3>
+                            <h3>Tải ảnh lên</h3>
                             <button type="button" class="tryon-upload-plus" aria-label="Chọn ảnh">
                                 <i class="fas fa-plus"></i>
                             </button>
-                            <p><span>Select a file</span> or drag image here</p>
-                            <small>(maximum file size is 5 MB)</small>
-                            <p class="tryon-upload-note">Keep your face forward, centered, and level.<br>Do not wear any eyewear.</p>
+                            <p><span>Chọn file</span> hoặc kéo ảnh vào đây</p>
+                            <small>(dung lượng tối đa 5 MB)</small>
+                            <p class="tryon-upload-note">Giữ khuôn mặt nhìn thẳng, ở giữa khung hình.<br>Không đeo kính khi chụp ảnh.</p>
                             <div class="tryon-upload-error" id="tryonUploadError"></div>
                         </div>
                     </div>
@@ -363,7 +366,7 @@
                         <button type="button" class="tryon-round-control is-active" id="tryonStartCamera" title="Bật camera">
                             <i class="fas fa-camera"></i>
                         </button>
-                        <button type="button" class="tryon-round-control tryon-round-control--image" id="tryonUploadImage" title="Thu bang anh">
+                        <button type="button" class="tryon-round-control tryon-round-control--image" id="tryonUploadImage" title="Chụp/đổi ảnh">
                             <i class="far fa-image"></i>
                         </button>
                     </div>
@@ -405,10 +408,10 @@
                                         @csrf
                                         <input type="hidden" name="variant_id" id="tryonCartVariantId" value="{{ $firstTryOn['variantId'] }}">
                                         <input type="hidden" name="quantity" value="1">
-                                        <button type="submit" class="tryon-ai-bag-btn">Buy now</button>
+                                        <button type="submit" class="tryon-ai-bag-btn">Thêm vào giỏ</button>
                                     </form>
                                 @else
-                                    <button type="button" class="tryon-ai-bag-btn" disabled>Buy now</button>
+                                    <button type="button" class="tryon-ai-bag-btn" disabled>Thêm vào giỏ</button>
                                 @endif
                                 <button type="button" class="tryon-heart-outline" title="Yêu thích">
                                     <i class="far fa-heart"></i>
@@ -419,11 +422,11 @@
 
                     <div class="tryon-side-panel tryon-side-panel--upload" data-panel="upload">
                         <button type="button" class="tryon-fit-back" id="tryonUploadBack">
-                            <i class="fas fa-chevron-left"></i> BACK
+                            <i class="fas fa-redo"></i> Chụp ảnh lại
                         </button>
-                        <h2>Add new Image</h2>
-                        <p>Be sure to double check your frame's dimensions before ordering your glasses.</p>
-                        <button type="button" class="tryon-fit-cancel" id="tryonUploadCancel">Cancel</button>
+                        <h2>Thêm ảnh mới</h2>
+                        <p>Chọn ảnh chính diện, rõ khuôn mặt để thử kính chính xác hơn.</p>
+                        <button type="button" class="tryon-fit-cancel" id="tryonUploadCancel">Quay lại</button>
                     </div>
                 </aside>
 

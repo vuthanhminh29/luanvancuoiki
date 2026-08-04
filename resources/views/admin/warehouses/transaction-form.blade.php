@@ -307,7 +307,7 @@ document.getElementById('stockForm').addEventListener('submit', function (event)
         alert('Bạn cần chọn kho đích.');
         return;
     }
-    if (source && target && source === target) {
+    if (type === 'TRANSFER' && source && target && source === target) {
         event.preventDefault();
         alert('Kho nguồn và kho đích phải khác nhau.');
         return;
