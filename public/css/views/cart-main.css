@@ -208,24 +208,6 @@
     color: #0f766e;
 }
 
-.cart-product-meta,
-.cart-stock {
-    color: #6b7280;
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.45;
-    margin-top: 6px;
-}
-
-.cart-stock {
-    color: #0f766e;
-}
-
-.cart-stock.is-low {
-    color: #b45309;
-}
-
 .cart-price,
 .cart-line-total {
     color: #111827;
