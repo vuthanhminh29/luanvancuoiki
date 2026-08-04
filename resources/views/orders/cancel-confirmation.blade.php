@@ -19,16 +19,17 @@
 .oc-item span { display:block; color:#6b7280; font-size:12px; font-weight:800; margin-bottom:5px; }
 .oc-item strong { display:block; font-size:14px; line-height:1.45; }
 .oc-products { border-top:1px solid #eef0f3; margin-top:18px; padding-top:8px; }
-.oc-product { display:grid; grid-template-columns:1fr auto; gap:16px; padding:12px 0; border-bottom:1px solid #f1f3f5; }
+.oc-product { display:grid; grid-template-columns:60px 1fr auto; gap:16px; padding:12px 0; border-bottom:1px solid #f1f3f5; align-items: center; }
+.oc-product img { width:100%; aspect-ratio:1/1; border-radius:4px; object-fit:cover; border:1px solid #eef0f3; }
 .oc-product:last-child { border-bottom:0; }
 .oc-product strong { display:block; }
-.oc-product span { color:#6b7280; font-size:13px; }
+.oc-product span { display:block; color:#6b7280; font-size:13px; margin-top:2px; }
 .oc-total { border-top:1px solid #eef0f3; padding-top:16px; margin-top:14px; display:flex; justify-content:space-between; gap:16px; font-size:18px; font-weight:800; }
 .oc-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:22px; }
 .oc-btn { min-height:40px; border-radius:6px; padding:0 15px; border:1px solid transparent; display:inline-flex; align-items:center; justify-content:center; gap:7px; font-size:14px; font-weight:800; cursor:pointer; text-decoration:none; }
 .oc-btn.danger { background:#b91c1c; color:#fff; }
 .oc-btn.light { background:#fff; color:#374151; border-color:#d1d5db; }
-@media (max-width:680px) { .oc-head { flex-direction:column; } .oc-grid { grid-template-columns:1fr; } .oc-product { grid-template-columns:1fr; } .oc-actions { flex-direction:column; } .oc-btn { width:100%; } }
+@media (max-width:680px) { .oc-head { flex-direction:column; } .oc-grid { grid-template-columns:1fr; } .oc-product { grid-template-columns:50px 1fr; align-items:start; gap:12px; } .oc-product-price { grid-column:2; margin-top:-4px; } .oc-actions { flex-direction:column; } .oc-btn { width:100%; } }
 </style>
 @endpush
 
@@ -64,11 +65,15 @@
             <div class="oc-products">
                 @foreach ($order->items as $item)
                     <div class="oc-product">
+                        <img src="{{ $item->product->image_url ?? asset('upload/no-image.jpg') }}" alt="{{ $item->product_name }}">
                         <div>
                             <strong>{{ $item->product_name }}</strong>
-                            <span>SL: {{ $item->quantity }}{{ $item->sku ? ' | SKU: ' . $item->sku : '' }}</span>
+                            @if (trim(implode(' ', array_filter([$item->color_name, $item->lens_size_name]))))
+                                <span>Phân loại: {{ trim(implode(' ', array_filter([$item->color_name, $item->lens_size_name]))) }}</span>
+                            @endif
+                            <span>Số lượng: {{ $item->quantity }}</span>
                         </div>
-                        <strong>{{ number_format($item->total_price, 0, ',', '.') }}đ</strong>
+                        <strong class="oc-product-price">{{ number_format($item->total_price, 0, ',', '.') }}đ</strong>
                     </div>
                 @endforeach
             </div>
