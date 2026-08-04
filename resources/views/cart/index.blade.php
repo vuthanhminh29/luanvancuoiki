@@ -10,7 +10,7 @@
     @php
         $totalPayment = (float) $items->sum('line_total');
         $totalQuantity = (int) $items->sum('quantity');
-        $orderMaxQuantity = 20;
+        $orderMaxQuantity = 10;
         $hasCartErrors = isset($errors) && $errors->any();
         $cartMessage = session('error') ?: session('success') ?: ($hasCartErrors ? $errors->first() : null);
         $formatMoney = fn ($value) => number_format((float) $value, 0, ',', '.') . 'đ';
@@ -214,7 +214,7 @@
             }
 
             function validateCartQuantities(event) {
-                const maxQuantity = parseInt(cartUpdateForm.dataset.orderMaxQuantity || '20', 10);
+                const maxQuantity = parseInt(cartUpdateForm.dataset.orderMaxQuantity || '10', 10);
                 let totalQuantity = 0;
                 const quantityInputs = cartUpdateForm.querySelectorAll('.quantity-field-cart');
 

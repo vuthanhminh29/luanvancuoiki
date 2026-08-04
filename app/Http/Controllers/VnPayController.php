@@ -21,7 +21,7 @@ use RuntimeException;
 
 class VnPayController extends Controller
 {
-    private const MAX_CART_QUANTITY = 20;
+    private const MAX_CART_QUANTITY = 10;
 
     public function return(Request $request, VnPayService $vnPay): RedirectResponse
     {
@@ -162,7 +162,7 @@ class VnPayController extends Controller
                 ->all();
 
             if (array_sum(array_map('intval', $cart)) > self::MAX_CART_QUANTITY) {
-                throw new RuntimeException('Giỏ hàng chỉ được tối đa 20 sản phẩm, chưa thể tạo đơn sau thanh toán.');
+                throw new RuntimeException('Mỗi đơn chỉ đặt tối đa ' . self::MAX_CART_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
             }
 
             $variants = ProductVariant::query()
