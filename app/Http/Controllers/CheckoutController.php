@@ -20,7 +20,7 @@ use RuntimeException;
 
 class CheckoutController extends Controller
 {
-    private const MAX_CART_QUANTITY = 20;
+    private const MAX_CART_QUANTITY = 10;
 
     public function index(): View
     {
@@ -69,7 +69,7 @@ class CheckoutController extends Controller
         }
 
         if ($this->totalQuantity($cart) > self::MAX_CART_QUANTITY) {
-            return redirect()->route('cart.index')->with('error', 'Giỏ hàng chỉ được tối đa 20 sản phẩm.');
+            return redirect()->route('cart.index')->with('error', 'Mỗi đơn chỉ đặt tối đa ' . self::MAX_CART_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
         }
 
         $variants = $this->cartVariants($cart);
@@ -125,7 +125,7 @@ class CheckoutController extends Controller
         }
 
         if ($this->totalQuantity($cart) > self::MAX_CART_QUANTITY) {
-            return redirect()->route('cart.index')->with('error', 'Giỏ hàng chỉ được tối đa 20 sản phẩm.');
+            return redirect()->route('cart.index')->with('error', 'Mỗi đơn chỉ đặt tối đa ' . self::MAX_CART_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
         }
 
         $variants = ProductVariant::query()
@@ -264,7 +264,7 @@ class CheckoutController extends Controller
     private function normalizedCart(): array
     {
         return collect(session('cart', []))
-            ->mapWithKeys(fn ($quantity, $variantId) => [(int) $variantId => min(20, max(1, (int) $quantity))])
+            ->mapWithKeys(fn ($quantity, $variantId) => [(int) $variantId => min(self::MAX_CART_QUANTITY, max(1, (int) $quantity))])
             ->all();
     }
 

@@ -12,7 +12,7 @@ use Illuminate\View\View;
 
 class CartController extends Controller
 {
-    private const MAX_TOTAL_QUANTITY = 20;
+    private const MAX_TOTAL_QUANTITY = 10;
 
     public function index(): View
     {
@@ -25,7 +25,7 @@ class CartController extends Controller
     {
         $data = $request->validate([
             'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
-            'quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:' . self::MAX_TOTAL_QUANTITY],
         ]);
 
         $variant = ProductVariant::active()->findOrFail($data['variant_id']);
@@ -36,7 +36,7 @@ class CartController extends Controller
         if ($remainingQuantity <= 0) {
             session(['cart' => $cart]);
 
-            return back()->with('error', 'Giỏ hàng chỉ được tối đa 20 sản phẩm.');
+            return back()->with('error', 'Mỗi đơn chỉ đặt tối đa ' . self::MAX_TOTAL_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
         }
 
         $quantity = min($requestedQuantity, $remainingQuantity);
@@ -44,7 +44,7 @@ class CartController extends Controller
         session(['cart' => $cart]);
 
         if ($quantity < $requestedQuantity) {
-            return back()->with('success', 'Chỉ thêm được ' . $quantity . ' sản phẩm vì giỏ hàng tối đa 20 sản phẩm.');
+            return back()->with('success', 'Chỉ thêm được ' . $quantity . ' sản phẩm vì mỗi đơn chỉ đặt tối đa ' . self::MAX_TOTAL_QUANTITY . ' sản phẩm.');
         }
 
         return back()->with('success', 'Đã thêm sản phẩm vào giỏ hàng.');
@@ -54,7 +54,7 @@ class CartController extends Controller
     {
         $data = $request->validate([
             'quantities' => ['array'],
-            'quantities.*' => ['integer', 'min:0', 'max:20'],
+            'quantities.*' => ['integer', 'min:0', 'max:' . self::MAX_TOTAL_QUANTITY],
         ]);
 
         $cart = $this->limitedCart($this->normalizedCart(session('cart', [])));
@@ -78,7 +78,7 @@ class CartController extends Controller
         if ($this->totalQuantity($updatedCart) > self::MAX_TOTAL_QUANTITY) {
             session(['cart' => $cart]);
 
-            return back()->with('error', 'Tổng số lượng trong giỏ hàng chỉ được tối đa 20 sản phẩm.');
+            return back()->with('error', 'Mỗi đơn chỉ đặt tối đa ' . self::MAX_TOTAL_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
         }
 
         session(['cart' => $updatedCart]);
