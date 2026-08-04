@@ -8,6 +8,7 @@ use App\Models\StockTransaction;
 use App\Models\Warehouse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -42,6 +43,11 @@ class BusinessAdminController extends Controller
             ->limit(40)
             ->get();
 
+        $promotions = DB::table('promotions')
+            ->latest('created_at')
+            ->limit(40)
+            ->get();
+
         $stockTransactions = StockTransaction::query()
             ->with(['sourceWarehouse', 'targetWarehouse'])
             ->latest('created_at')
@@ -50,6 +56,7 @@ class BusinessAdminController extends Controller
 
         $summary = [
             'brands' => Brand::count(),
+            'promotions' => DB::table('promotions')->count(),
             'warehouses' => Warehouse::count(),
             'stores' => DB::table('stores')->count(),
             'stock' => StockTransaction::count(),
@@ -60,6 +67,7 @@ class BusinessAdminController extends Controller
             'brands',
             'warehouses',
             'stores',
+            'promotions',
             'stockTransactions',
             'summary'
         ));

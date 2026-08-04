@@ -10,6 +10,21 @@ use Illuminate\View\View;
 
 class OrderAdminController extends Controller
 {
+    private const STATUS_LABELS = [
+        'PENDING' => ['Chờ xác nhận', 'warning', 'fa-clock'],
+        'AWAITING_PAYMENT' => ['Chờ thanh toán', 'warning', 'fa-credit-card'],
+        'CONFIRMED' => ['Đã xác nhận', 'info', 'fa-clipboard-check'],
+        'DELIVERING' => ['Đang giao', 'moving', 'fa-truck'],
+        'DELIVERED' => ['Giao thành công', 'success', 'fa-check-circle'],
+        'CANCELLED' => ['Đã hủy', 'danger', 'fa-times-circle'],
+        'RETURN_PENDING' => ['Chờ hoàn/đổi', 'return', 'fa-rotate-left'],
+        'RETURNED' => ['Đã hoàn trả', 'dark', 'fa-undo'],
+        'EXCHANGED' => ['Đã đổi hàng', 'success', 'fa-exchange-alt'],
+        'LOST_IN_TRANSIT' => ['Mất hàng khi giao', 'lost', 'fa-exclamation-triangle'],
+    ];
+
+    private const CANCELLABLE_STATUSES = ['PENDING', 'AWAITING_PAYMENT', 'CONFIRMED'];
+
     public function index(Request $request): View
     {
         return $this->orderList($request, false);
@@ -60,15 +75,7 @@ class OrderAdminController extends Controller
 
     private function canCancelOrder(Order $order): bool
     {
-        return ! in_array($order->status, [
-            'DELIVERING',
-            'DELIVERED',
-            'RETURN_PENDING',
-            'RETURNED',
-            'EXCHANGED',
-            'LOST_IN_TRANSIT',
-            'CANCELLED',
-        ], true);
+        return in_array($order->status, self::CANCELLABLE_STATUSES, true);
     }
 
     private function orderList(Request $request, bool $isUnconfirmed): View
@@ -98,7 +105,7 @@ class OrderAdminController extends Controller
 
         // Trả dữ liệu sang view admin.orders.index.
         return view('admin.orders.index', [
-            'orders' => $ordersQuery->get(),
+            'orders' => $ordersQuery->paginate(15)->withQueryString(),
             'summary' => [
                 'total' => Order::count(),
                 'pending' => Order::where('status', 'PENDING')->count(),
