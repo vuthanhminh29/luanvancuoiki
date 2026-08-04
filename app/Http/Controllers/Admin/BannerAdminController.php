@@ -44,6 +44,13 @@ class BannerAdminController extends Controller
         }
 
         $banners = $query->paginate(12)->withQueryString();
+        $sliderPreview = Banner::query()
+            ->where('position', 'HOME_SLIDER')
+            ->where('status', 'ACTIVE')
+            ->orderBy('priority')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get();
         $summary = [
             'total' => Banner::count(),
             'active' => Banner::where('status', 'ACTIVE')->count(),
@@ -51,7 +58,7 @@ class BannerAdminController extends Controller
             'home' => Banner::where('position', 'HOME_SLIDER')->count(),
         ];
 
-        return view('admin.banners.index', compact('banners', 'summary', 'status', 'position', 'platform', 'keyword'));
+        return view('admin.banners.index', compact('banners', 'sliderPreview', 'summary', 'status', 'position', 'platform', 'keyword'));
     }
 
     public function create(): View

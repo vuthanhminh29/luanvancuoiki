@@ -3,11 +3,12 @@
     $allFields = collect($fieldsToRender);
     $main = $allFields->reject(fn ($field) => $field['side'] ?? false);
     $side = $allFields->filter(fn ($field) => $field['side'] ?? false);
+    $viewErrors = $errors ?? new \Illuminate\Support\ViewErrorBag();
 @endphp
 
-@if ($errors->any())
+@if ($viewErrors->any())
     <div class="alert alert-danger">
-        @foreach ($errors->all() as $error)
+        @foreach ($viewErrors->all() as $error)
             <div>{{ $error }}</div>
         @endforeach
     </div>

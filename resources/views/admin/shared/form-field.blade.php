@@ -12,14 +12,17 @@
     $type = $field['type'] ?? 'text';
     $id = $field['id'] ?? $name;
     $value = old($name, $field['value'] ?? '');
+    $fieldErrors = $errors ?? new \Illuminate\Support\ViewErrorBag();
+    $hasError = $fieldErrors->has($name);
+    $firstError = $fieldErrors->first($name);
 @endphp
 
 <div class="{{ $classes['field'] }}">
     <label class="{{ $classes['label'] }}" for="{{ $id }}">{{ $label }}</label>
     @if ($type === 'textarea')
-        <textarea id="{{ $id }}" name="{{ $name }}" class="{{ $classes['textarea'] }} @error($name) is-invalid @enderror" rows="{{ $field['rows'] ?? 4 }}">{{ $value }}</textarea>
+        <textarea id="{{ $id }}" name="{{ $name }}" class="{{ $classes['textarea'] }} {{ $hasError ? 'is-invalid' : '' }}" rows="{{ $field['rows'] ?? 4 }}">{{ $value }}</textarea>
     @elseif ($type === 'select')
-        <select id="{{ $id }}" name="{{ $name }}" class="{{ $classes['select'] }} @error($name) is-invalid @enderror" @if(!empty($field['required'])) required @endif>
+        <select id="{{ $id }}" name="{{ $name }}" class="{{ $classes['select'] }} {{ $hasError ? 'is-invalid' : '' }}" @if(!empty($field['required'])) required @endif>
             @if (!empty($field['placeholder']))
                 <option value="">{{ $field['placeholder'] }}</option>
             @endif
@@ -28,18 +31,18 @@
             @endforeach
         </select>
     @elseif ($type === 'file')
-        <input id="{{ $id }}" name="{{ $name }}" class="{{ $classes['file'] }} @error($name) is-invalid @enderror" type="file" accept="{{ $field['accept'] ?? 'image/*' }}">
+        <input id="{{ $id }}" name="{{ $name }}" class="{{ $classes['file'] }} {{ $hasError ? 'is-invalid' : '' }}" type="file" accept="{{ $field['accept'] ?? 'image/*' }}">
         @if (!empty($field['preview']))
-            <div class="mt-2">
+            <div class="mt-2 {{ $layout === 'banner' ? 'bn-form-preview' : '' }}">
                 <img src="{{ $field['preview'] }}" alt="{{ $label }}" style="width:100%;max-width:180px;border-radius:8px;border:1px solid #ddd;object-fit:cover;">
             </div>
         @endif
     @else
-        <input id="{{ $id }}" name="{{ $name }}" class="{{ $classes['input'] }} @error($name) is-invalid @enderror" type="{{ $type }}" value="{{ $value }}" @if(!empty($field['required'])) required @endif>
+        <input id="{{ $id }}" name="{{ $name }}" class="{{ $classes['input'] }} {{ $hasError ? 'is-invalid' : '' }}" type="{{ $type }}" value="{{ $value }}" @if(!empty($field['required'])) required @endif>
     @endif
-    @error($name)
-        <span class="{{ $classes['error'] }}">{{ $message }}</span>
-    @enderror
+    @if ($hasError)
+        <span class="{{ $classes['error'] }}">{{ $firstError }}</span>
+    @endif
     @if (!empty($field['hint']))
         <div class="ma-hint">{{ $field['hint'] }}</div>
     @endif
