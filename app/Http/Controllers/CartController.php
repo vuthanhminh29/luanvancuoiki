@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\Inventory;
 use App\Models\ProductVariant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -104,25 +103,17 @@ class CartController extends Controller
             return collect();
         }
 
-        $stockByVariant = Inventory::query()
-            ->whereIn('variant_id', array_keys($cart))
-            ->selectRaw('variant_id, COALESCE(SUM(quantity), 0) as available_stock')
-            ->groupBy('variant_id')
-            ->pluck('available_stock', 'variant_id')
-            ->map(fn ($value) => (int) $value);
-
         return ProductVariant::query()
             ->with(['product.brand', 'color', 'lensSize'])
             ->whereIn('id', array_keys($cart))
             ->get()
-            ->map(function (ProductVariant $variant) use ($cart, $stockByVariant) {
+            ->map(function (ProductVariant $variant) use ($cart) {
                 $quantity = (int) ($cart[$variant->id] ?? 0);
 
                 return [
                     'variant' => $variant,
                     'quantity' => $quantity,
                     'line_total' => $variant->display_price * $quantity,
-                    'available_stock' => $stockByVariant->get($variant->id, 0),
                 ];
             });
     }

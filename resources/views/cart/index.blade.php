@@ -52,7 +52,7 @@
 
                 <div class="cart-layout">
                     <div class="cart-main-panel">
-                        <form action="{{ route('cart.update') }}" method="post" id="cart-update-form" data-order-max-quantity="{{ $orderMaxQuantity }}">
+                        <form action="{{ route('cart.update') }}" method="post" id="cart-update-form" data-order-max-quantity="{{ $orderMaxQuantity }}" novalidate>
                             @csrf
                             @method('PUT')
 
@@ -69,8 +69,6 @@
                                     @php
                                         $variant = $item['variant'];
                                         $product = $variant->product;
-                                        $availableStock = max(0, (int) ($item['available_stock'] ?? $item['quantity']));
-                                        $lineMax = max(1, min($availableStock, $orderMaxQuantity));
                                     @endphp
 
                                     <article class="cart-item">
@@ -91,10 +89,9 @@
                                                 <input type="number"
                                                     step="1"
                                                     min="1"
-                                                    max="{{ $lineMax }}"
+                                                    max="{{ $orderMaxQuantity }}"
                                                     value="{{ $item['quantity'] }}"
                                                     name="quantities[{{ $variant->id }}]"
-                                                    data-stock="{{ $availableStock }}"
                                                     data-product="{{ $product->name }}"
                                                     data-original-value="{{ $item['quantity'] }}"
                                                     class="quantity-field-cart">
@@ -151,7 +148,7 @@
                             Thanh toán
                         </a>
                         <p class="cart-safe-note">
-                            <i class="fa fa-lock"></i> Kiểm tra tồn kho và thông tin giao hàng trước khi tạo đơn.
+                            <i class="fa fa-lock"></i> Kiểm tra giỏ hàng và thông tin giao hàng trước khi tạo đơn.
                         </p>
                     </aside>
                 </div>
@@ -209,16 +206,8 @@
 
                 for (const input of quantityInputs) {
                     const quantity = Math.max(0, parseInt(input.value || '0', 10) || 0);
-                    const stock = Math.max(0, parseInt(input.dataset.stock || '0', 10) || 0);
 
                     totalQuantity += quantity;
-
-                    if (quantity > stock) {
-                        event.preventDefault();
-                        input.value = Math.max(1, stock);
-                        showCartAlert('Sản phẩm này chỉ còn ' + stock + ' sản phẩm trong kho. Vui lòng giảm số lượng.', input);
-                        return false;
-                    }
                 }
 
                 if (totalQuantity > maxQuantity) {
