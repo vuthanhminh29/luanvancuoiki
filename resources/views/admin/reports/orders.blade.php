@@ -17,7 +17,7 @@
             'DELIVERING' => ['Đang giao', 'primary'],
             'DELIVERED' => ['Đã giao', 'success'],
             'CANCELLED' => ['Đã hủy', 'danger'],
-            'LOST_IN_TRANSIT' => ['Thất lạc', 'danger'],
+            'LOST_IN_TRANSIT' => ['Không hoàn tất', 'danger'],
             default => [$status, 'secondary'],
         };
     };
@@ -51,7 +51,7 @@
         <div class="report-card">
             <div class="report-metric-label">Số lượng đã bán</div>
             <div class="report-metric-value">{{ $int($summary->sold_quantity ?? 0) }}</div>
-            <p class="report-metric-note">Không tính đơn hủy/mất hàng</p>
+            <p class="report-metric-note">Không tính đơn hủy</p>
         </div>
         <div class="report-card">
             <div class="report-metric-label">Sản phẩm có giao dịch</div>

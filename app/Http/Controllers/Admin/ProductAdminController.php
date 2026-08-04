@@ -36,7 +36,7 @@ class ProductAdminController extends Controller
                 FROM order_items
                 JOIN orders ON orders.id = order_items.order_id
                 WHERE order_items.product_id = products.id
-                  AND orders.status NOT IN ('CANCELLED', 'LOST_IN_TRANSIT')) as sold_quantity")
+                  AND orders.status NOT IN ('CANCELLED')) as sold_quantity")
             ->selectRaw("(SELECT COALESCE(MAX(COALESCE(product_variants.variant_price, products.base_price)), COALESCE(products.sale_price, products.base_price, 0))
                 FROM product_variants
                 WHERE product_variants.product_id = products.id) as max_price")

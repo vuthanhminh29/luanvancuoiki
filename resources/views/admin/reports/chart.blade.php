@@ -35,7 +35,7 @@
         <div class="report-card">
             <div class="report-metric-label">Số lượng đã bán</div>
             <div class="report-metric-value">{{ $int($totalSold) }}</div>
-            <p class="report-metric-note">Không tính đơn hủy/mất hàng</p>
+            <p class="report-metric-note">Không tính đơn hủy</p>
         </div>
         <div class="report-card">
             <div class="report-metric-label">Doanh thu ghi nhận</div>

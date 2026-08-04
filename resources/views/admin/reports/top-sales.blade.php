@@ -40,7 +40,7 @@
         <div class="report-card">
             <div class="report-metric-label">Doanh thu top</div>
             <div class="report-metric-value">{{ $money($totalRevenue) }}</div>
-            <p class="report-metric-note">Không tính đơn hủy/mất hàng</p>
+            <p class="report-metric-note">Không tính đơn hủy</p>
         </div>
         <div class="report-card">
             <div class="report-metric-label">Bán TB / sản phẩm</div>

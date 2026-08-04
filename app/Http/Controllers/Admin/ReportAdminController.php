@@ -10,7 +10,7 @@ use Illuminate\View\View;
 
 class ReportAdminController extends Controller
 {
-    private array $excludedOrderStatuses = ['CANCELLED', 'LOST_IN_TRANSIT'];
+    private array $excludedOrderStatuses = ['CANCELLED'];
 
     public function products(): View
     {
@@ -54,7 +54,7 @@ class ReportAdminController extends Controller
                 FROM order_items oi
                 JOIN products p ON p.id = oi.product_id
                 JOIN orders o ON o.id = oi.order_id
-                WHERE o.status NOT IN ('CANCELLED', 'LOST_IN_TRANSIT')
+                WHERE o.status NOT IN ('CANCELLED')
                 GROUP BY p.category_id
             ) sold ON sold.category_id = c.id
             WHERE c.status = 'ACTIVE'
@@ -79,7 +79,7 @@ class ReportAdminController extends Controller
                     SELECT COALESCE(SUM(oi.quantity), 0)
                     FROM order_items oi
                     JOIN orders o ON o.id = oi.order_id
-                    WHERE o.status NOT IN ('CANCELLED', 'LOST_IN_TRANSIT')
+                    WHERE o.status NOT IN ('CANCELLED')
                 ) AS sold_quantity,
                 (SELECT COUNT(*) FROM orders WHERE status IN ('PENDING', 'AWAITING_PAYMENT')) AS pending_orders
         ");
@@ -140,7 +140,7 @@ class ReportAdminController extends Controller
                     COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS revenue
                 FROM order_items oi
                 JOIN orders o ON o.id = oi.order_id
-                WHERE o.status NOT IN ('CANCELLED', 'LOST_IN_TRANSIT')
+                WHERE o.status NOT IN ('CANCELLED')
                 GROUP BY oi.product_id
             ) sold ON sold.product_id = p.id
             LEFT JOIN (
@@ -180,7 +180,7 @@ class ReportAdminController extends Controller
             JOIN orders o ON o.id = oi.order_id
             JOIN products p ON p.id = oi.product_id
             LEFT JOIN categories c ON c.id = p.category_id
-            WHERE o.status NOT IN ('CANCELLED', 'LOST_IN_TRANSIT')
+            WHERE o.status NOT IN ('CANCELLED')
             GROUP BY c.id, c.name
             ORDER BY revenue DESC, sold_quantity DESC
             LIMIT {$top}
@@ -227,7 +227,7 @@ class ReportAdminController extends Controller
                 LEFT JOIN inventories i ON i.variant_id = pv.id
                 GROUP BY pv.product_id
             ) stock ON stock.product_id = p.id
-            WHERE o.status NOT IN ('CANCELLED', 'LOST_IN_TRANSIT')
+            WHERE o.status NOT IN ('CANCELLED')
             GROUP BY p.id, p.name, c.name, b.name, stock.available_stock
             ORDER BY sold_quantity DESC, revenue DESC
             LIMIT {$top}
@@ -261,7 +261,7 @@ class ReportAdminController extends Controller
             FROM orders o
             LEFT JOIN order_items oi ON oi.order_id = o.id
             WHERE o.created_at >= DATE_SUB(CURDATE(), INTERVAL " . ($limitDay - 1) . " DAY)
-              AND o.status NOT IN ('CANCELLED', 'LOST_IN_TRANSIT')
+              AND o.status NOT IN ('CANCELLED')
             GROUP BY DATE(o.created_at)
             ORDER BY order_date ASC
         "));

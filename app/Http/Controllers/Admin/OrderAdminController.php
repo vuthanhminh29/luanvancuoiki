@@ -32,7 +32,6 @@ class OrderAdminController extends Controller
         'RETURN_PENDING',
         'RETURNED',
         'EXCHANGED',
-        'LOST_IN_TRANSIT',
     ];
 
     private const STATUS_LABELS = [
@@ -45,20 +44,18 @@ class OrderAdminController extends Controller
         'RETURN_PENDING' => ['Chờ hoàn/đổi', 'return', 'fa-rotate-left'],
         'RETURNED' => ['Đã hoàn trả', 'dark', 'fa-undo'],
         'EXCHANGED' => ['Đã đổi hàng', 'success', 'fa-exchange-alt'],
-        'LOST_IN_TRANSIT' => ['Mất hàng khi giao', 'lost', 'fa-exclamation-triangle'],
     ];
 
     private const STATUS_TRANSITIONS = [
         'PENDING' => ['CONFIRMED', 'CANCELLED'],
         'AWAITING_PAYMENT' => ['CONFIRMED', 'CANCELLED'],
         'CONFIRMED' => ['DELIVERING', 'CANCELLED'],
-        'DELIVERING' => ['DELIVERED', 'LOST_IN_TRANSIT'],
+        'DELIVERING' => ['DELIVERED'],
         'DELIVERED' => ['RETURN_PENDING'],
         'RETURN_PENDING' => ['RETURNED', 'EXCHANGED', 'DELIVERED'],
         'CANCELLED' => [],
         'RETURNED' => [],
         'EXCHANGED' => [],
-        'LOST_IN_TRANSIT' => [],
     ];
 
     private const CANCELLABLE_STATUSES = ['PENDING', 'AWAITING_PAYMENT', 'CONFIRMED'];

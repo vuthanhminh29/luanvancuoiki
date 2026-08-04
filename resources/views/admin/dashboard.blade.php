@@ -16,7 +16,7 @@
         'RETURN_PENDING' => ['Đang hoàn/đổi', 'danger'],
         'RETURNED' => ['Đã hoàn', 'dark'],
         'EXCHANGED' => ['Đã đổi', 'dark'],
-        'LOST_IN_TRANSIT' => ['Mất hàng', 'danger'],
+        'LOST_IN_TRANSIT' => ['Không hoàn tất', 'danger'],
     ];
     $maxSold = max(1, (int) $topCategories->max('sold_quantity'));
 @endphp
