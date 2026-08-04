@@ -11,6 +11,8 @@
         $totalPayment = (float) $items->sum('line_total');
         $totalQuantity = (int) $items->sum('quantity');
         $orderMaxQuantity = 20;
+        $hasCartErrors = isset($errors) && $errors->any();
+        $cartMessage = session('error') ?: session('success') ?: ($hasCartErrors ? $errors->first() : null);
         $formatMoney = fn ($value) => number_format((float) $value, 0, ',', '.') . 'đ';
     @endphp
 
@@ -33,10 +35,10 @@
                     <div class="cart-count">{{ $totalQuantity }}/{{ $orderMaxQuantity }} sản phẩm</div>
                 </header>
 
-                @if (session('success') || session('error') || $errors->any())
-                    <div class="cart-message {{ session('error') || $errors->any() ? 'is-error' : 'is-success' }}">
-                        <i class="fa {{ session('error') || $errors->any() ? 'fa-exclamation-circle' : 'fa-check-circle' }}"></i>
-                        <span>{{ session('error') ?: session('success') ?: $errors->first() }}</span>
+                @if ($cartMessage)
+                    <div class="cart-message {{ session('error') || $hasCartErrors ? 'is-error' : 'is-success' }}">
+                        <i class="fa {{ session('error') || $hasCartErrors ? 'fa-exclamation-circle' : 'fa-check-circle' }}"></i>
+                        <span>{{ $cartMessage }}</span>
                     </div>
                 @endif
 
