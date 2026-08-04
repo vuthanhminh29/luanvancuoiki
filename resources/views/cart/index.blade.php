@@ -7,164 +7,183 @@
 @endpush
 
 @section('content')
-    <div class="breadcrumb-option">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="breadcrumb__links">
-                        <a href="{{ route('home') }}"><i class="fa fa-home"></i> Trang chủ</a>
-                        <a href="{{ route('products.index') }}"> Cửa hàng</a>
-                        <span>Giỏ hàng</span>
+    @php
+        $totalPayment = (float) $items->sum('line_total');
+        $totalQuantity = (int) $items->sum('quantity');
+        $orderMaxQuantity = 20;
+        $formatMoney = fn ($value) => number_format((float) $value, 0, ',', '.') . 'đ';
+    @endphp
+
+    <section class="cart-page">
+        <div class="cart-container">
+            <nav class="cart-breadcrumb" aria-label="Breadcrumb">
+                <a href="{{ route('home') }}"><i class="fa fa-home"></i> Trang chủ</a>
+                <span><i class="fa fa-angle-right"></i></span>
+                <a href="{{ route('products.index') }}">Cửa hàng</a>
+                <span><i class="fa fa-angle-right"></i></span>
+                <strong>Giỏ hàng</strong>
+            </nav>
+
+            @if ($items->isNotEmpty())
+                <header class="cart-heading">
+                    <div>
+                        <p class="cart-kicker">Đơn hàng của bạn</p>
+                        <h1>Giỏ hàng</h1>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if ($items->isNotEmpty())
-        @php
-            $totalPayment = $items->sum('line_total');
-            $totalQuantity = $items->sum('quantity');
-            $orderMaxQuantity = 10;
-        @endphp
-
-        <section class="shop-cart spad">
-            <div class="container">
-                <div class="cart-page-head">
-                    <h1>Giỏ hàng</h1>
                     <div class="cart-count">{{ $totalQuantity }}/{{ $orderMaxQuantity }} sản phẩm</div>
-                </div>
+                </header>
 
-                <div class="cart-bulk-note">
-                    <i class="fa fa-info-circle" aria-hidden="true"></i>
+                @if (session('success') || session('error') || $errors->any())
+                    <div class="cart-message {{ session('error') || $errors->any() ? 'is-error' : 'is-success' }}">
+                        <i class="fa {{ session('error') || $errors->any() ? 'fa-exclamation-circle' : 'fa-check-circle' }}"></i>
+                        <span>{{ session('error') ?: session('success') ?: $errors->first() }}</span>
+                    </div>
+                @endif
+
+                <div class="cart-limit-note">
+                    <i class="fa fa-info-circle"></i>
                     <span>
-                        Nếu khách hàng muốn đặt trên {{ $orderMaxQuantity }} cái, vui lòng bấm sang
-                        <a href="{{ route('pages.contact') }}">Liên hệ</a> để liên hệ với shop.
+                        Mỗi đơn tối đa {{ $orderMaxQuantity }} sản phẩm. Nếu cần đặt số lượng lớn hơn, vui lòng
+                        <a href="{{ route('pages.contact') }}">liên hệ cửa hàng</a>.
                     </span>
                 </div>
 
-                <form action="{{ route('cart.update') }}" method="post" id="cart-update-form" data-order-max-quantity="{{ $orderMaxQuantity }}">
-                    @csrf
-                    @method('PUT')
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="shop__cart__table">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Sản phẩm</th>
-                                            <th>Giá</th>
-                                            <th>Số lượng</th>
-                                            <th>Tổng</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($items as $item)
-                                            @php
-                                                $variant = $item['variant'];
-                                                $product = $variant->product;
-                                            @endphp
-                                            <tr>
-                                                <td class="cart__product__item">
-                                                    <a href="{{ route('products.show', $product) }}">
-                                                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}">
-                                                    </a>
-                                                    <div class="cart__product__item__title">
-                                                        <h6 class="text-truncate-1">
-                                                            <a href="{{ route('products.show', $product) }}" class="text-dark">
-                                                                {{ $product->name }}
-                                                            </a>
-                                                        </h6>
-                                                        <div class="rating">
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="cart__price">{{ number_format($variant->display_price, 0, ',', '.') }}₫</td>
-                                                <td class="cart__quantity">
-                                                    <div class="input-group float-left">
-                                                        <div class="input-next-cart d-flex">
-                                                            <input type="button" value="-" class="button-minus" data-field="quantity">
-                                                            <input type="number" step="1" min="1" max="{{ max(1, min((int) $item['available_stock'], $orderMaxQuantity)) }}"
-                                                                value="{{ $item['quantity'] }}"
-                                                                name="quantities[{{ $variant->id }}]"
-                                                                data-stock="{{ $item['available_stock'] }}"
-                                                                data-product="{{ $product->name }}"
-                                                                data-original-value="{{ $item['quantity'] }}"
-                                                                class="quantity-field-cart">
-                                                            <input type="button" value="+" class="button-plus" data-field="quantity">
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="cart__total">{{ number_format($item['line_total'], 0, ',', '.') }}₫</td>
-                                                <td class="cart__close">
-                                                    <button form="remove-{{ $variant->id }}" type="submit"
-                                                        onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                                                        <span class="icon_close"></span>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                <div class="cart-layout">
+                    <div class="cart-main-panel">
+                        <form action="{{ route('cart.update') }}" method="post" id="cart-update-form" data-order-max-quantity="{{ $orderMaxQuantity }}">
+                            @csrf
+                            @method('PUT')
+
+                            <div class="cart-table-head">
+                                <span>Sản phẩm</span>
+                                <span>Đơn giá</span>
+                                <span>Số lượng</span>
+                                <span>Tạm tính</span>
+                                <span></span>
                             </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-6 col-md-6 col-sm-6">
-                            <div class="cart__btn">
-                                <a href="{{ route('products.index') }}">Tiếp tục mua sắm</a>
+
+                            <div class="cart-items">
+                                @foreach ($items as $item)
+                                    @php
+                                        $variant = $item['variant'];
+                                        $product = $variant->product;
+                                        $availableStock = max(0, (int) ($item['available_stock'] ?? $item['quantity']));
+                                        $lineMax = max(1, min($availableStock, $orderMaxQuantity));
+                                        $variantText = collect([
+                                            $variant->color?->name,
+                                            $variant->lensSize?->name,
+                                            $variant->sku ? 'SKU ' . $variant->sku : null,
+                                        ])->filter()->implode(' / ');
+                                    @endphp
+
+                                    <article class="cart-item">
+                                        <div class="cart-product">
+                                            <a class="cart-product-image" href="{{ route('products.show', $product) }}">
+                                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}">
+                                            </a>
+                                            <div class="cart-product-copy">
+                                                <a class="cart-product-name" href="{{ route('products.show', $product) }}">{{ $product->name }}</a>
+                                                @if ($variantText !== '')
+                                                    <span class="cart-product-meta">{{ $variantText }}</span>
+                                                @endif
+                                                <span class="cart-stock {{ $availableStock <= 3 ? 'is-low' : '' }}">
+                                                    Còn {{ $availableStock }} sản phẩm
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="cart-price" data-label="Đơn giá">{{ $formatMoney($variant->display_price) }}</div>
+
+                                        <div class="cart-quantity" data-label="Số lượng">
+                                            <div class="input-next-cart">
+                                                <button type="button" class="button-minus" data-field="quantity" aria-label="Giảm số lượng">-</button>
+                                                <input type="number"
+                                                    step="1"
+                                                    min="1"
+                                                    max="{{ $lineMax }}"
+                                                    value="{{ $item['quantity'] }}"
+                                                    name="quantities[{{ $variant->id }}]"
+                                                    data-stock="{{ $availableStock }}"
+                                                    data-product="{{ $product->name }}"
+                                                    data-original-value="{{ $item['quantity'] }}"
+                                                    class="quantity-field-cart">
+                                                <button type="button" class="button-plus" data-field="quantity" aria-label="Tăng số lượng">+</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="cart-line-total" data-label="Tạm tính">{{ $formatMoney($item['line_total']) }}</div>
+
+                                        <div class="cart-remove">
+                                            <button form="remove-{{ $variant->id }}" type="submit" title="Xóa sản phẩm"
+                                                onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </article>
+                                @endforeach
                             </div>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-sm-6">
-                            <div class="cart__btn update__btn">
-                                <button name="update_cart" type="submit">
-                                    <span class="icon_loading"></span> Cập nhật giỏ hàng
+
+                            <div class="cart-actions">
+                                <a class="cart-btn light" href="{{ route('products.index') }}">
+                                    <i class="fa fa-angle-left"></i> Tiếp tục mua sắm
+                                </a>
+                                <button class="cart-btn dark" name="update_cart" type="submit">
+                                    <i class="fa fa-sync-alt"></i> Cập nhật giỏ hàng
                                 </button>
                             </div>
-                        </div>
+                        </form>
                     </div>
-                </form>
-                <div class="row">
-                    <div class="col-lg-6"></div>
-                    <div class="col-lg-4 offset-lg-2">
-                        <div class="cart__total__procced">
-                            <h6>Tổng tiền</h6>
-                            <ul>
-                                <li>Số lượng <span>{{ $totalQuantity }}/20 sản phẩm</span></li>
-                                <li>Tổng <span>{{ number_format($totalPayment, 0, ',', '.') }}₫</span></li>
-                            </ul>
-                            <a href="{{ route('checkout.index') }}" class="primary-btn">Thanh toán</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        @foreach ($items as $item)
-            <form id="remove-{{ $item['variant']->id }}" method="post" action="{{ route('cart.destroy', $item['variant']->id) }}">
-                @csrf
-                @method('DELETE')
-            </form>
-        @endforeach
-@else
-        <div class="empty-cart-container">
-            <div class="container">
-                <div class="row rounded justify-content-center mx-0">
-                    <div class="col-md-6 text-center">
-                        <h4>Chưa có sản phẩm nào trong giỏ hàng</h4>
-                        <a class="btn btn-primary" href="{{ route('products.index') }}">Xem sản phẩm</a>
-                        <a class="btn btn-secondary" href="{{ route('home') }}">Trang chủ</a>
+                    <aside class="cart-summary" aria-label="Tóm tắt giỏ hàng">
+                        <div class="cart-summary-head">
+                            <h2>Tổng tiền</h2>
+                            <span>{{ $totalQuantity }} sản phẩm</span>
+                        </div>
+                        <div class="cart-summary-row">
+                            <span>Số lượng</span>
+                            <strong>{{ $totalQuantity }}/{{ $orderMaxQuantity }}</strong>
+                        </div>
+                        <div class="cart-summary-row">
+                            <span>Tạm tính</span>
+                            <strong>{{ $formatMoney($totalPayment) }}</strong>
+                        </div>
+                        <div class="cart-summary-row muted">
+                            <span>Phí vận chuyển</span>
+                            <strong>Tính ở bước thanh toán</strong>
+                        </div>
+                        <div class="cart-summary-divider"></div>
+                        <div class="cart-summary-total">
+                            <span>Tổng</span>
+                            <strong>{{ $formatMoney($totalPayment) }}</strong>
+                        </div>
+                        <a href="{{ route('checkout.index') }}" class="cart-checkout-btn" id="cart-checkout-link">
+                            Thanh toán
+                        </a>
+                        <p class="cart-safe-note">
+                            <i class="fa fa-lock"></i> Kiểm tra tồn kho và thông tin giao hàng trước khi tạo đơn.
+                        </p>
+                    </aside>
+                </div>
+
+                @foreach ($items as $item)
+                    <form id="remove-{{ $item['variant']->id }}" method="post" action="{{ route('cart.destroy', $item['variant']->id) }}">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endforeach
+            @else
+                <div class="cart-empty">
+                    <div class="cart-empty-icon"><i class="fa fa-shopping-bag"></i></div>
+                    <h1>Giỏ hàng đang trống</h1>
+                    <p>Chọn một mẫu kính bạn thích, thử kính nếu cần, rồi quay lại đây để hoàn tất đơn hàng.</p>
+                    <div class="cart-empty-actions">
+                        <a class="cart-btn dark" href="{{ route('products.index') }}">Xem sản phẩm</a>
+                        <a class="cart-btn light" href="{{ route('home') }}">Trang chủ</a>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
-    @endif
+    </section>
 @endsection
 
 @push('scripts')
@@ -193,9 +212,8 @@
             }
 
             function validateCartQuantities(event) {
-                const maxQuantity = parseInt(cartUpdateForm.dataset.orderMaxQuantity || '10', 10);
+                const maxQuantity = parseInt(cartUpdateForm.dataset.orderMaxQuantity || '20', 10);
                 let totalQuantity = 0;
-
                 const quantityInputs = cartUpdateForm.querySelectorAll('.quantity-field-cart');
 
                 for (const input of quantityInputs) {
@@ -239,7 +257,6 @@
                     if (hasUnsavedChanges) {
                         event.preventDefault();
                         showCartAlert('Bạn vừa thay đổi số lượng. Vui lòng bấm Cập nhật giỏ hàng trước khi thanh toán.', changedInput);
-
                     }
                 });
             }
