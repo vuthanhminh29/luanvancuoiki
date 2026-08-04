@@ -14,8 +14,6 @@
     $transactionType = fn ($type) => match ($type) {
         'IMPORT' => ['Nhập kho', 'success', 'fa-arrow-down'],
         'EXPORT' => ['Xuất kho', 'danger', 'fa-arrow-up'],
-        'TRANSFER' => ['Chuyển kho', 'info', 'fa-exchange-alt'],
-        'ADJUST' => ['Điều chỉnh', 'warning', 'fa-sliders-h'],
         'RETURN_IN' => ['Nhập hàng hoàn', 'success', 'fa-undo'],
         'SALE_OUT' => ['Xuất bán', 'dark', 'fa-shopping-cart'],
         default => [$type ?: '-', 'muted', 'fa-circle'],
@@ -262,7 +260,7 @@
                 <div class="wa-card-head">
                     <div>
                         <h6>Phiếu kho</h6>
-                        <small>Danh sách nhập, xuất, chuyển kho và điều chỉnh tồn.</small>
+                        <small>Danh sách phiếu nhập kho, xuất kho và xuất bán.</small>
                     </div>
                     <a href="{{ route('admin.warehouses.create-transaction') }}" class="wa-btn primary"><i class="fa fa-plus"></i> Tạo phiếu</a>
                 </div>
@@ -276,7 +274,7 @@
                         <label>Loại phiếu</label>
                         <select class="wa-select" name="stock_type">
                             <option value="">Tất cả</option>
-                            @foreach (['IMPORT' => 'Nhập kho', 'EXPORT' => 'Xuất kho', 'TRANSFER' => 'Chuyển kho', 'ADJUST' => 'Điều chỉnh', 'RETURN_IN' => 'Nhập hàng hoàn', 'SALE_OUT' => 'Xuất bán'] as $type => $label)
+                            @foreach (['IMPORT' => 'Nhập kho', 'EXPORT' => 'Xuất kho', 'RETURN_IN' => 'Nhập hàng hoàn', 'SALE_OUT' => 'Xuất bán'] as $type => $label)
                                 <option value="{{ $type }}" @selected(($stockFilters['stock_type'] ?? '') === $type)>{{ $label }}</option>
                             @endforeach
                         </select>

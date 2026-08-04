@@ -28,7 +28,7 @@
         <div class="wt-toolbar">
             <div class="wt-title">
                 <h4>Tạo phiếu kho</h4>
-                <p>Nhập thêm hàng để bán, xuất hàng khỏi kho hoặc chuyển tồn giữa các kho.</p>
+                <p>Nhập thêm hàng để bán hoặc xuất hàng khỏi kho.</p>
             </div>
             <div class="wt-actions">
                 <a href="{{ route('admin.warehouses.index') }}" class="wt-btn"><i class="fa fa-arrow-left"></i> Quay lại kho</a>
@@ -40,7 +40,7 @@
             <div class="wt-card-head">
                 <div>
                     <h6>Thông tin phiếu</h6>
-                    <small>Phiếu hoàn tất sẽ cập nhật tồn kho ngay khi lưu.</small>
+                    <small>Phiếu hoàn tất sẽ ghi nhận tồn kho ngay khi lưu.</small>
                 </div>
                 <button type="submit" class="wt-btn primary"><i class="fa fa-save"></i> Lưu phiếu kho</button>
             </div>
@@ -58,10 +58,8 @@
                         <select name="type" id="stockType" class="wt-select">
                             <option value="IMPORT" @selected(old('type', 'IMPORT') === 'IMPORT')>Nhập kho</option>
                             <option value="EXPORT" @selected(old('type') === 'EXPORT')>Xuất kho</option>
-                            <option value="TRANSFER" @selected(old('type') === 'TRANSFER')>Chuyển kho</option>
-                            <option value="ADJUST" @selected(old('type') === 'ADJUST')>Cập nhật tồn kho</option>
                         </select>
-                        <div class="wt-help">Nhập cộng tồn, xuất trừ tồn, chuyển kho, hoặc cập nhật tồn kho trực tiếp.</div>
+                        <div class="wt-help">Nhập kho sẽ cộng tồn, xuất kho sẽ trừ tồn theo kho đã chọn.</div>
                     </div>
                     <div class="wt-field" id="sourceWarehouseGroup">
                         <label>Kho nguồn</label>
@@ -169,8 +167,8 @@ const stockVariants = @json($variants, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_S
 
 function syncWarehouseFields() {
     const type = document.getElementById('stockType').value;
-    document.getElementById('sourceWarehouseGroup').style.display = (type === 'EXPORT' || type === 'TRANSFER') ? '' : 'none';
-    document.getElementById('targetWarehouseGroup').style.display = (type === 'IMPORT' || type === 'TRANSFER' || type === 'ADJUST') ? '' : 'none';
+    document.getElementById('sourceWarehouseGroup').style.display = type === 'EXPORT' ? '' : 'none';
+    document.getElementById('targetWarehouseGroup').style.display = type === 'IMPORT' ? '' : 'none';
 }
 
 function normalizeSearch(value) {
@@ -299,19 +297,14 @@ document.getElementById('stockForm').addEventListener('submit', function (event)
     const type = document.getElementById('stockType').value;
     const source = document.querySelector('select[name="source_warehouse_id"]').value;
     const target = document.querySelector('select[name="target_warehouse_id"]').value;
-    if ((type === 'EXPORT' || type === 'TRANSFER') && !source) {
+    if (type === 'EXPORT' && !source) {
         event.preventDefault();
         alert('Bạn cần chọn kho nguồn.');
         return;
     }
-    if ((type === 'IMPORT' || type === 'TRANSFER' || type === 'ADJUST') && !target) {
+    if (type === 'IMPORT' && !target) {
         event.preventDefault();
-        alert(type === 'ADJUST' ? 'Bạn cần chọn kho cần cập nhật.' : 'Bạn cần chọn kho đích.');
-        return;
-    }
-    if (type === 'TRANSFER' && source && target && source === target) {
-        event.preventDefault();
-        alert('Kho nguồn và kho đích phải khác nhau.');
+        alert('Bạn cần chọn kho đích.');
         return;
     }
     const emptyRow = Array.from(document.querySelectorAll('.variant-id')).find(function (input) {
