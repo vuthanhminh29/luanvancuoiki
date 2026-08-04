@@ -71,11 +71,6 @@
                                         $product = $variant->product;
                                         $availableStock = max(0, (int) ($item['available_stock'] ?? $item['quantity']));
                                         $lineMax = max(1, min($availableStock, $orderMaxQuantity));
-                                        $variantText = collect([
-                                            $variant->color?->name,
-                                            $variant->lensSize?->name,
-                                            $variant->sku ? 'SKU ' . $variant->sku : null,
-                                        ])->filter()->implode(' / ');
                                     @endphp
 
                                     <article class="cart-item">
@@ -85,12 +80,6 @@
                                             </a>
                                             <div class="cart-product-copy">
                                                 <a class="cart-product-name" href="{{ route('products.show', $product) }}">{{ $product->name }}</a>
-                                                @if ($variantText !== '')
-                                                    <span class="cart-product-meta">{{ $variantText }}</span>
-                                                @endif
-                                                <span class="cart-stock {{ $availableStock <= 3 ? 'is-low' : '' }}">
-                                                    Còn {{ $availableStock }} sản phẩm
-                                                </span>
                                             </div>
                                         </div>
 
