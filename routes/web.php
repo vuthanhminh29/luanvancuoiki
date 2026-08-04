@@ -77,6 +77,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/tai-khoan/dia-chi/{address}', [AccountController::class, 'destroyAddress'])->middleware('throttle:user-actions')->name('account.addresses.destroy');
     Route::get('/tai-khoan/don-hang', [AccountController::class, 'orders'])->name('account.orders.index');
     Route::get('/tai-khoan/don-hang/{order}', [AccountController::class, 'showOrder'])->name('account.orders.show');
+    Route::get('/tai-khoan/don-hang/{order}/hoa-don', [AccountController::class, 'invoice'])->name('account.orders.invoice');
+    Route::post('/tai-khoan/don-hang/{order}/hoa-don/gui-email', [AccountController::class, 'emailInvoice'])->middleware('throttle:user-actions')->name('account.orders.invoice.email');
 
     // User đã mua hàng có thể gửi đánh giá cho sản phẩm.
     Route::post('/san-pham/{product:slug}/danh-gia', [ProductController::class, 'storeReview'])->middleware('throttle:user-actions')->name('products.reviews.store');

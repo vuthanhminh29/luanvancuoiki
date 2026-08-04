@@ -88,6 +88,15 @@
             </div>
             <div class="od-actions">
                 <span class="od-badge {{ $statusClass }}"><i class="fas {{ $statusIcon }}"></i>{{ $statusLabel }}</span>
+                <a href="{{ route('account.orders.invoice', $order) }}" class="od-btn primary" target="_blank" rel="noopener">
+                    <i class="fas fa-file-invoice"></i> Xuất hóa đơn
+                </a>
+                <form action="{{ route('account.orders.invoice.email', $order) }}" method="post" class="od-inline-form">
+                    @csrf
+                    <button type="submit" class="od-btn light">
+                        <i class="fas fa-envelope"></i> Gửi hóa đơn
+                    </button>
+                </form>
                 <a href="{{ route('account.orders.index') }}" class="od-btn light"><i class="fas fa-arrow-left"></i> Quay lại</a>
             </div>
         </div>

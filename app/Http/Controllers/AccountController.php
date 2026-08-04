@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\OrderInvoiceEmailService;
 use App\Models\TryOnSnapshot;
 use App\Models\UserAddress;
 use Illuminate\Http\RedirectResponse;
@@ -54,6 +55,26 @@ class AccountController extends Controller
             'countedReturnStatuses' => ['PENDING', 'APPROVED', 'RECEIVED', 'COMPLETED'],
             'isReturnWindowOpen' => $order->delivered_at === null || $order->delivered_at->gte(now()->subDays(7)),
         ]);
+    }
+
+    public function invoice(Order $order): View
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        return view('account.orders.invoice', [
+            'order' => $order->load(['user', 'items']),
+            'backUrl' => route('account.orders.show', $order),
+            'invoiceEmailSent' => session('invoice_email_sent'),
+        ]);
+    }
+
+    public function emailInvoice(Order $order, OrderInvoiceEmailService $invoiceEmail): RedirectResponse
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        return redirect()
+            ->route('account.orders.invoice', $order)
+            ->with('invoice_email_sent', $invoiceEmail->send($order));
     }
 
     public function editProfile(): View

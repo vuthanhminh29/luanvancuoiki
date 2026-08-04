@@ -16,6 +16,7 @@
 .od-title h1 { margin:0; font-size:26px; font-weight:800; letter-spacing:0; }
 .od-title p { margin:6px 0 0; color:#6b7280; font-size:14px; }
 .od-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.od-inline-form { display:inline-flex; margin:0; }
 .od-btn { min-height:40px; border-radius:6px; padding:0 14px; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; border:0; font-weight:700; font-size:14px; cursor:pointer; }
 .od-btn.primary { background:#111827; color:#fff; }
 .od-btn.light { background:#fff; color:#374151; border:1px solid #d1d5db; }
