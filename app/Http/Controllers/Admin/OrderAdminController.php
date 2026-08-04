@@ -93,8 +93,10 @@ class OrderAdminController extends Controller
                             ->orWhere('email', 'like', $keyword));
                 });
             })
+            // ÄÆ¡n má»›i nháº¥t lÃªn trÆ°á»›c.
             ->latest();
 
+        // Tráº£ dá»¯ liá»‡u sang view admin.orders.index.
         return view('admin.orders.index', [
             'orders' => $ordersQuery->get(),
             'summary' => [
@@ -106,6 +108,10 @@ class OrderAdminController extends Controller
             ],
             'filters' => $filters,
             'isUnconfirmed' => $isUnconfirmed,
+            'statusLabels' => self::STATUS_LABELS,
+            // Máº£ng status_code => label tiáº¿ng Viá»‡t Ä‘á»ƒ view render filter.
+            'statusOptions' => collect(self::STATUS_LABELS)->map(fn ($meta) => $meta[0])->all(),
+            'cancellableStatuses' => self::CANCELLABLE_STATUSES,
         ]);
     }
 }

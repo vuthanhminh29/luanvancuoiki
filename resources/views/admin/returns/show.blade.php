@@ -29,6 +29,19 @@
     $damageMap = $returnRequest->damageAssessments->keyBy('part_code');
     $order = $returnRequest->order;
     $customer = $returnRequest->user;
+    $returnProgressSteps = [
+        'PENDING' => ['KhÃ¡ch gá»­i yÃªu cáº§u', 'fa-paper-plane', 'pending'],
+        'APPROVED' => ['Admin Ä‘Ã£ duyá»‡t', 'fa-clipboard-check', 'info'],
+        'RECEIVED' => ['ÄÃ£ nháº­n hÃ ng', 'fa-box-open', 'moving'],
+        'COMPLETED' => [$returnRequest->type === 'EXCHANGE' ? 'Äá»•i hÃ ng xong' : 'HoÃ n tráº£ xong', 'fa-check-circle', 'success'],
+    ];
+    $returnProgressOrder = array_keys($returnProgressSteps);
+    $returnProgressStatus = in_array($returnRequest->status, ['REJECTED', 'CANCELLED'], true) ? null : $returnRequest->status;
+    $returnProgressIndex = $returnProgressStatus ? array_search($returnProgressStatus, $returnProgressOrder, true) : false;
+    $returnEndMeta = [
+        'REJECTED' => ['YÃªu cáº§u bá»‹ tá»« chá»‘i', 'danger', 'fa-times-circle'],
+        'CANCELLED' => ['YÃªu cáº§u Ä‘Ã£ há»§y', 'dark', 'fa-ban'],
+    ];
 @endphp
 
 @push('styles')
@@ -47,6 +60,14 @@
 .rr-badge,.rr-type{align-items:center;border:1px solid transparent;border-radius:999px;display:inline-flex;font-size:12px;font-weight:900;gap:6px;min-height:29px;padding:0 10px;white-space:nowrap}
 .rr-badge.warning{background:#fffbeb;border-color:#fde68a;color:#92400e}.rr-badge.info{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}.rr-badge.moving{background:#f5f3ff;border-color:#ddd6fe;color:#6d28d9}.rr-badge.success{background:#ecfdf5;border-color:#a7f3d0;color:#047857}.rr-badge.danger{background:#fef2f2;border-color:#fecaca;color:#b91c1c}.rr-badge.dark{background:#f3f4f6;border-color:#d1d5db;color:#374151}
 .rr-type.return{background:#e0f2fe;border-color:#bae6fd;color:#075985}.rr-type.exchange{background:#f5f3ff;border-color:#ddd6fe;color:#6d28d9}
+.rr-flow-card{background:#fff;border:1px solid #e4e7ec;border-radius:8px;box-shadow:0 8px 24px rgba(16,24,40,.04);margin-bottom:18px;padding:18px}
+.rr-flow{display:grid;gap:8px;grid-template-columns:repeat(4,minmax(0,1fr));position:relative}
+.rr-flow:before{background:#e5e7eb;content:"";height:2px;left:7%;position:absolute;right:7%;top:18px}
+.rr-flow-step{--step-color:#9ca3af;position:relative;text-align:center;z-index:1;color:#98a2b3;font-size:12px;font-weight:900;line-height:1.3}
+.rr-flow-step.pending{--step-color:#92400e}.rr-flow-step.info{--step-color:#1d4ed8}.rr-flow-step.moving{--step-color:#6d28d9}.rr-flow-step.success{--step-color:#047857}
+.rr-flow-step-icon{align-items:center;background:#fff;border:2px solid #d1d5db;border-radius:50%;color:#9ca3af;display:flex;height:36px;justify-content:center;margin:0 auto 7px;width:36px}
+.rr-flow-step.active{color:var(--step-color)}.rr-flow-step.active .rr-flow-step-icon{background:var(--step-color);border-color:var(--step-color);color:#fff}
+.rr-flow-end{align-items:center;border-radius:8px;display:flex;font-size:13px;font-weight:900;gap:10px;justify-content:center;min-height:52px}.rr-flow-end.danger{background:#fef2f2;color:#b91c1c}.rr-flow-end.dark{background:#f3f4f6;color:#374151}
 .rr-layout{align-items:start;display:grid;gap:18px;grid-template-columns:minmax(0,1fr) 420px}.rr-stack{display:grid;gap:18px}
 .rr-card{background:#fff;border:1px solid #e4e7ec;border-radius:8px;box-shadow:0 8px 24px rgba(16,24,40,.04);overflow:hidden}
 .rr-card-head{align-items:center;background:#fbfcfd;border-bottom:1px solid #eef2f6;display:flex;gap:12px;justify-content:space-between;padding:15px 18px}.rr-card-head h6{color:#101828;font-size:16px;font-weight:900;margin:0}.rr-card-head span{color:#667085;font-size:12px;font-weight:800}
@@ -58,7 +79,7 @@
 .rr-damage-grid{display:grid;gap:10px}.rr-damage{border:1px solid #e4e7ec;border-radius:8px;padding:12px;background:#fff}.rr-damage-top{align-items:center;display:flex;gap:10px;justify-content:space-between;margin-bottom:9px}.rr-damage-title{color:#101828;font-size:13px;font-weight:900}.rr-damage-level{border-radius:999px;font-size:11px;font-weight:900;padding:5px 8px}.rr-damage-level.none{background:#f3f4f6;color:#475467}.rr-damage-level.light{background:#ecfdf5;color:#047857}.rr-damage-level.medium{background:#fffbeb;color:#92400e}.rr-damage-level.heavy{background:#fff7ed;color:#c2410c}.rr-damage-level.severe{background:#fef2f2;color:#b91c1c}.rr-damage-fields{display:grid;gap:8px;grid-template-columns:98px minmax(0,1fr)}
 .rr-history{display:grid;gap:10px}.rr-history-item{align-items:flex-start;border:1px solid #eef2f6;border-radius:8px;display:flex;gap:10px;padding:11px}.rr-history-icon{align-items:center;background:#eff6ff;border-radius:999px;color:#1d4ed8;display:inline-flex;flex:0 0 34px;height:34px;justify-content:center;width:34px}.rr-history strong{color:#101828;display:block;font-size:13px}.rr-history span{color:#667085;display:block;font-size:12px;margin-top:3px}
 .rr-empty{align-items:center;color:#667085;display:flex;font-size:14px;justify-content:center;min-height:92px;text-align:center}
-@media(max-width:1180px){.rr-hero{grid-template-columns:repeat(2,minmax(0,1fr))}.rr-layout{grid-template-columns:1fr}.rr-side{position:static}}@media(max-width:680px){.rr-page{padding:14px}.rr-topbar{align-items:flex-start;flex-direction:column}.rr-actions,.rr-btn{width:100%}.rr-hero{grid-template-columns:1fr}.rr-product{grid-template-columns:62px minmax(0,1fr)}.rr-product img{height:62px;width:62px}.rr-product .rr-product-money{grid-column:2;text-align:left}.rr-product .rr-product-note{grid-column:1 / 3}.rr-quick{grid-template-columns:1fr}.rr-damage-fields{grid-template-columns:1fr}}
+@media(max-width:1180px){.rr-hero{grid-template-columns:repeat(2,minmax(0,1fr))}.rr-layout{grid-template-columns:1fr}.rr-side{position:static}}@media(max-width:680px){.rr-page{padding:14px}.rr-topbar{align-items:flex-start;flex-direction:column}.rr-actions,.rr-btn{width:100%}.rr-hero{grid-template-columns:1fr}.rr-flow{gap:4px}.rr-flow-step{font-size:11px}.rr-product{grid-template-columns:62px minmax(0,1fr)}.rr-product img{height:62px;width:62px}.rr-product .rr-product-money{grid-column:2;text-align:left}.rr-product .rr-product-note{grid-column:1 / 3}.rr-quick{grid-template-columns:1fr}.rr-damage-fields{grid-template-columns:1fr}}
 </style>
 @endpush
 
@@ -97,6 +118,27 @@
             <strong>{{ $money($order->total_amount ?? 0) }}</strong>
             <small>{{ $returnRequest->items->sum('quantity') }} sản phẩm trong yêu cầu</small>
         </div>
+    </div>
+
+    <div class="rr-flow-card">
+        @if (isset($returnEndMeta[$returnRequest->status]))
+            @php
+                [$endText, $endClass, $endIcon] = $returnEndMeta[$returnRequest->status];
+            @endphp
+            <div class="rr-flow-end {{ $endClass }}">
+                <i class="fas {{ $endIcon }}"></i>
+                {{ $endText }}
+            </div>
+        @else
+            <div class="rr-flow">
+                @foreach ($returnProgressSteps as $stepStatus => [$stepLabel, $stepIcon, $stepClass])
+                    <div class="rr-flow-step {{ $stepClass }} {{ $returnProgressIndex !== false && $returnProgressIndex >= $loop->index ? 'active' : '' }}">
+                        <div class="rr-flow-step-icon"><i class="fas {{ $stepIcon }}"></i></div>
+                        {{ $stepLabel }}
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     <div class="rr-layout">

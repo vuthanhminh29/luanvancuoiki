@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
@@ -62,11 +63,13 @@ class AdminAuthController extends Controller
 
     private function canAccessAdmin(int $userId): bool
     {
-        return DB::table('user_roles')
+        $userRoles = Cache::remember("users.{$userId}.role_codes", now()->addMinutes(5), fn () => DB::table('user_roles')
             ->join('roles', 'roles.id', '=', 'user_roles.role_id')
             ->where('user_roles.user_id', $userId)
-            ->whereIn('roles.code', self::ADMIN_AREA_ROLES)
-            ->exists();
+            ->pluck('roles.code')
+            ->all());
+
+        return count(array_intersect(self::ADMIN_AREA_ROLES, $userRoles)) > 0;
     }
 
     private function passwordMatches(string $password, string $hash): bool

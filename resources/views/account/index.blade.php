@@ -29,6 +29,52 @@
                         <span>Thông tin tài khoản</span>
                     </div>
                 </div>
+
+                <div class="account-card tryon-history-card" id="lich-su-thu-kinh">
+                    <div class="tryon-history-head">
+                        <div>
+                            <span class="tryon-history-eyebrow">áº¢nh Ä‘Ã£ lÆ°u</span>
+                            <h5 class="card-title">Lá»‹ch sá»­ thá»­ kÃ­nh</h5>
+                            <p class="card-subtitle">CÃ¡c áº£nh báº¡n Ä‘Ã£ chá»¥p sau khi thá»­ kÃ­nh trá»±c tuyáº¿n</p>
+                        </div>
+                        <div class="tryon-history-summary">
+                            <strong>{{ $tryOnCount }}</strong>
+                            <span>áº£nh Ä‘Ã£ lÆ°u</span>
+                        </div>
+                    </div>
+
+                    {{-- Lá»‹ch sá»­ nÃ y láº¥y tá»« báº£ng try_on_snapshots theo user_id cá»§a tÃ i khoáº£n Ä‘ang Ä‘Äƒng nháº­p. --}}
+                    @if ($tryOnSnapshots->isNotEmpty())
+                        <div class="tryon-history-grid">
+                            @foreach ($tryOnSnapshots as $snapshot)
+                                {{-- Má»—i tháº» lÃ  má»™t láº§n khÃ¡ch báº¥m nÃºt Chá»¥p/LÆ°u káº¿t quáº£ á»Ÿ trang thá»­ kÃ­nh. --}}
+                                <article class="tryon-history-item">
+                                    <a href="{{ $snapshot->image_url }}" target="_blank" rel="noopener" class="tryon-history-photo">
+                                        <img src="{{ $snapshot->image_url }}" alt="{{ $snapshot->product_name }}">
+                                    </a>
+
+                                    <div class="tryon-history-info">
+                                        <h6>{{ $snapshot->product_name }}</h6>
+                                        <span><i class="fa fa-clock-o"></i> {{ $snapshot->created_at?->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+                        <div class="tryon-history-actions">
+                            <a href="{{ route('tryon') }}" class="btn-orders">
+                                <i class="fa fa-camera-retro"></i>
+                                Thá»­ kÃ­nh tiáº¿p
+                            </a>
+                        </div>
+                    @else
+                        <div class="tryon-history-empty">
+                            <i class="fa fa-camera-retro"></i>
+                            <h6>ChÆ°a cÃ³ áº£nh thá»­ kÃ­nh</h6>
+                            <p>Sau khi thá»­ kÃ­nh, báº¥m Chá»¥p/LÆ°u káº¿t quáº£ Ä‘á»ƒ áº£nh xuáº¥t hiá»‡n táº¡i Ä‘Ã¢y.</p>
+                            <a href="{{ route('tryon') }}" class="btn-orders">Thá»­ kÃ­nh ngay</a>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

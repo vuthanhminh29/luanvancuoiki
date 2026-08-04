@@ -19,6 +19,17 @@
     $currentStatus = $statusLabels[$order->status] ?? [$order->status, 'dark', 'fa-question-circle'];
     $nonCancellableStatuses = ['DELIVERING', 'DELIVERED', 'RETURN_PENDING', 'RETURNED', 'EXCHANGED', 'LOST_IN_TRANSIT', 'CANCELLED'];
     $canCancelOrder = ! in_array($order->status, $nonCancellableStatuses, true);
+    $nextStatusOptions = $statusOptions ?? [];
+    $progressSteps = [
+        'AWAITING_PAYMENT' => ['Chá» thanh toÃ¡n', 'fa-credit-card', 'payment'],
+        'PENDING' => ['Chá» xÃ¡c nháº­n', 'fa-clock', 'pending'],
+        'CONFIRMED' => ['ÄÃ£ xÃ¡c nháº­n', 'fa-clipboard-check', 'confirmed'],
+        'DELIVERING' => ['Äang giao', 'fa-truck', 'shipping'],
+        'DELIVERED' => ['Giao thÃ nh cÃ´ng', 'fa-check-circle', 'success'],
+    ];
+    $progressOrder = array_keys($progressSteps);
+    $progressCurrent = in_array($order->status, ['RETURN_PENDING', 'RETURNED', 'EXCHANGED'], true) ? 'DELIVERED' : $order->status;
+    $progressIndex = array_search($progressCurrent, $progressOrder, true);
 @endphp
 
 @push('styles')
@@ -38,9 +49,10 @@
 .aod-card-head h6 { margin:0; font-size:16px; font-weight:800; color:#111827; }
 .aod-card-body { padding:18px; }
 .aod-badge { display:inline-flex; align-items:center; gap:6px; min-height:30px; padding:0 11px; border-radius:999px; font-size:12px; font-weight:800; border:1px solid transparent; white-space:nowrap; }
-.aod-badge.warning { color:#92400e; background:#fffbeb; border-color:#fde68a; }
-.aod-badge.info { color:#1d4ed8; background:#eff6ff; border-color:#bfdbfe; }
-.aod-badge.moving { color:#6d28d9; background:#f5f3ff; border-color:#ddd6fe; }
+.aod-badge.warning, .aod-badge.pending { color:#92400e; background:#fffbeb; border-color:#fde68a; }
+.aod-badge.payment { color:#c2410c; background:#fff7ed; border-color:#fed7aa; }
+.aod-badge.info, .aod-badge.confirmed { color:#1d4ed8; background:#eff6ff; border-color:#bfdbfe; }
+.aod-badge.moving, .aod-badge.shipping { color:#6d28d9; background:#f5f3ff; border-color:#ddd6fe; }
 .aod-badge.success { color:#047857; background:#ecfdf5; border-color:#a7f3d0; }
 .aod-badge.danger { color:#b91c1c; background:#fef2f2; border-color:#fecaca; }
 .aod-badge.return { color:#3730a3; background:#eef2ff; border-color:#c7d2fe; }
@@ -50,6 +62,17 @@
 .aod-meta-item { border:1px solid #eef0f3; border-radius:8px; padding:12px; background:#fff; }
 .aod-meta-item span { display:block; color:#6b7280; font-size:12px; font-weight:700; margin-bottom:5px; }
 .aod-meta-item strong { display:block; font-size:14px; line-height:1.35; color:#111827; }
+.aod-progress { margin:4px 0 18px; position:relative; display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; }
+.aod-progress:before { content:""; position:absolute; left:7%; right:7%; top:18px; height:2px; background:#e5e7eb; }
+.aod-step { --step-color:#9ca3af; --step-bg:#f9fafb; --step-border:#d1d5db; position:relative; z-index:1; text-align:center; color:#9ca3af; font-size:12px; font-weight:800; }
+.aod-step.payment { --step-color:#c2410c; --step-bg:#fff7ed; --step-border:#fed7aa; }
+.aod-step.pending { --step-color:#92400e; --step-bg:#fffbeb; --step-border:#fde68a; }
+.aod-step.confirmed { --step-color:#1d4ed8; --step-bg:#eff6ff; --step-border:#bfdbfe; }
+.aod-step.shipping { --step-color:#6d28d9; --step-bg:#f5f3ff; --step-border:#ddd6fe; }
+.aod-step.success { --step-color:#047857; --step-bg:#ecfdf5; --step-border:#a7f3d0; }
+.aod-step-icon { width:36px; height:36px; border-radius:50%; margin:0 auto 7px; background:#fff; border:2px solid #d1d5db; display:flex; align-items:center; justify-content:center; color:#9ca3af; }
+.aod-step.active { color:var(--step-color); }
+.aod-step.active .aod-step-icon { background:var(--step-color); border-color:var(--step-color); color:#fff; }
 .aod-product { display:grid; grid-template-columns:76px 1fr auto; gap:13px; align-items:center; padding:14px 0; border-bottom:1px solid #eef0f3; }
 .aod-product:last-child { border-bottom:0; }
 .aod-product img { width:76px; height:76px; border:1px solid #e5e7eb; border-radius:8px; object-fit:cover; background:#f9fafb; }
@@ -59,6 +82,9 @@
 .aod-product-price strong { display:block; font-size:16px; color:#111827; }
 .aod-form label { display:block; color:#6b7280; font-size:12px; font-weight:800; margin-bottom:6px; }
 .aod-select { width:100%; min-height:40px; border:1px solid #d1d5db; border-radius:6px; padding:0 11px; color:#111827; background:#fff; }
+.aod-textarea { width:100%; min-height:84px; border:1px solid #d1d5db; border-radius:6px; padding:9px 11px; color:#111827; background:#fff; resize:vertical; }
+.aod-help { margin:8px 0 0; color:#6b7280; font-size:12px; line-height:1.45; }
+.aod-error { margin:8px 0 0; color:#b91c1c; font-size:12px; font-weight:700; }
 .aod-form .aod-btn { margin-top:11px; width:100%; }
 .aod-row { display:flex; justify-content:space-between; gap:16px; padding:11px 0; border-bottom:1px solid #eef0f3; font-size:14px; }
 .aod-row span:first-child { color:#6b7280; }
@@ -66,7 +92,7 @@
 .aod-total { border-bottom:0; padding-top:14px; }
 .aod-total strong { font-size:22px; }
 @media (max-width:1100px) { .aod-page { padding:14px; } .aod-head { flex-direction:column; } .aod-actions { justify-content:flex-start; } .aod-grid { grid-template-columns:1fr; } }
-@media (max-width:620px) { .aod-meta { grid-template-columns:1fr; } .aod-product { grid-template-columns:64px 1fr; align-items:start; } .aod-product img { width:64px; height:64px; } .aod-product-price { grid-column:2; text-align:left; min-width:0; } }
+@media (max-width:620px) { .aod-meta { grid-template-columns:1fr; } .aod-progress { gap:4px; } .aod-step { font-size:11px; } .aod-product { grid-template-columns:64px 1fr; align-items:start; } .aod-product img { width:64px; height:64px; } .aod-product-price { grid-column:2; text-align:left; min-width:0; } }
 </style>
 @endpush
 

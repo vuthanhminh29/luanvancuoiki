@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Category;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -60,22 +61,34 @@ class AppServiceProvider extends ServiceProvider
 
     private function headerProductLinks(): array
     {
-        try {
-            $categories = Category::active()
-                ->withCount(['products as active_products_count' => fn ($query) => $query->active()])
-                ->get();
-        } catch (Throwable) {
+        $categories = Cache::remember('layout.header_categories.v2', now()->addMinutes(10), function (): array {
+            try {
+                return Category::active()
+                    ->withCount(['products as active_products_count' => fn ($query) => $query->active()])
+                    ->get(['id', 'slug'])
+                    ->map(fn (Category $category): array => [
+                        'id' => (int) $category->id,
+                        'slug' => (string) $category->slug,
+                        'active_products_count' => (int) $category->active_products_count,
+                    ])
+                    ->all();
+            } catch (Throwable) {
+                return [];
+            }
+        });
+
+        if ($categories === []) {
             return [];
         }
 
         $linkFor = function (string $label, array $slugPrefixes) use ($categories): ?array {
-            $ids = $categories
-                ->filter(function (Category $category) use ($slugPrefixes): bool {
-                    if ((int) $category->active_products_count < 1) {
+            $ids = collect($categories)
+                ->filter(function (array $category) use ($slugPrefixes): bool {
+                    if ((int) $category['active_products_count'] < 1) {
                         return false;
                     }
 
-                    $slug = (string) $category->slug;
+                    $slug = (string) $category['slug'];
 
                     foreach ($slugPrefixes as $prefix) {
                         if ($slug === $prefix || str_starts_with($slug, $prefix . '-')) {

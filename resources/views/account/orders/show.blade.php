@@ -48,6 +48,18 @@
             return [$item->order_item_id => $typeLabel . ' - ' . $statusLabel];
         });
     });
+    $remainingReturnQuantities = $order->items->mapWithKeys(function ($item) use ($order, $countedReturnStatuses) {
+        $requestedQuantity = $order->returnRequests
+            ->whereIn('status', $countedReturnStatuses)
+            ->flatMap->items
+            ->where('order_item_id', $item->id)
+            ->sum('quantity');
+
+        return [$item->id => max(0, (int) $item->quantity - (int) $requestedQuantity)];
+    });
+    $canCreateReturnRequest = $order->hasReturnableStatus()
+        && $isReturnWindowOpen
+        && $remainingReturnQuantities->contains(fn ($quantity) => $quantity > 0);
 @endphp
 
 <div class="od-breadcrumb">

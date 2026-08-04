@@ -32,7 +32,7 @@
                         {{ $selectedCategory ? 'Chuyên mục: ' . $selectedCategory->name : 'Bài viết' }}
                     </h1>
                     <p class="blog-subtitle mt-2 text-gray-600">
-                        {{ $selectedCategory ? 'Các bài viết thuộc chuyên mục ' . $selectedCategory->name . '.' : 'Tin tức và chia sẻ mới nhất từ Hải Triều Optic Master.' }}
+                        {{ $selectedCategory ? 'Các bài viết thuộc chuyên mục ' . $selectedCategory->name . '.' : 'Tin tức và chia sẻ mới nhất từ WARFARER.' }}
                     </p>
                 </div>
 
@@ -54,7 +54,7 @@
                                     </span>
                                     <span class="blog-card-admin flex items-center gap-1">
                                         <i class="fas fa-user"></i>
-                                        Admin
+                                        Quáº£n trá»‹ viÃªn
                                     </span>
                                 </div>
 

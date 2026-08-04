@@ -173,7 +173,7 @@
                             $payment = $paymentBadge($order->payment_method);
                         @endphp
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $orders->firstItem() + $index }}</td>
                             <td>
                                 <a class="ao-id" href="{{ route('admin.orders.show', $order) }}">
                                     <i class="fas fa-receipt"></i> {{ $order->order_code ?: '#' . $order->id }}
@@ -206,6 +206,7 @@
                     @endforelse
                 </tbody>
             </table>
+            <div style=padding-top:16px;>{{ $orders->links() }}</div>
         </div>
     </div>
 </div>

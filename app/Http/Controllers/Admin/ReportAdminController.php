@@ -19,7 +19,7 @@ class ReportAdminController extends Controller
                 (SELECT COUNT(*) FROM categories WHERE status = 'ACTIVE') AS active_categories,
                 (SELECT COUNT(*) FROM products WHERE status = 'ACTIVE') AS active_products,
                 (SELECT COUNT(*) FROM product_variants) AS total_variants,
-                (SELECT COALESCE(SUM(quantity - reserved_quantity), 0) FROM inventories) AS available_stock
+                (SELECT COALESCE(SUM(quantity), 0) FROM inventories) AS available_stock
         ");
 
         $categoryReports = collect(DB::select("
@@ -41,7 +41,7 @@ class ReportAdminController extends Controller
             LEFT JOIN (
                 SELECT
                     variant_id,
-                    COALESCE(SUM(quantity - reserved_quantity), 0) AS available_stock,
+                    COALESCE(SUM(quantity), 0) AS available_stock,
                     COALESCE(MAX(min_stock_level), 10) AS min_stock_level
                 FROM inventories
                 GROUP BY variant_id
@@ -124,7 +124,7 @@ class ReportAdminController extends Controller
                     SELECT
                         pv.product_id,
                         pv.id AS variant_id,
-                        COALESCE(SUM(i.quantity - i.reserved_quantity), 0) AS available_stock,
+                        COALESCE(SUM(i.quantity), 0) AS available_stock,
                         COALESCE(MAX(i.min_stock_level), 10) AS min_stock_level
                     FROM product_variants pv
                     LEFT JOIN inventories i ON i.variant_id = pv.id
@@ -222,7 +222,7 @@ class ReportAdminController extends Controller
             LEFT JOIN (
                 SELECT
                     pv.product_id,
-                    COALESCE(SUM(i.quantity - i.reserved_quantity), 0) AS available_stock
+                    COALESCE(SUM(i.quantity), 0) AS available_stock
                 FROM product_variants pv
                 LEFT JOIN inventories i ON i.variant_id = pv.id
                 GROUP BY pv.product_id

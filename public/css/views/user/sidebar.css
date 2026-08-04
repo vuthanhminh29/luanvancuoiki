@@ -59,6 +59,52 @@
     transition: all 0.15s;
 }
 
+.menu-item span {
+    flex: 1;
+}
+
+.menu-item em {
+    min-width: 26px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #1d4ed8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 700;
+}
+
+.menu-item-history {
+    color: #1f2937;
+}
+
+.menu-item span {
+    flex: 1;
+}
+
+.menu-item em {
+    min-width: 26px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #1d4ed8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 700;
+}
+
+.menu-item-history {
+    color: #1f2937;
+}
+
 .menu-item:hover {
     background-color: #f9fafb;
     color: #111827;

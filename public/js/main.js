@@ -283,25 +283,25 @@ Created: Colorib
         var input = parent.find('.quantity-field-cart');
         var currentVal = parseInt(input.val(), 10);
 
-        var newValue = (!isNaN(currentVal) && currentVal > 0) ? currentVal - 1 : 0;
+        var newValue = (!isNaN(currentVal) && currentVal > 1) ? currentVal - 1 : 1;
 
         input.val(newValue);
     }
 
     function getCartMaxTotal(parent) {
-        var form = parent.closest('form[data-max-total-quantity]');
+        var form = parent.closest('form[data-order-max-quantity], form[data-max-total-quantity]');
 
         if (!form.length) {
             return 0;
         }
 
-        var maxTotal = parseInt(form.data('max-total-quantity'), 10);
+        var maxTotal = parseInt(form.data('order-max-quantity') || form.data('max-total-quantity'), 10);
 
         return !isNaN(maxTotal) ? maxTotal : 0;
     }
 
     function getCartTotal(parent) {
-        var form = parent.closest('form[data-max-total-quantity]');
+        var form = parent.closest('form[data-order-max-quantity], form[data-max-total-quantity]');
         var total = 0;
 
         if (!form.length) {

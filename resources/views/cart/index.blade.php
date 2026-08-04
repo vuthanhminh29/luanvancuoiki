@@ -25,11 +25,25 @@
         @php
             $totalPayment = $items->sum('line_total');
             $totalQuantity = $items->sum('quantity');
+            $orderMaxQuantity = 10;
         @endphp
 
         <section class="shop-cart spad">
             <div class="container">
-                <form action="{{ route('cart.update') }}" method="post" data-max-total-quantity="20">
+                <div class="cart-page-head">
+                    <h1>Giá» hÃ ng</h1>
+                    <div class="cart-count">{{ $totalQuantity }}/{{ $orderMaxQuantity }} sáº£n pháº©m</div>
+                </div>
+
+                <div class="cart-bulk-note">
+                    <i class="fa fa-info-circle" aria-hidden="true"></i>
+                    <span>
+                        Náº¿u khÃ¡ch hÃ ng muá»‘n Ä‘áº·t trÃªn {{ $orderMaxQuantity }} cÃ¡i, vui lÃ²ng báº¥m sang
+                        <a href="{{ route('pages.contact') }}">LiÃªn há»‡</a> Ä‘á»ƒ liÃªn há»‡ vá»›i shop.
+                    </span>
+                </div>
+
+                <form action="{{ route('cart.update') }}" method="post" id="cart-update-form" data-order-max-quantity="{{ $orderMaxQuantity }}">
                     @csrf
                     @method('PUT')
                     <div class="row">
@@ -76,9 +90,12 @@
                                                     <div class="input-group float-left">
                                                         <div class="input-next-cart d-flex">
                                                             <input type="button" value="-" class="button-minus" data-field="quantity">
-                                                            <input type="number" readonly step="1" min="0" max="20"
+                                                            <input type="number" step="1" min="1" max="{{ max(1, min((int) $item['available_stock'], $orderMaxQuantity)) }}"
                                                                 value="{{ $item['quantity'] }}"
                                                                 name="quantities[{{ $variant->id }}]"
+                                                                data-stock="{{ $item['available_stock'] }}"
+                                                                data-product="{{ $product->name }}"
+                                                                data-original-value="{{ $item['quantity'] }}"
                                                                 class="quantity-field-cart">
                                                             <input type="button" value="+" class="button-plus" data-field="quantity">
                                                         </div>
@@ -135,7 +152,7 @@
                 @method('DELETE')
             </form>
         @endforeach
-    @else
+@else
         <div class="empty-cart-container">
             <div class="container">
                 <div class="row rounded justify-content-center mx-0">
@@ -149,3 +166,83 @@
         </div>
     @endif
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cartUpdateForm = document.getElementById('cart-update-form');
+            const checkoutLink = document.getElementById('cart-checkout-link');
+            let cartAlertOpen = false;
+
+            if (!cartUpdateForm) {
+                return;
+            }
+
+            function showCartAlert(message, focusElement = null) {
+                if (cartAlertOpen) {
+                    return;
+                }
+
+                cartAlertOpen = true;
+                alert(message);
+                cartAlertOpen = false;
+
+                if (focusElement) {
+                    focusElement.focus();
+                }
+            }
+
+            function validateCartQuantities(event) {
+                const maxQuantity = parseInt(cartUpdateForm.dataset.orderMaxQuantity || '10', 10);
+                let totalQuantity = 0;
+
+                const quantityInputs = cartUpdateForm.querySelectorAll('.quantity-field-cart');
+
+                for (const input of quantityInputs) {
+                    const quantity = Math.max(0, parseInt(input.value || '0', 10) || 0);
+                    const stock = Math.max(0, parseInt(input.dataset.stock || '0', 10) || 0);
+
+                    totalQuantity += quantity;
+
+                    if (quantity > stock) {
+                        event.preventDefault();
+                        input.value = Math.max(1, stock);
+                        showCartAlert('Sáº£n pháº©m nÃ y chá»‰ cÃ²n ' + stock + ' sáº£n pháº©m trong kho. Vui lÃ²ng giáº£m sá»‘ lÆ°á»£ng.', input);
+                        return false;
+                    }
+                }
+
+                if (totalQuantity > maxQuantity) {
+                    event.preventDefault();
+                    showCartAlert('Má»—i Ä‘Æ¡n chá»‰ Ä‘áº·t tá»‘i Ä‘a ' + maxQuantity + ' sáº£n pháº©m. Vui lÃ²ng giáº£m sá»‘ lÆ°á»£ng trong giá».');
+                    return false;
+                }
+
+                return true;
+            }
+
+            cartUpdateForm.addEventListener('submit', function(event) {
+                validateCartQuantities(event);
+            });
+
+            if (checkoutLink) {
+                checkoutLink.addEventListener('click', function(event) {
+                    if (!validateCartQuantities(event)) {
+                        return;
+                    }
+
+                    const changedInput = cartUpdateForm.querySelector('.quantity-field-cart');
+                    const hasUnsavedChanges = Array.from(cartUpdateForm.querySelectorAll('.quantity-field-cart')).some(function(input) {
+                        return String(parseInt(input.value || '0', 10) || 0) !== String(parseInt(input.dataset.originalValue || '0', 10) || 0);
+                    });
+
+                    if (hasUnsavedChanges) {
+                        event.preventDefault();
+                        showCartAlert('Báº¡n vá»«a thay Ä‘á»•i sá»‘ lÆ°á»£ng. Vui lÃ²ng báº¥m Cáº­p nháº­t giá» hÃ ng trÆ°á»›c khi thanh toÃ¡n.', changedInput);
+
+                    }
+                });
+            }
+        });
+    </script>
+@endpush

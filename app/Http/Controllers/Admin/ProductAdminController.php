@@ -211,6 +211,15 @@ class ProductAdminController extends Controller
         ];
     }
 
+    private function clearProductCaches(): void
+    {
+        Cache::forget('admin.product.form_lookups');
+        Cache::forget('products.index.price_range');
+        Cache::forget('products.index.filter_lookups');
+        Cache::forget('layout.header_categories');
+        Cache::forget('home.payload');
+    }
+
     private function syncVariants(Request $request, Product $product): void
     {
         $colors = $request->input('variant_color_id', []);
