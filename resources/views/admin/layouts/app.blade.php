@@ -28,22 +28,22 @@
         .sidebar.pb-3 { padding-bottom: 0 !important; }
         .content { margin-left: 280px; background: #f3f6fa; }
         .sidebar, .sidebar .navbar { background: #111827 !important; }
-        .sidebar .navbar { align-items: flex-start; min-height: 100%; padding: clamp(10px, 1.7vh, 16px) 0 clamp(10px, 1.7vh, 16px); }
-        .sidebar .navbar-brand { align-items: center; display: flex; margin-left: 26px !important; margin-bottom: clamp(10px, 2vh, 18px) !important; min-height: clamp(36px, 5vh, 44px); }
-        .sidebar .navbar-brand h3 { color: #fff !important; font-size: clamp(22px, 2.7vh, 25px); font-weight: 800; letter-spacing: 0; margin: 0; }
-        .sidebar .navbar .navbar-nav { gap: clamp(2px, .55vh, 5px); padding-right: 14px; }
+        .sidebar .navbar { align-content: flex-start; align-items: flex-start; display: flex; flex-direction: column; min-height: 100%; padding: 18px 0 16px; }
+        .sidebar .navbar-brand { align-items: center; display: flex; margin: 0 0 20px 26px !important; min-height: 44px; }
+        .sidebar .navbar-brand h3 { color: #fff !important; font-size: 26px; font-weight: 800; letter-spacing: 0; margin: 0; }
+        .sidebar .navbar .navbar-nav { display: flex; flex-direction: column; gap: 5px; margin-top: 0 !important; padding-right: 14px; width: 100%; }
         .sidebar .navbar .navbar-nav .nav-link {
             align-items: center;
             border-left: 0 !important;
-            border-radius: 0 24px 24px 0;
+            border-radius: 0 26px 26px 0;
             color: #cbd5e1 !important;
             display: flex;
-            font-size: clamp(14px, 1.85vh, 16px);
+            font-size: 17px;
             font-weight: 800;
-            gap: 11px;
+            gap: 13px;
             margin: 0;
-            min-height: clamp(40px, 5.45vh, 48px);
-            padding: 0 18px 0 31px;
+            min-height: 46px;
+            padding: 0 20px 0 34px;
             position: relative;
             transition: background-color .15s ease, color .15s ease;
         }
@@ -52,13 +52,13 @@
             border-radius: 0 !important;
             color: inherit;
             display: inline-block;
-            flex: 0 0 22px;
-            font-size: clamp(16px, 2vh, 18px);
+            flex: 0 0 24px;
+            font-size: 18px;
             height: auto;
             line-height: 1;
             margin: 0 !important;
             text-align: center;
-            width: 22px;
+            width: 24px;
         }
         .sidebar .navbar .navbar-nav .dropdown-toggle { color: #cbd5e1 !important; }
         .sidebar .navbar .navbar-nav .nav-link:hover,
@@ -68,7 +68,7 @@
         .sidebar .navbar .nav-link.active i { background: transparent !important; }
         .sidebar .navbar .dropdown-toggle::after { top: calc(50% - 3px); right: 14px; }
         .sidebar .dropdown-menu { background: #0f172a !important; border-radius: 0 16px 16px 0; margin: 0 0 4px 0; padding: 4px 0; }
-        .sidebar .dropdown-item { color: #cbd5e1 !important; font-size: clamp(12px, 1.55vh, 13px); font-weight: 700; min-height: clamp(26px, 3.5vh, 30px); padding: 5px 22px 5px 64px; }
+        .sidebar .dropdown-item { color:#cbd5e1 !important; font-size:13px; font-weight:700; min-height:28px; padding:5px 22px 5px 66px; }
         .sidebar .dropdown-item:hover { color: #fff !important; background: #1d4ed8 !important; }
         .content .navbar { min-height: 72px; background: #fff !important; border-bottom: 1px solid #e5e7eb; box-shadow: none; }
         .content .navbar .form-control { min-height: 42px; min-width: 230px; border-radius: 6px; }
