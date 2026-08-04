@@ -55,7 +55,7 @@ class AdminRouteAliasController extends Controller
             'bieu-do-luot-ban' => ['admin.reports.sales-chart'],
             'top-luot-ban' => ['admin.reports.top-sales'],
             'luot-ban-theo-ngay' => ['admin.reports.daily-sales'],
-            'xuat-exel' => ['admin.reports.orders'],
+            'xuat-exel' => ['admin.products.export-excel'],
             'kho-hang' => ['admin.warehouses.index'],
             'kho-hang2' => ['admin.warehouses.transactions'],
             'them-hoa-don' => ['admin.warehouses.create-transaction'],

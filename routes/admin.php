@@ -32,6 +32,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/index.php', [AdminRouteAliasController::class, 'index'])->name('php.index');
 
         Route::get('/san-pham', [ProductAdminController::class, 'index'])->name('products.index');
+        Route::get('/san-pham/xuat-excel', [ProductAdminController::class, 'exportExcel'])->name('products.export-excel');
         Route::post('/san-pham/upload-editor', [ProductAdminController::class, 'uploadEditorImage'])->middleware('throttle:uploads')->name('products.upload-editor');
         Route::get('/san-pham/them', [ProductAdminController::class, 'create'])->name('products.create');
         Route::post('/san-pham', [ProductAdminController::class, 'store'])->name('products.store');
