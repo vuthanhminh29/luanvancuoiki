@@ -23,11 +23,15 @@ class SendRawMailJob implements ShouldQueue
 
     public int $timeout = 30;
 
-    public function __construct(
-        private readonly string $to,
-        private readonly string $subject,
-        private readonly string $body,
-    ) {
+    private string $to;
+    private string $subject;
+    private string $body;
+
+    public function __construct(string $to, string $subject, string $body)
+    {
+        $this->to = $to;
+        $this->subject = $subject;
+        $this->body = $body;
     }
 
     public function handle(): void

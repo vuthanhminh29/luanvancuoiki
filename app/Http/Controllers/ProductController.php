@@ -103,6 +103,7 @@ class ProductController extends Controller
         $product->load(['brand', 'category', 'frameShape', 'frameMaterial', 'images', 'variants.color', 'variants.lensSize']);
         $variantStock = Inventory::query()
             ->whereIn('variant_id', $product->variants->pluck('id'))
+            ->whereHas('warehouse', fn ($query) => $query->where('status', 'ACTIVE')->where('type', '!=', \App\Services\InventoryService::QUARANTINE_TYPE))
             ->selectRaw('variant_id, COALESCE(SUM(quantity), 0) as available_stock')
             ->groupBy('variant_id')
             ->pluck('available_stock', 'variant_id')
@@ -178,10 +179,15 @@ class ProductController extends Controller
     {
         $selectedProductId = $request->integer('id_sp');
 
+        // Only show products that have a Jeeliz-compatible 3D model SKU
+        // (SKU contains underscore, e.g. rayban_aviator_or_vert).
+        // Exclude auto-generated codes like SP2026…
         $tryOnProducts = Product::active()
             ->with(['brand', 'category', 'frameMaterial', 'variants'])
+            ->where('product_code', 'LIKE', '%_%')
+            ->where('product_code', 'NOT LIKE', 'SP20%')
             ->latest()
-            ->limit(12)
+            ->limit(24)
             ->get();
 
         if ($selectedProductId > 0) {

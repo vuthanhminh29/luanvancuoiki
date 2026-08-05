@@ -40,18 +40,68 @@
 #vtoApp .vto-placeholder {
     position: absolute;
     inset: 0;
+    z-index: 5;
+    background: #0d0d0d;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+/* Hide placeholder once camera has started (JS adds is-active on root) */
+#vtoApp.tryon-camera-active .vto-placeholder {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+/* Show placeholder again when no-model (camera on but no 3D data) */
+#vtoApp.tryon-camera-active.tryon-no-model-active .vto-placeholder {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+#vtoApp .vto-demo-model {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+#vtoApp .vto-demo-face-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 25%;
+    filter: brightness(0.85) contrast(1.05);
+}
+#vtoApp .vto-demo-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    color: rgba(255,255,255,.4);
-    font-size: 14px;
-    letter-spacing: .02em;
+    gap: 14px;
+    color: #ffffff;
+    padding: 24px;
+    text-align: center;
 }
-#vtoApp .vto-placeholder i {
-    font-size: 52px;
-    opacity: .25;
+#vtoApp .vto-demo-overlay i {
+    font-size: 32px;
+    background: rgba(255,255,255,0.25);
+    color: #ffffff;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+#vtoApp .vto-demo-overlay span {
+    font-size: 15px;
+    font-weight: 500;
+    max-width: 290px;
+    line-height: 1.5;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
 }
 
 /* ── Top bar: close + favourite ── */

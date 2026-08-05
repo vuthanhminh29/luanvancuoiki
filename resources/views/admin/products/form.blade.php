@@ -119,19 +119,61 @@
                     <div class="pa-form-grid">
                         <div class="pa-field">
                             <label class="pa-label">Giá nhập</label>
-                            <input class="pa-input" type="number" min="0" step="1000" name="import_price" value="{{ $value('import_price', 0) }}">
+                            <input class="pa-input" type="number" min="0" step="1000" id="import_price" name="import_price" value="{{ $value('import_price', 0) }}">
+                            <div class="pa-hint">Giá vốn mua vào từ nhà cung cấp.</div>
                         </div>
                         <div class="pa-field">
                             <label class="pa-label">Giá bán niêm yết</label>
-                            <input class="pa-input" type="number" min="0" step="1000" name="base_price" value="{{ $value('base_price') }}">
+                            <input class="pa-input" type="number" min="0" step="1000" id="base_price" name="base_price" value="{{ $value('base_price') }}" placeholder="Tự động tính = Giá nhập × {{ config('pricing.markup', 1.45) }}">
+                            <div class="pa-hint" id="margin_hint">Tự động gợi ý nếu để trống.</div>
                             @error('base_price')<span class="pa-error">{{ $message }}</span>@enderror
                         </div>
                         <div class="pa-field">
                             <label class="pa-label">Giá khuyến mãi</label>
-                            <input class="pa-input" type="number" min="0" step="1000" name="sale_price" value="{{ $value('sale_price') }}" placeholder="Để trống nếu không giảm">
+                            <input class="pa-input" type="number" min="0" step="1000" id="sale_price" name="sale_price" value="{{ $value('sale_price') }}" placeholder="Để trống nếu không giảm">
                             <div class="pa-hint">Nhập khi sản phẩm đang khuyến mãi. Giá này sẽ hiển thị ngoài website.</div>
+                            @error('sale_price')<span class="pa-error">{{ $message }}</span>@enderror
                         </div>
                     </div>
+
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const markup = {{ config('pricing.markup', 1.45) }};
+                        const roundTo = {{ config('pricing.round_to', 1000) }};
+                        const importEl = document.getElementById('import_price');
+                        const baseEl = document.getElementById('base_price');
+                        const marginHint = document.getElementById('margin_hint');
+
+                        function updateMarginHint() {
+                            const imp = parseFloat(importEl.value) || 0;
+                            const base = parseFloat(baseEl.value) || 0;
+                            if (imp > 0 && base > 0) {
+                                const profit = base - imp;
+                                const marginPct = ((profit / base) * 100).toFixed(1);
+                                marginHint.textContent = `Lợi nhuận gộp: ${profit.toLocaleString('vi-VN')}đ (${marginPct}%)`;
+                            } else {
+                                marginHint.textContent = 'Tự động gợi ý nếu để trống.';
+                            }
+                        }
+
+                        importEl?.addEventListener('input', function () {
+                            if (baseEl && baseEl.dataset.touched !== 'true') {
+                                const imp = parseFloat(importEl.value) || 0;
+                                if (imp > 0) {
+                                    baseEl.value = Math.ceil((imp * markup) / roundTo) * roundTo;
+                                }
+                            }
+                            updateMarginHint();
+                        });
+
+                        baseEl?.addEventListener('input', function () {
+                            baseEl.dataset.touched = 'true';
+                            updateMarginHint();
+                        });
+
+                        updateMarginHint();
+                    });
+                    </script>
 
                     <div class="pa-field">
                         <label class="pa-label">Mô tả sản phẩm</label>

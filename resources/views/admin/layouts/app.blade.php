@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8">
@@ -9,7 +9,7 @@
     <link href="{{ asset('admin_assets/img/favicon.ico') }}" rel="icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="{{ asset('admin_assets/lib/owlcarousel/assets/owl.carousel.min.css') }}" rel="stylesheet">
@@ -19,6 +19,7 @@
     <link href="{{ asset('admin_assets/css/custom.css') }}" rel="stylesheet">
     @stack('styles')
     <style>
+        body, html, h1, h2, h3, h4, h5, h6, input, button, select, textarea { font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; }
         .container-xxl { max-width: none; }
         body { background: #f3f6fa; color: #111827; }
         .fa-bars { color: #2563eb; }
@@ -170,7 +171,14 @@
                     </div>
                 </div>
 
-                <a href="{{ route('admin.orders.index') }}" class="nav-item nav-link {{ $isRoute('admin.orders.*') ? 'active' : '' }}"><i class="fas fa-shopping-basket me-2"></i>Đơn hàng</a>
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.orders.*', 'admin.returns.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fas fa-shopping-basket me-2"></i>Đơn hàng</a>
+                    <div class="dropdown-menu bg-transparent border-0">
+                        <a href="{{ route('admin.orders.index') }}" class="dropdown-item {{ $isRoute('admin.orders.index', 'admin.orders.show') ? 'active' : '' }}">Tất cả đơn hàng</a>
+                        <a href="{{ route('admin.orders.unconfirmed') }}" class="dropdown-item {{ $isRoute('admin.orders.unconfirmed') ? 'active' : '' }}">Đơn chờ xác nhận</a>
+                        <a href="{{ route('admin.returns.index') }}" class="dropdown-item {{ $isRoute('admin.returns.*') ? 'active' : '' }}">Yêu cầu hoàn/đổi</a>
+                    </div>
+                </div>
 
                 @if ($isAdminUser)
                 <div class="nav-item dropdown">
@@ -183,14 +191,20 @@
                         <a href="{{ route('admin.reports.daily-sales') }}" class="dropdown-item {{ $isRoute('admin.reports.daily-sales') ? 'active' : '' }}">Lượt bán theo ngày</a>
                     </div>
                 </div>
-
                 @endif
+
                 <a href="{{ route('admin.warehouses.index') }}" class="nav-item nav-link {{ $isRoute('admin.warehouses.*') ? 'active' : '' }}"><i class="fas fa-warehouse me-2"></i>Quản lý kho</a>
+                
                 @if ($isAdminUser)
                 <a href="{{ route('admin.promotions.index') }}" class="nav-item nav-link {{ $isRoute('admin.promotions.*') ? 'active' : '' }}"><i class="fas fa-tags me-2"></i>Khuyến mãi</a>
                 <a href="{{ route('admin.customers.index') }}" class="nav-item nav-link {{ $isRoute('admin.customers.*') ? 'active' : '' }}"><i class="fas fa-users me-2"></i>Thành viên</a>
                 <a href="{{ route('admin.tryon-snapshots.index') }}" class="nav-item nav-link {{ $isRoute('admin.tryon-snapshots.*') ? 'active' : '' }}"><i class="fas fa-camera-retro me-2"></i>Thử kính</a>
+                <a href="{{ route('admin.posts.index') }}" class="nav-item nav-link {{ $isRoute('admin.posts.*') ? 'active' : '' }}"><i class="fas fa-newspaper me-2"></i>Bài viết</a>
+                <a href="{{ route('admin.banners.index') }}" class="nav-item nav-link {{ $isRoute('admin.banners.*') ? 'active' : '' }}"><i class="fas fa-images me-2"></i>Banners</a>
+                <a href="{{ route('admin.home-layout.index') }}" class="nav-item nav-link {{ $isRoute('admin.home-layout.*') ? 'active' : '' }}"><i class="fas fa-layer-group me-2"></i>Bố cục trang chủ</a>
+                <a href="{{ route('admin.business.index') }}" class="nav-item nav-link {{ $isRoute('admin.business.*') ? 'active' : '' }}"><i class="fas fa-briefcase me-2"></i>Thương hiệu & Cửa hàng</a>
                 @endif
+                
                 <a href="{{ route('admin.reviews.index') }}" class="nav-item nav-link {{ $isRoute('admin.reviews.*') ? 'active' : '' }}"><i class="fas fa-comment me-2"></i>Bình luận</a>
             </div>
         </nav>

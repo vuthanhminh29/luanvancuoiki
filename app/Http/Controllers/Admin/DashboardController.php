@@ -17,11 +17,14 @@ class DashboardController extends Controller
 {
     public function __invoke(): View
     {
+        $startOfMonth = now()->startOfMonth()->toDateTimeString();
+        $startOfToday = now()->startOfDay()->toDateTimeString();
+
         $orderStats = Order::query()
             ->selectRaw("COALESCE(SUM(CASE WHEN status = 'DELIVERED' THEN total_amount ELSE 0 END), 0) as total_revenue")
-            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'DELIVERED' AND MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE()) THEN total_amount ELSE 0 END), 0) as month_revenue")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'DELIVERED' AND created_at >= '{$startOfMonth}' THEN total_amount ELSE 0 END), 0) as month_revenue")
             ->selectRaw('COUNT(*) as total_orders')
-            ->selectRaw('SUM(CASE WHEN DATE(created_at) = CURRENT_DATE() THEN 1 ELSE 0 END) as today_orders')
+            ->selectRaw("SUM(CASE WHEN created_at >= '{$startOfToday}' THEN 1 ELSE 0 END) as today_orders")
             ->selectRaw("SUM(CASE WHEN status IN ('PENDING', 'AWAITING_PAYMENT') THEN 1 ELSE 0 END) as pending_orders")
             ->selectRaw("SUM(CASE WHEN status = 'CONFIRMED' THEN 1 ELSE 0 END) as confirmed_orders")
             ->selectRaw("SUM(CASE WHEN status = 'DELIVERING' THEN 1 ELSE 0 END) as delivering_orders")
@@ -29,11 +32,12 @@ class DashboardController extends Controller
 
         $returnStats = ReturnRequest::query()
             ->selectRaw("SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pending_returns")
-            ->selectRaw("SUM(CASE WHEN type = 'RETURN' AND status = 'PENDING' THEN 1 ELSE 0 END) as return_only")
-            ->selectRaw("SUM(CASE WHEN type = 'EXCHANGE' AND status = 'PENDING' THEN 1 ELSE 0 END) as exchange_only")
+            ->selectRaw("SUM(CASE WHEN return_type = 'RETURN' AND status = 'PENDING' THEN 1 ELSE 0 END) as return_only")
+            ->selectRaw("SUM(CASE WHEN return_type = 'EXCHANGE' AND status = 'PENDING' THEN 1 ELSE 0 END) as exchange_only")
             ->first();
 
         $stock = Inventory::query()
+            ->whereHas('warehouse', fn ($query) => $query->where('status', 'ACTIVE')->where('type', '!=', \App\Services\InventoryService::QUARANTINE_TYPE))
             ->selectRaw('COALESCE(SUM(quantity), 0) as total_stock')
             ->first();
 
@@ -47,11 +51,11 @@ class DashboardController extends Controller
                 'products.name as product_name',
                 'product_variants.sku',
                 'colors.name as color_name',
-                'lens_sizes.name as lens_size',
+                'lens_sizes.size_label as lens_size',
             ])
             ->selectRaw('COALESCE(SUM(inventories.quantity), 0) as available_stock')
             ->selectRaw('COALESCE(MAX(inventories.min_stock_level), 10) as min_stock_level')
-            ->groupBy('product_variants.id', 'products.name', 'product_variants.sku', 'colors.name', 'lens_sizes.name')
+            ->groupBy('product_variants.id', 'products.name', 'product_variants.sku', 'colors.name', 'lens_sizes.size_label')
             ->havingRaw('available_stock <= min_stock_level')
             ->orderBy('available_stock')
             ->limit(5)
