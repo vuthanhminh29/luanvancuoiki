@@ -3,7 +3,7 @@
 @section('title', $post->title . ' - ' . config('app.name'))
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/views/blog/blog-details.css') }}?v={{ filemtime(public_path('css/views/blog/blog-details.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/views/blog/blog-details.css') }}?v={{ file_exists(public_path('css/views/blog/blog-details.css')) ? filemtime(public_path('css/views/blog/blog-details.css')) : time() }}">
 @endpush
 
 @section('content')
@@ -54,7 +54,7 @@
                     </div>
 
                     <div class="p-8 prose prose-gray max-w-none">
-                        {!! $post->content ?: '<p>' . e($post->summary) . '</p>' !!}
+                        {!! $post->content ? strip_tags($post->content, '<p><br><strong><b><em><i><ul><ol><li><h1><h2><h3><h4><h5><h6><a><img><blockquote><table><thead><tbody><tr><th><td><span><div><figure><figcaption>') : '<p>' . e($post->summary) . '</p>' !!}
                     </div>
 
                     <div class="mx-8 mb-8 p-6 bg-gray-50 border-l-4 border-gray-900 rounded">

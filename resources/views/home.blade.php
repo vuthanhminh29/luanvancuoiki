@@ -90,7 +90,7 @@
                         <div class="watch-cat-img-box">
                             <img src="https://matkinhsaigon.com.vn/img/featured-category/1669985298-Khuyen_Mai_2.png" alt="Khuyến mãi">
                         </div>
-                        <h3 class="watch-cat-title">KHUY?N M?I</h3>
+                        <h3 class="watch-cat-title">KHUYẾN MÃI</h3>
                         <span class="watch-cat-btn">Xem ngay</span>
                     </a>
                     <a href="{{ route('pages.contact') }}" class="watch-cat-card view-home-categories-inline-7">

@@ -3,7 +3,7 @@
 @section('title', 'Thử kính AI - ' . config('app.name'))
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/views/tryon-ai.css') }}?v=tryon-fix-20260801-{{ filemtime(public_path('css/views/tryon-ai.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/views/tryon-ai.css') }}?v=tryon-fix-20260801-{{ file_exists(public_path('css/views/tryon-ai.css')) ? filemtime(public_path('css/views/tryon-ai.css')) : time() }}">
 @endpush
 
 @section('content')
@@ -40,8 +40,13 @@
             </div>
 
             <div class="vto-placeholder" id="tryonNoModel">
-                <i class="fas fa-camera"></i>
-                <span>Nhấn nút camera để bắt đầu thử kính</span>
+                <div class="vto-demo-model">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80" alt="Người mẫu thử kính" class="vto-demo-face-img">
+                    <div class="vto-demo-overlay">
+                        <i class="fas fa-camera"></i>
+                        <span>Nhấn nút <strong>"Bật camera"</strong> để thử kính 3D trực tiếp trên khuôn mặt bạn</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -107,6 +112,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js') }}?v=tryon-fix-20260801-{{ filemtime(public_path('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js')) }}"></script>
-    <script src="{{ asset('js/tryon-ai.js') }}?v=tryon-fix-20260801-{{ filemtime(public_path('js/tryon-ai.js')) }}"></script>
+    <script src="{{ asset('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js') }}?v=tryon-fix-20260801-{{ file_exists(public_path('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js')) ? filemtime(public_path('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js')) : time() }}"></script>
+    <script src="{{ asset('js/tryon-ai.js') }}?v=tryon-fix-20260801-{{ file_exists(public_path('js/tryon-ai.js')) ? filemtime(public_path('js/tryon-ai.js')) : time() }}"></script>
 @endpush

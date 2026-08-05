@@ -31,12 +31,18 @@ class QueuedRawMail
             ]);
         }
 
-        LaravelMail::raw(
-            $body,
-            fn ($mail) => $mail
-                ->to($message->to)
-                ->subject($message->subject)
-        );
+        app()->terminating(function () use ($body, $message) {
+            try {
+                LaravelMail::raw(
+                    $body,
+                    fn ($mail) => $mail
+                        ->to($message->to)
+                        ->subject($message->subject)
+                );
+            } catch (\Throwable $e) {
+                Log::error('Failed sending raw mail in terminating callback', ['error' => $e->getMessage()]);
+            }
+        });
     }
 }
 

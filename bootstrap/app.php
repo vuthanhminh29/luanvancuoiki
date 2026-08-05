@@ -16,12 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [
+        $middleware->web([
             \App\Http\Middleware\ValidateRequestInput::class,
             \App\Http\Middleware\SecurityHeaders::class,
         ]);
 
-        $middleware->validateCsrfTokens(except: [
+        $middleware->validateCsrfTokens([
             'vnpay/ipn',
         ]);
 
@@ -38,11 +38,11 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->routeIs('orders.cancel-confirm.*')) {
                 return redirect()
                     ->route('home')
-                    ->with('error', 'LiÃªn káº¿t xÃ¡c nháº­n há»§y Ä‘Æ¡n khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng liÃªn há»‡ cá»­a hÃ ng Ä‘á»ƒ Ä‘Æ°á»£c há»— trá»£.');
+                    ->with('error', 'Liên kết xác nhận hủy đơn không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ cửa hàng để được hỗ trợ.');
             }
 
             return redirect()
                 ->route('login')
-                ->withErrors(['email' => 'LiÃªn káº¿t xÃ¡c thá»±c khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng sá»­ dá»¥ng liÃªn káº¿t má»›i.']);
+                ->withErrors(['email' => 'Liên kết xác thực không hợp lệ hoặc đã hết hạn. Vui lòng sử dụng liên kết mới.']);
         });
     })->create();

@@ -7,13 +7,16 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('payments') || ! \Illuminate\Support\Facades\Schema::hasTable('orders')) {
+            return;
+        }
+
         DB::statement("ALTER TABLE payments MODIFY method ENUM('COD','VNPAY') NOT NULL");
         DB::statement("ALTER TABLE orders MODIFY payment_method ENUM('COD','VNPAY') NOT NULL DEFAULT 'COD'");
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE payments MODIFY method ENUM('COD','VNPAY') NOT NULL");
-        DB::statement("ALTER TABLE orders MODIFY payment_method ENUM('COD','VNPAY') NOT NULL DEFAULT 'COD'");
+        // Non-reversible migration on payment method enums
     }
 };

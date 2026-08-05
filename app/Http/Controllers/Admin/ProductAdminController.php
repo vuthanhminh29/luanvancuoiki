@@ -32,7 +32,9 @@ class ProductAdminController extends Controller
             ->selectRaw("(SELECT COALESCE(SUM(inventories.quantity), 0)
                 FROM product_variants
                 LEFT JOIN inventories ON inventories.variant_id = product_variants.id
-                WHERE product_variants.product_id = products.id) as quantity")
+                LEFT JOIN warehouses ON warehouses.id = inventories.warehouse_id
+                WHERE product_variants.product_id = products.id
+                  AND (warehouses.type IS NULL OR warehouses.type != 'QUARANTINE')) as quantity")
             ->selectRaw("(SELECT COALESCE(SUM(order_items.quantity), 0)
                 FROM order_items
                 JOIN orders ON orders.id = order_items.order_id
@@ -104,7 +106,7 @@ class ProductAdminController extends Controller
         ]);
     }
 
-    public function exportExcel(): Response
+    public function exportExcel(Request $request): Response
     {
         $rows = DB::table('products as p')
             ->leftJoin('categories as c', 'c.id', '=', 'p.category_id')
@@ -116,6 +118,7 @@ class ProductAdminController extends Controller
             ->leftJoin('lens_sizes as ls', 'ls.id', '=', 'pv.lens_size_id')
             ->select([
                 'p.name',
+                'p.product_code',
                 'c.name as category_name',
                 'b.name as brand_name',
                 'fs.name as frame_shape_name',
@@ -126,7 +129,6 @@ class ProductAdminController extends Controller
                 'p.sale_price',
                 'p.status',
                 'p.view_count',
-                'p.description',
                 'p.created_at',
                 'p.updated_at',
                 'co.name as color_name',
@@ -142,6 +144,15 @@ class ProductAdminController extends Controller
                   AND o.status <> 'CANCELLED'
                   AND ((pv.id IS NULL AND oi.variant_id IS NULL) OR oi.variant_id = pv.id)
             ) as sold_quantity")
+            ->when($request->filled('q'), function ($query) use ($request) {
+                $keyword = '%' . trim((string) $request->q) . '%';
+                $query->where(function ($sub) use ($keyword) {
+                    $sub->where('p.name', 'like', $keyword)
+                        ->orWhere('p.product_code', 'like', $keyword);
+                });
+            })
+            ->when($request->filled('search_cate'), fn ($query) => $query->where('p.category_id', $request->search_cate))
+            ->where('p.status', 'ACTIVE')
             ->orderByDesc('p.id')
             ->orderBy('pv.id')
             ->get();
@@ -223,8 +234,8 @@ class ProductAdminController extends Controller
             'frame_material_id' => ['nullable', 'exists:frame_materials,id'],
             'uv_protection' => ['required', 'in:UV380,UV400,NONE'],
             'import_price' => ['nullable', 'numeric', 'min:0'],
-            'base_price' => ['required', 'numeric', 'min:0'],
-            'sale_price' => ['nullable', 'numeric', 'min:0'],
+            'base_price' => ['nullable', 'numeric', 'min:0', 'gte:import_price'],
+            'sale_price' => ['nullable', 'numeric', 'min:0', 'lte:base_price'],
             'thumbnail_url' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
             'image1' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
             'image2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
@@ -241,6 +252,9 @@ class ProductAdminController extends Controller
             'variant_price.*' => ['nullable', 'numeric', 'min:0'],
             'variant_status' => ['nullable', 'array'],
             'variant_status.*' => ['nullable', 'in:ACTIVE,OUT_OF_STOCK,DISCONTINUED'],
+        ], [
+            'base_price.gte' => 'Giá bán niêm yết không được thấp hơn giá nhập.',
+            'sale_price.lte' => 'Giá khuyến mãi không được lớn hơn giá niêm yết.',
         ]);
     }
 
@@ -252,7 +266,16 @@ class ProductAdminController extends Controller
             unset($data['thumbnail_url']);
         }
 
-        $data['import_price'] = $data['import_price'] ?? 0;
+        $data['import_price'] = (float) ($data['import_price'] ?? 0);
+        
+        if (blank($data['base_price'] ?? null) && $data['import_price'] > 0) {
+            $roundTo = (int) config('pricing.round_to', 1000);
+            $markup = (float) config('pricing.markup', 1.45);
+            $data['base_price'] = (int) (ceil(($data['import_price'] * $markup) / $roundTo) * $roundTo);
+        } else {
+            $data['base_price'] = (float) ($data['base_price'] ?? 0);
+        }
+
         $data['slug'] = $product ? Str::slug($data['name']) . '-' . $product->id : Str::slug($data['name']) . '-' . time();
 
         if (! $product) {
@@ -280,7 +303,7 @@ class ProductAdminController extends Controller
         Cache::forget('admin.product.form_lookups');
         Cache::forget('products.index.price_range');
         Cache::forget('products.index.filter_lookups');
-        Cache::forget('layout.header_categories');
+        Cache::forget('layout.header_categories.v2');
         Cache::forget('home.payload');
     }
 

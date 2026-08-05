@@ -304,6 +304,7 @@
             isStarted = false;
             isReady = false;
             tryonMode = "idle";
+            root.classList.remove("tryon-camera-active");
             stopCameraStream();
             return Promise.resolve();
         }
@@ -314,6 +315,7 @@
                 isStarted = false;
                 isReady = false;
                 tryonMode = "idle";
+                root.classList.remove("tryon-camera-active");
                 if (canvasNode) {
                     const context = canvasNode.getContext && canvasNode.getContext("2d");
                     if (context) context.clearRect(0, 0, canvasNode.width, canvasNode.height);
@@ -395,6 +397,7 @@
             if (!isStarted) {
                 isStarted = true;
                 tryonMode = "camera";
+                root.classList.add("tryon-camera-active");
             const startPromise = JEELIZVTOWIDGET.start({
                 placeHolder: widgetNode,
                 canvas: canvasNode,
@@ -661,6 +664,7 @@
             setCameraToggle(false);
             tryonMode = "image";
             isStarted = true;
+            root.classList.add("tryon-camera-active");
             isReady = false;
             setStatus("\u0110ang nh\u1eadn di\u1ec7n khu\u00f4n m\u1eb7t t\u1eeb \u1ea3nh...");
 

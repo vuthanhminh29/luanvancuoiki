@@ -7,6 +7,7 @@ use App\Models\Inventory;
 use App\Models\Order;
 use App\Models\StockTransaction;
 use App\Models\Warehouse;
+use App\Services\InventoryService;
 use App\Services\OrderCancellationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,11 +16,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
 
 class OrderAdminController extends Controller
 {
-    public function __construct(private readonly OrderCancellationService $cancellations)
+    private OrderCancellationService $cancellations;
+
+    private InventoryService $inventory;
+
+    public function __construct(OrderCancellationService $cancellations, InventoryService $inventory)
     {
+        $this->cancellations = $cancellations;
+        $this->inventory = $inventory;
     }
 
     private const VALID_STATUSES = [
@@ -125,9 +133,23 @@ class OrderAdminController extends Controller
         return back()->with('success', 'Đã gửi email xác nhận hủy đơn cho khách hàng. Đơn hàng chỉ được hủy sau khi khách bấm xác nhận.');
     }
 
-    private function changeStatus(Order $order, string $newStatus, ?string $cancelReason = null): true|string
+    /**
+     * @return true|string
+     */
+    private function changeStatus(Order $order, string $newStatus, ?string $cancelReason = null)
     {
-        return DB::transaction(function () use ($order, $newStatus, $cancelReason): true|string {
+        try {
+            return $this->changeStatusInTransaction($order, $newStatus, $cancelReason);
+        } catch (RuntimeException $exception) {
+            // Không đủ tồn kho để xuất bán: transaction đã rollback, đơn giữ nguyên
+            // trạng thái cũ. Trả message để hiển thị cho admin thay vì trang lỗi 500.
+            return $exception->getMessage();
+        }
+    }
+
+    private function changeStatusInTransaction(Order $order, string $newStatus, ?string $cancelReason = null)
+    {
+        return DB::transaction(function () use ($order, $newStatus, $cancelReason) {
             $lockedOrder = Order::query()->lockForUpdate()->find($order->id);
 
             if (! $lockedOrder) {
@@ -179,7 +201,7 @@ class OrderAdminController extends Controller
         $payload = [
             'transaction_code' => $this->nextSaleOutTransactionCode(),
             'type' => 'SALE_OUT',
-            'source_warehouse_id' => $this->saleOutSourceWarehouseId($order),
+            'source_warehouse_id' => $this->inventory->defaultSellableWarehouseId(),
             'target_warehouse_id' => null,
             'status' => 'COMPLETED',
             'expected_date' => null,
@@ -196,13 +218,31 @@ class OrderAdminController extends Controller
         $transaction = StockTransaction::create($payload);
 
         foreach ($items as $item) {
+            $variantId = (int) $item->variant_id;
+            $quantity = (int) $item->quantity;
+
+            // Chọn kho theo từng biến thể: đơn có nhiều sản phẩm nằm ở các kho khác
+            // nhau vẫn trừ đúng chỗ, thay vì trừ hết vào một kho chung.
+            $warehouseId = $this->inventory->sellableWarehouseIdFor($variantId);
+
+            if (! $warehouseId) {
+                throw new RuntimeException(
+                    'Chưa có kho bán nào để xuất hàng cho ' . (trim((string) $item->product_name) ?: 'sản phẩm') . '.'
+                );
+            }
+
             $transaction->items()->create([
-                'variant_id' => (int) $item->variant_id,
-                'ordered_quantity' => (int) $item->quantity,
-                'actual_quantity' => (int) $item->quantity,
+                'variant_id' => $variantId,
+                'ordered_quantity' => $quantity,
+                'actual_quantity' => $quantity,
                 'unit_cost' => null,
                 'note' => trim((string) $item->product_name) ?: null,
             ]);
+
+            // issue() ném lỗi nếu không đủ tồn -> transaction rollback, đơn giữ nguyên
+            // trạng thái cũ. Trước đây decrement() có thể đẩy tồn xuống âm hoặc
+            // âm thầm không trừ gì khi chưa có dòng tồn kho.
+            $this->inventory->issue($warehouseId, $variantId, $quantity, trim((string) $item->product_name));
         }
     }
 

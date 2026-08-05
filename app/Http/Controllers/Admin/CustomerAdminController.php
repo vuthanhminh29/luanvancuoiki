@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -143,6 +144,7 @@ class CustomerAdminController extends Controller
         ]);
 
         $user->update(['status' => $data['status']]);
+        Cache::forget("users.{$user->id}.role_codes");
 
         return back()->with('success', 'Đã cập nhật trạng thái thành viên.');
     }
@@ -151,7 +153,7 @@ class CustomerAdminController extends Controller
     {
         return $request->validate([
             'full_name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:255', 'regex:/@gmail\\.com$/', Rule::unique('users', 'email')->ignore($user?->id)],
+            'email' => ['required', 'email', 'max:255', 'regex:/@gmail\\.com$/', Rule::unique('users', 'email')->ignore($user ? $user->id : null)],
             'phone' => ['nullable', 'string', 'max:20', 'regex:/^0[0-9]{9}$/'],
             'password' => [$user ? 'nullable' : 'required', 'string', 'min:6', 'max:100'],
             'gender' => ['nullable', 'in:MALE,FEMALE,OTHER'],
@@ -164,13 +166,13 @@ class CustomerAdminController extends Controller
     private function customerFields(?User $user = null): array
     {
         return [
-            ['name' => 'full_name', 'label' => 'Họ tên', 'required' => true, 'value' => $user?->full_name],
-            ['name' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => true, 'value' => $user?->email],
-            ['name' => 'phone', 'label' => 'Số điện thoại', 'value' => $user?->phone],
+            ['name' => 'full_name', 'label' => 'Họ tên', 'required' => true, 'value' => $user ? $user->full_name : null],
+            ['name' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => true, 'value' => $user ? $user->email : null],
+            ['name' => 'phone', 'label' => 'Số điện thoại', 'value' => $user ? $user->phone : null],
             ['name' => 'password', 'label' => $user ? 'Mật khẩu mới' : 'Mật khẩu', 'type' => 'password', 'required' => ! $user],
-            ['name' => 'gender', 'label' => 'Giới tính', 'type' => 'select', 'value' => $user?->gender ?? 'OTHER', 'options' => ['MALE' => 'Nam', 'FEMALE' => 'Nữ', 'OTHER' => 'Khác']],
-            ['name' => 'date_of_birth', 'label' => 'Ngày sinh', 'type' => 'date', 'value' => $user?->date_of_birth?->format('Y-m-d')],
-            ['name' => 'status', 'label' => 'Trạng thái', 'type' => 'select', 'required' => true, 'value' => $user?->status ?? 'ACTIVE', 'options' => ['ACTIVE' => 'Hoạt động', 'LOCKED' => 'Bị khóa']],
+            ['name' => 'gender', 'label' => 'Giới tính', 'type' => 'select', 'value' => ($user && $user->gender) ? $user->gender : 'OTHER', 'options' => ['MALE' => 'Nam', 'FEMALE' => 'Nữ', 'OTHER' => 'Khác']],
+            ['name' => 'date_of_birth', 'label' => 'Ngày sinh', 'type' => 'date', 'value' => ($user && $user->date_of_birth) ? $user->date_of_birth->format('Y-m-d') : null],
+            ['name' => 'status', 'label' => 'Trạng thái', 'type' => 'select', 'required' => true, 'value' => ($user && $user->status) ? $user->status : 'ACTIVE', 'options' => ['ACTIVE' => 'Hoạt động', 'LOCKED' => 'Bị khóa']],
             ['name' => 'role_code', 'label' => 'Vai trò', 'type' => 'select', 'required' => true, 'value' => $this->currentRoleCode($user), 'options' => $this->roleOptions()],
         ];
     }
@@ -243,5 +245,7 @@ class CustomerAdminController extends Controller
             'user_id' => $user->id,
             'role_id' => $roleId,
         ]);
+
+        Cache::forget("users.{$user->id}.role_codes");
     }
 }
