@@ -61,7 +61,6 @@
             <th>Trạng thái biến thể</th>
             <th>Ngày tạo</th>
             <th>Ngày cập nhật</th>
-            <th>Mô tả</th>
         </tr>
         @foreach ($rows as $index => $row)
             @php
@@ -89,7 +88,6 @@
                 <td>{{ $variantStatus($row->variant_status) }}</td>
                 <td>{{ $date($row->created_at) }}</td>
                 <td>{{ $date($row->updated_at) }}</td>
-                <td>{{ $plain($row->description) }}</td>
             </tr>
         @endforeach
     </table>

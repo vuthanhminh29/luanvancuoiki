@@ -105,6 +105,13 @@
                                 <img src="{{ $image }}" alt="{{ $item->product_name }}">
                                 <div>
                                     <p class="aod-product-name">{{ $item->product_name }}</p>
+                                    <div class="aod-product-spec" style="font-size: 11px; font-family: var(--font-mono, monospace); color: #5a636b; margin-bottom: 2px;">
+                                        @if (!empty($item->product?->frame_size))
+                                            <span>{{ str_replace([' ', '□', '-'], [' ', '▭', '-'], $item->product->frame_size) }}</span>
+                                        @else
+                                            <span>52▭18-145</span>
+                                        @endif
+                                    </div>
                                     <div class="aod-product-meta">
                                         Số lượng: <strong>x{{ $item->quantity }}</strong>
                                         @if ($variant !== '')

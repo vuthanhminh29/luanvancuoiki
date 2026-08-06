@@ -245,55 +245,7 @@
                     @if ($products->count())
                         <div class="ebd-products-grid">
                             @foreach ($products as $product)
-                                @php
-                                    $discount = $product->sale_price ? max(0, round((($product->base_price - $product->sale_price) / max(1, $product->base_price)) * 100)) : 0;
-                                    $firstVariant = $product->variants->firstWhere('status', 'ACTIVE') ?? $product->variants->first();
-                                    $hexes = $product->variants->pluck('color.hex_code')->filter()->unique()->take(5);
-                                @endphp
-                                <article class="ebd-product-card">
-                                    @if ($discount > 0)
-                                        <div class="ebd-discount-badge">-{{ $discount }}%</div>
-                                    @endif
-                                    <a href="{{ route('products.show', $product) }}" class="ebd-product-media">
-                                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}">
-                                    </a>
-                                    <div class="ebd-product-info">
-                                        <div class="ebd-card-meta">
-                                            <span>{{ $product->brand->name ?? 'RayBan' }}</span>
-                                            <span>{{ $product->frameShape->name ?? '' }}</span>
-                                        </div>
-                                        <h3><a href="{{ route('products.show', $product) }}">{{ $product->name }}</a></h3>
-                                        <div class="ebd-product-specs">
-                                            <span>{{ $product->frameMaterial->name ?? 'Acetate' }}</span>
-                                            <span>{{ $product->uv_protection ?: 'UV400' }}</span>
-                                            @if ($product->variants->pluck('lensSize.name')->filter()->unique()->isNotEmpty())
-                                                <span>Size {{ $product->variants->pluck('lensSize.name')->filter()->unique()->join(', ') }}</span>
-                                            @endif
-                                        </div>
-                                        <div class="ebd-swatches">
-                                            @foreach ($hexes as $hex)
-                                                <span style="background: {{ $hex }}"></span>
-                                            @endforeach
-                                        </div>
-                                        <div class="ebd-price-row">
-                                            <strong>{{ number_format($product->display_price, 0, ',', '.') }}d</strong>
-                                            @if ($product->sale_price)
-                                                <del>{{ number_format($product->base_price, 0, ',', '.') }}d</del>
-                                            @endif
-                                        </div>
-                                        <div class="ebd-card-actions">
-                                            <a href="{{ route('tryon', ['id_sp' => $product->id]) }}" class="ebd-tryon-btn"><i class="fas fa-glasses"></i> Thử kính</a>
-                                            @if ($firstVariant)
-                                                <form action="{{ route('cart.store') }}" method="post">
-                                                    @csrf
-                                                    <input type="hidden" name="variant_id" value="{{ $firstVariant->id }}">
-                                                    <input type="hidden" name="quantity" value="1">
-                                                    <button type="submit" class="ebd-cart-btn"><i class="fas fa-shopping-bag"></i></button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </article>
+                                @include('partials.eyewear-product-card', ['product' => $product, 'showTryOn' => true])
                             @endforeach
                         </div>
 
@@ -305,11 +257,17 @@
                             </div>
                         @endif
                     @else
-                        <div class="ebd-empty-state">
-                            <i class="fas fa-box-open"></i>
-                            <h3>Không tìm thấy sản phẩm</h3>
-                            <p>Hãy thử bỏ bớt điều kiện lọc hoặc quay lại danh sách tất cả sản phẩm.</p>
-                            <a href="{{ $clearUrl }}">Xóa bộ lọc</a>
+                        <div class="ebd-empty-state text-center p-5 my-4" style="background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--radius);">
+                            <i class="fas fa-search-minus fa-3x mb-3" style="color: var(--accent);"></i>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--ink);">Không tìm thấy gọng kính phù hợp</h3>
+                            <p style="color: var(--ink-soft); max-width: 500px; margin: 8px auto 16px;">
+                                Rất tiếc, hiện tại không có sản phẩm nào khớp với bộ lọc bạn đã chọn. Hãy thử xóa bớt điều kiện lọc hoặc quay lại danh sách tất cả sản phẩm.
+                            </p>
+                            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                <a href="{{ $clearUrl }}" class="btn-atelier-primary" style="padding: 8px 20px; font-size: 14px;">
+                                    <i class="fas fa-undo" aria-hidden="true"></i> Xóa tất cả bộ lọc
+                                </a>
+                            </div>
                         </div>
                     @endif
                 </main>

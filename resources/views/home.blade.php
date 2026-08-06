@@ -31,123 +31,252 @@
 
 @section('content')
     <div class="home-layout-stack" style="display:flex;flex-direction:column;">
-    <section class="watch-promo-banner my-3" style="{{ $homeSectionStyle('banner') }}">
-        <div class="row">
-            <div class="col-lg-12 col-sm-12">
-                <div id="header-carousel" class="carousel slide" data-ride="carousel">
-                    <div class="carousel-inner view-home-banner-inline-1">
-                        @forelse ($banners as $index => $banner)
-                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                                <a href="{{ $banner->link_url ?: '#' }}">
-                                    <img class="img-fluid" src="{{ $banner->image_src }}" alt="{{ $banner->title }}">
-                                </a>
-                            </div>
-                        @empty
-                            <div class="carousel-item active">
-                                <img class="img-fluid" src="{{ asset('upload/banner/banner-kinh-1.jpg') }}" alt="Banner">
-                            </div>
-                        @endforelse
+    <!-- SECTION 1: Top Optical Experience Flow Bar -->
+    <section class="atelier-experience-bar" style="background: var(--paper); border-bottom: 1px solid var(--line); padding: 10px 0; font-size: 13px;">
+        <div class="container" style="max-width: 1280px;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span style="font-weight: 700; color: var(--accent-dark); text-transform: uppercase; font-size: 11px; letter-spacing: 0.08em;">TRẢI NGHIỆM THỊ LỰC</span>
+                <div class="d-flex align-items-center gap-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge" style="background: var(--line); color: var(--ink-soft); border-radius: 999px; font-size: 10px;">01</span>
+                        <div>
+                            <strong style="color: var(--ink);">Chọn dáng mặt</strong>
+                            <small class="text-muted d-none d-md-inline">&bull; Xác định tỷ lệ khuôn mặt</small>
+                        </div>
                     </div>
-                    <a class="carousel-control-prev" href="#header-carousel" data-slide="prev">
-                        <div class="btn btn-dark view-home-banner-inline-2">
-                            <span class="carousel-control-prev-icon mb-n2"></span>
+                    <i class="fas fa-chevron-right text-muted" style="font-size: 10px;"></i>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge" style="background: var(--line); color: var(--ink-soft); border-radius: 999px; font-size: 10px;">02</span>
+                        <div>
+                            <strong style="color: var(--ink);">Tìm gọng phù hợp</strong>
+                            <small class="text-muted d-none d-md-inline">&bull; Gợi ý theo phong cách</small>
                         </div>
-                    </a>
-                    <a class="carousel-control-next" href="#header-carousel" data-slide="next">
-                        <div class="btn btn-dark view-home-banner-inline-2">
-                            <span class="carousel-control-next-icon mb-n2"></span>
+                    </div>
+                    <i class="fas fa-chevron-right text-muted" style="font-size: 10px;"></i>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge" style="background: var(--accent); color: var(--paper-card); border-radius: 999px; font-size: 10px;">03</span>
+                        <div>
+                            <strong style="color: var(--accent);">Thử kính AI</strong>
+                            <small class="text-muted d-none d-md-inline">&bull; Xem trực tiếp trên khuôn mặt</small>
                         </div>
-                    </a>
+                    </div>
                 </div>
+                <a href="{{ route('tryon') }}" style="color: var(--accent); font-weight: 700; font-size: 12px; text-decoration: none;">BẮT ĐẦU NGAY &rarr;</a>
             </div>
         </div>
     </section>
 
-    <section class="watch-featured-cats-section" style="{{ $homeSectionStyle('categories') }}">
-        <div class="watch-container">
-            <div class="watch-section-header">
-                <h2 class="watch-section-title">DANH MỤC NỔI BẬT</h2>
-            </div>
-            <div class="watch-featured-cats-container">
-                <button class="watch-cat-arrow prev" onclick="scrollFeaturedCats('prev')"><i class="fas fa-chevron-left"></i></button>
-                <button class="watch-cat-arrow next" onclick="scrollFeaturedCats('next')"><i class="fas fa-chevron-right"></i></button>
-                <div id="featured-cats-slider" class="watch-featured-cats-grid">
-                    @foreach ($featuredCategories as $index => $category)
-                        @php
-                            $image = str_starts_with((string) $category->slug, 'kinh-mat')
-                                ? 'https://matkinhsaigon.com.vn/img/featured-category/1669976518-Kinh_Mat.png'
-                                : 'https://matkinhsaigon.com.vn/img/featured-category/1669976593-Gong_Kinh_1.png';
-                        @endphp
-                        <a href="{{ route('products.index', ['category' => $category->id]) }}" class="watch-cat-card view-home-categories-inline-{{ $index + 1 }}">
-                            <div class="watch-cat-img-box">
-                                <img src="{{ $image }}" alt="{{ $category->name }}">
-                            </div>
-                            <h3 class="watch-cat-title">{{ mb_strtoupper($category->name, 'UTF-8') }}</h3>
-                            <span class="watch-cat-btn">Xem ngay</span>
+    <!-- SECTION 2: 12-Column Atelier Hero Grid -->
+    {{-- Hero bỏ border-bottom và padding dưới: banner ngay bên dưới cũng nền trắng,
+         có đường kẻ ở giữa sẽ thành hai khối trắng rời nhau. Để hai phần liền một mảng,
+         phần phân cách thật là dải xám của thanh cam kết phía sau. --}}
+    <section class="atelier-hero" style="{{ $homeSectionStyle('banner') }}; background: var(--paper-card); padding: 48px 0 {{ empty($midBanner) ? '48px' : '0' }};">
+       <div class="container" style="max-width: 1280px;">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <span style="font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;">ATELIER OPTIQUE</span>
+                    <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--ink); line-height: 1.2; margin: 12px 0 16px;">
+                        Thị lực chính xác.<br>
+                        <em style="color: var(--accent); font-style: italic; font-weight: 600;">Diện mạo được định hình.</em>
+                    </h1>
+                    <p style="color: var(--ink-soft); font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                        Kết hợp giữa nghệ thuật chế tác gọng kính di sản và công nghệ đo thị lực chuẩn y khoa.
+                    </p>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <a href="{{ route('tryon') }}" class="btn text-white" style="background: var(--accent-dark); padding: 12px 24px; font-weight: 700; font-size: 14px; border-radius: 4px;">
+                            <i class="fas fa-camera mr-2"></i> THỬ KÍNH AI NGAY
                         </a>
-                    @endforeach
-                    <a href="{{ route('products.index') }}" class="watch-cat-card view-home-categories-inline-6">
-                        <div class="watch-cat-img-box">
-                            <img src="https://matkinhsaigon.com.vn/img/featured-category/1669985298-Khuyen_Mai_2.png" alt="Khuyến mãi">
+                        <a href="{{ route('products.index') }}" class="btn" style="border: 1px solid var(--line); color: var(--ink); padding: 12px 24px; font-weight: 600; font-size: 14px; border-radius: 4px;">
+                            KHÁM PHÁ BỘ SƯ TẬP
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="position-relative p-2" style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px;">
+                        @php
+                            $heroImage = isset($banners) && $banners->count() > 0 ? $banners->first()->image_src : asset('upload/banner/banner-kinh-1.jpg');
+                        @endphp
+                        <img src="{{ $heroImage }}" alt="Gọng kính Atelier Optique" style="width: 100%; height: 380px; object-fit: cover; border-radius: 6px;" fetchpriority="high" loading="eager">
+                        <div class="position-absolute d-flex align-items-center gap-3 px-3 py-2" style="bottom: 20px; right: 20px; background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 6px; font-size: 12px;">
+                            <span style="font-family: var(--font-mono); font-weight: 700; color: var(--accent);">52 &square; 18 &mdash; 145</span>
+                            <span class="text-muted" style="font-size: 10px;">Eye &bull; Bridge &bull; Temple</span>
                         </div>
-                        <h3 class="watch-cat-title">KHUYẾN MÃI</h3>
-                        <span class="watch-cat-btn">Xem ngay</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2B: Banner ngang giữa hero và thanh cam kết -->
+    @if (!empty($midBanner))
+        <section class="atelier-mid-banner" style="background: var(--paper-card); padding: 32px 0 48px;">
+            <div class="container" style="max-width: 1280px;">
+                <a href="{{ $midBanner->link_url ?: route('products.index') }}"
+                   style="display: block; border-radius: 6px; overflow: hidden; border: 1px solid var(--line);">
+                    <img src="{{ $midBanner->image_src }}"
+                         alt="{{ $midBanner->title ?: 'Ưu đãi Atelier Optique' }}"
+                         style="width: 100%; height: 220px; object-fit: cover; display: block;"
+                         loading="lazy">
+                </a>
+            </div>
+        </section>
+    @endif
+
+    <!-- SECTION 3: Trust Strip Section -->
+    <section class="atelier-trust-strip" style="background: var(--paper); border-bottom: 1px solid var(--line); padding: 20px 0;">
+        <div class="container" style="max-width: 1280px;">
+            <div class="row align-items-center text-center text-md-left">
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
+                        <i class="fas fa-user-md fa-2x" style="color: var(--accent);"></i>
+                        <div>
+                            <strong style="font-size: 13px; color: var(--ink); display: block;">Đo thị lực chuẩn y khoa</strong>
+                            <small style="color: var(--ink-soft);">Thiết bị ZEISS chính hãng</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
+                        <i class="fas fa-glasses fa-2x" style="color: var(--accent);"></i>
+                        <div>
+                            <strong style="font-size: 13px; color: var(--ink); display: block;">Tròng kính chính hãng</strong>
+                            <small style="color: var(--ink-soft);">Essilor, Zeiss, Hoya...</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
+                        <i class="fas fa-shield-alt fa-2x" style="color: var(--accent);"></i>
+                        <div>
+                            <strong style="font-size: 13px; color: var(--ink); display: block;">Bảo hành 12 tháng</strong>
+                            <small style="color: var(--ink-soft);">Áp dụng toàn quốc</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
+                        <i class="fas fa-truck fa-2x" style="color: var(--accent);"></i>
+                        <div>
+                            <strong style="font-size: 13px; color: var(--ink); display: block;">Miễn phí vận chuyển</strong>
+                            <small style="color: var(--ink-soft);">Đơn từ 400.000đ</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- SECTION 4: Featured Collections Grid -->
+    <section class="atelier-collections-section py-5" style="background: var(--paper-card); border-bottom: 1px solid var(--line);">
+        <div class="container" style="max-width: 1280px;">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--ink); letter-spacing: 0.05em; margin: 0; text-transform: uppercase;">BỘ SƯ TẬP NỔI BẬT</h2>
+                <a href="{{ route('products.index') }}" style="color: var(--accent); font-weight: 600; font-size: 13px; text-decoration: none;">Xem tất cả bộ sưu tập &rarr;</a>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{{ route('products.index', ['material' => 'acetate']) }}" class="card border-0 h-100 text-decoration-none" style="background: var(--paper); border-radius: 6px; overflow: hidden; border: 1px solid var(--line) !important;">
+                        <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=600&auto=format&fit=crop" alt="Acetate Thủ Công" style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                        <div class="card-body p-3">
+                            <strong style="color: var(--ink); font-size: 13px; letter-spacing: 0.05em; display: block; font-weight: 700; text-transform: uppercase;">ACETATE THỦ CÔNG</strong>
+                            <small class="text-muted" style="font-size: 11px;">Tinh tế &amp; bền bỉ</small>
+                        </div>
                     </a>
-                    <a href="{{ route('pages.contact') }}" class="watch-cat-card view-home-categories-inline-7">
-                        <div class="watch-cat-img-box">
-                            <img src="https://matkinhsaigon.com.vn/img/featured-category/1669978174-He_Thong.png" alt="Hệ thống">
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{{ route('products.index', ['material' => 'titanium']) }}" class="card border-0 h-100 text-decoration-none" style="background: var(--paper); border-radius: 6px; overflow: hidden; border: 1px solid var(--line) !important;">
+                        <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=600&auto=format&fit=crop" alt="Titanium Cao Cấp" style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                        <div class="card-body p-3">
+                            <strong style="color: var(--ink); font-size: 13px; letter-spacing: 0.05em; display: block; font-weight: 700; text-transform: uppercase;">TITANIUM CAO CẤP</strong>
+                            <small class="text-muted" style="font-size: 11px;">Nhẹ - Bền - Sang trọng</small>
                         </div>
-                        <h3 class="watch-cat-title">HỆ THỐNG</h3>
-                        <span class="watch-cat-btn">Xem ngay</span>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{{ route('products.index', ['category' => 'kinh-ram']) }}" class="card border-0 h-100 text-decoration-none" style="background: var(--paper); border-radius: 6px; overflow: hidden; border: 1px solid var(--line) !important;">
+                        <img src="https://images.unsplash.com/photo-1508296695146-257a814070b4?q=80&w=600&auto=format&fit=crop" alt="Kính Râm Chống UV" style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                        <div class="card-body p-3">
+                            <strong style="color: var(--ink); font-size: 13px; letter-spacing: 0.05em; display: block; font-weight: 700; text-transform: uppercase;">KÍNH RÂM CHỐNG UV</strong>
+                            <small class="text-muted" style="font-size: 11px;">Bảo vệ mắt tối ưu</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{{ route('products.index', ['category' => 'trong-kinh']) }}" class="card border-0 h-100 text-decoration-none" style="background: var(--paper); border-radius: 6px; overflow: hidden; border: 1px solid var(--line) !important;">
+                        <img src="https://images.unsplash.com/photo-1577803645773-f96470509666?q=80&w=600&auto=format&fit=crop" alt="Tròng Kính Cao Cấp" style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                        <div class="card-body p-3">
+                            <strong style="color: var(--ink); font-size: 13px; letter-spacing: 0.05em; display: block; font-weight: 700; text-transform: uppercase;">TRÒNG KÍNH CAO CẤP</strong>
+                            <small class="text-muted" style="font-size: 11px;">Đổi màu - Chống ánh sáng xanh</small>
+                        </div>
                     </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <div class="watch-products-section" style="{{ $homeSectionStyle('new_products') }}">
-        <div class="watch-container">
-            <div class="watch-section-header">
-                <h2 class="watch-section-title">SẢN PHẨM MỚI</h2>
+    <div class="watch-products-section" style="{{ $homeSectionStyle('new_products') }}; padding: 48px 0; background: var(--paper-card);">
+        <div class="container" style="max-width: 1280px;">
+            <div class="mb-4">
+                <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--ink); letter-spacing: 0.05em; margin: 0; text-transform: uppercase;">SẢN PHẨM MỚI</h2>
             </div>
-            <div class="watch-product-slider-container">
-                <button class="watch-product-slider-arrow prev" onclick="scrollProductSlider('new-products-track', 'prev')"><i class="fas fa-chevron-left"></i></button>
-                <button class="watch-product-slider-arrow next" onclick="scrollProductSlider('new-products-track', 'next')"><i class="fas fa-chevron-right"></i></button>
-                <div class="watch-product-slider-window">
+            <div class="watch-product-slider-container position-relative" style="padding: 0 10px;">
+                <button class="watch-product-slider-arrow prev position-absolute" onclick="scrollProductSlider('new-products-track', 'prev')" style="left: -20px; top: 50%; transform: translateY(-50%); z-index: 20; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); font-size: 18px; transition: all 0.2s;" aria-label="Sản phẩm trước">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="watch-product-slider-arrow next position-absolute" onclick="scrollProductSlider('new-products-track', 'next')" style="right: -20px; top: 50%; transform: translateY(-50%); z-index: 20; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); font-size: 18px; transition: all 0.2s;" aria-label="Sản phẩm tiếp theo">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+
+                <div class="watch-product-slider-window" style="overflow: hidden;">
                     <div id="new-products-track" class="watch-products-grid">
                         @foreach ($newProducts as $product)
-                            @include('partials.watch-product-card', ['product' => $product, 'showTryOn' => true])
+                            @include('partials.eyewear-product-card', ['product' => $product, 'showTryOn' => true])
                         @endforeach
                     </div>
                 </div>
             </div>
-            <div class="watch-view-all">
-                <a href="{{ route('products.index') }}" class="watch-view-all-btn">Xem tất cả</a>
+            <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block;"></span>
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--line); display: inline-block;"></span>
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--line); display: inline-block;"></span>
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--line); display: inline-block;"></span>
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--line); display: inline-block;"></span>
             </div>
         </div>
     </div>
 
-    <div class="watch-products-section" style="{{ $homeSectionStyle('best_sellers') }}">
-        <div class="watch-container">
-            <div class="watch-section-header">
-                <h2 class="watch-section-title">SẢN PHẨM BÁN CHẠY</h2>
+    <div class="watch-products-section" style="{{ $homeSectionStyle('best_sellers') }}; padding: 48px 0; background: var(--paper);">
+        <div class="container" style="max-width: 1280px;">
+            <div class="mb-4">
+                <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--ink); letter-spacing: 0.05em; margin: 0; text-transform: uppercase;">SẢN PHẨM BÁN CHẠY</h2>
             </div>
-            <div class="watch-product-slider-container">
-                <button class="watch-product-slider-arrow prev" onclick="scrollProductSlider('best-seller-track', 'prev')"><i class="fas fa-chevron-left"></i></button>
-                <button class="watch-product-slider-arrow next" onclick="scrollProductSlider('best-seller-track', 'next')"><i class="fas fa-chevron-right"></i></button>
-                <div class="watch-product-slider-window">
+            <div class="watch-product-slider-container position-relative" style="padding: 0 10px;">
+                <button class="watch-product-slider-arrow prev position-absolute" onclick="scrollProductSlider('best-seller-track', 'prev')" style="left: -20px; top: 50%; transform: translateY(-50%); z-index: 20; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); font-size: 18px; transition: all 0.2s;" aria-label="Sản phẩm trước">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="watch-product-slider-arrow next position-absolute" onclick="scrollProductSlider('best-seller-track', 'next')" style="right: -20px; top: 50%; transform: translateY(-50%); z-index: 20; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); font-size: 18px; transition: all 0.2s;" aria-label="Sản phẩm tiếp theo">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+
+                <div class="watch-product-slider-window" style="overflow: hidden;">
                     <div id="best-seller-track" class="watch-products-grid">
                         @foreach ($featuredProducts as $product)
-                            @include('partials.watch-product-card', ['product' => $product, 'showTryOn' => true])
+                            @include('partials.eyewear-product-card', ['product' => $product, 'showTryOn' => true])
                         @endforeach
                     </div>
                 </div>
             </div>
-            <div class="watch-view-all">
-                <a href="{{ route('products.index') }}" class="watch-view-all-btn">Xem tất cả</a>
+            <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block;"></span>
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--line); display: inline-block;"></span>
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--line); display: inline-block;"></span>
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--line); display: inline-block;"></span>
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--line); display: inline-block;"></span>
             </div>
         </div>
     </div>
+
 
     <section class="watch-brand-section" style="{{ $homeSectionStyle('brands') }}">
         <div class="watch-container">
@@ -173,6 +302,48 @@
                                 <img alt="{{ $brandName }}" src="{{ $brandLogo }}" loading="lazy">
                             </div>
                         @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!-- SECTION 6: Why Choose Atelier Optique Badges -->
+    <section class="atelier-why-us py-4" style="background: var(--paper); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+        <div class="container" style="max-width: 1280px;">
+            <div class="row align-items-center text-center text-md-left">
+                <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+                    <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-3">
+                        <i class="fas fa-users fa-2x" style="color: var(--accent);"></i>
+                        <div>
+                            <strong style="font-size: 14px; color: var(--ink); display: block;">10.000+</strong>
+                            <small style="color: var(--ink-soft);">Khách hàng tin tưởng</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+                    <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-3">
+                        <i class="fas fa-award fa-2x" style="color: var(--accent);"></i>
+                        <div>
+                            <strong style="font-size: 14px; color: var(--ink); display: block;">15+ năm</strong>
+                            <small style="color: var(--ink-soft);">Kinh nghiệm trong ngành</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+                    <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-3">
+                        <i class="fas fa-microscope fa-2x" style="color: var(--accent);"></i>
+                        <div>
+                            <strong style="font-size: 14px; color: var(--ink); display: block;">ZEISS Certified</strong>
+                            <small style="color: var(--ink-soft);">Thiết bị đo chính hãng</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-3">
+                        <i class="fas fa-heart fa-2x" style="color: var(--accent);"></i>
+                        <div>
+                            <strong style="font-size: 14px; color: var(--ink); display: block;">Bảo hành 12 tháng</strong>
+                            <small style="color: var(--ink-soft);">Hỗ trợ tận tâm</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -238,7 +409,10 @@
         </section>
     @endif
 
-    <section class="watch-services-section" style="{{ $homeSectionStyle('services') }}">
+    {{-- Dải cam kết cuối trang lấy nền trắng: ba section trước nó đều xám
+         (why-us, posts, best-sellers) nên nếu để xám nữa sẽ thành một mảng phẳng
+         đâm thẳng vào footer tối. Nền trắng + viền trên tạo nhịp nghỉ trước footer. --}}
+    <section class="watch-services-section" style="{{ $homeSectionStyle('services') }}; background: var(--paper-card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
         <div class="watch-container">
             <div class="watch-services-grid">
                 <div class="watch-service-item">
@@ -265,34 +439,7 @@
         </div>
     </section>
 
-    <section class="section-support" style="{{ $homeSectionStyle('support') }}">
-        <div class="watch-container watch-support-slider-container">
-            <button class="watch-support-arrow prev" onclick="scrollProductSlider('support-track', 'prev')"><i class="fas fa-chevron-left"></i></button>
-            <button class="watch-support-arrow next" onclick="scrollProductSlider('support-track', 'next')"><i class="fas fa-chevron-right"></i></button>
-            <div class="watch-support-slider-window">
-                <div id="support-track" class="flex-container">
-                    @foreach ([
-                        ['sp-1.png', 'GIAO HÀNG TOÀN QUỐC', 'Hồ Chí Minh: Từ 1-2 ngày. Tỉnh khác: Từ 2-3 ngày'],
-                        ['sp-2.png', 'ĐO KHÁM MẮT MIỄN PHÍ', 'Đội ngũ chuyên khoa khúc xạ và thiết bị hiện đại'],
-                        ['sp-3.png', 'THỜI GIAN BẢO HÀNH', 'Thị lực 30 ngày. Sản phẩm đến 24 tháng theo hãng'],
-                        ['sp-4.png', 'MIỄN PHÍ TRỌN ĐỜI', 'Vệ sinh gọng, thay ve mũi, nắn kính miễn phí'],
-                    ] as [$icon, $title, $desc])
-                        <div class="column-wrap active-ani">
-                            <div class="support-inner">
-                                <div class="inner-icon">
-                                    <img class="dt-width-auto" fetchpriority="low" decoding="async" src="{{ asset('upload/support/' . $icon) }}" alt="{{ $title }}">
-                                </div>
-                                <div class="inner-content">
-                                    <h3>{{ $title }}</h3>
-                                    <p>{{ $desc }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </section>
+
     </div>
 @endsection
 

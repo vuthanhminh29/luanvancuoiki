@@ -32,8 +32,8 @@ class DashboardController extends Controller
 
         $returnStats = ReturnRequest::query()
             ->selectRaw("SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pending_returns")
-            ->selectRaw("SUM(CASE WHEN return_type = 'RETURN' AND status = 'PENDING' THEN 1 ELSE 0 END) as return_only")
-            ->selectRaw("SUM(CASE WHEN return_type = 'EXCHANGE' AND status = 'PENDING' THEN 1 ELSE 0 END) as exchange_only")
+            ->selectRaw("SUM(CASE WHEN type = 'RETURN' AND status = 'PENDING' THEN 1 ELSE 0 END) as return_only")
+            ->selectRaw("SUM(CASE WHEN type = 'EXCHANGE' AND status = 'PENDING' THEN 1 ELSE 0 END) as exchange_only")
             ->first();
 
         $stock = Inventory::query()
@@ -51,11 +51,11 @@ class DashboardController extends Controller
                 'products.name as product_name',
                 'product_variants.sku',
                 'colors.name as color_name',
-                'lens_sizes.size_label as lens_size',
+                'lens_sizes.name as lens_size',
             ])
             ->selectRaw('COALESCE(SUM(inventories.quantity), 0) as available_stock')
             ->selectRaw('COALESCE(MAX(inventories.min_stock_level), 10) as min_stock_level')
-            ->groupBy('product_variants.id', 'products.name', 'product_variants.sku', 'colors.name', 'lens_sizes.size_label')
+            ->groupBy('product_variants.id', 'products.name', 'product_variants.sku', 'colors.name', 'lens_sizes.name')
             ->havingRaw('available_stock <= min_stock_level')
             ->orderBy('available_stock')
             ->limit(5)

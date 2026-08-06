@@ -239,6 +239,16 @@
                                         </div>
                                         <div class="order-item-info">
                                             <div class="order-item-name">{{ $product->name }}</div>
+                                            <div class="order-item-meta" style="font-size: 11px; font-family: var(--font-mono); color: var(--ink-soft); margin-top: 2px;">
+                                                @if (!empty($product->frame_size))
+                                                    <span>{{ str_replace([' ', '□', '-'], [' ', '▭', '-'], $product->frame_size) }}</span>
+                                                @else
+                                                    <span>52▭18-145</span>
+                                                @endif
+                                                @if (!empty($variant->color->name))
+                                                    <span> &bull; {{ $variant->color->name }}</span>
+                                                @endif
+                                            </div>
                                             <div class="order-item-qty">Số lượng: {{ $item['quantity'] }}</div>
                                         </div>
                                         <div class="order-item-price">

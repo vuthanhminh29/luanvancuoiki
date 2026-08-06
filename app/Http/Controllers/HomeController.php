@@ -20,6 +20,9 @@ class HomeController extends Controller
 
         return view('home', [
             'banners' => Banner::visible('HOME_SLIDER')->limit(3)->get(),
+            // Banner ngang chèn giữa hero và thanh cam kết. Vị trí HOME_BANNER_1
+            // đã có trong CSDL nhưng trước đây không màn hình nào hiển thị.
+            'midBanner' => Banner::visible('HOME_BANNER_1')->first(),
             'featuredCategories' => Category::active()
                 ->withCount(['products as active_products_count' => fn ($query) => $query->active()])
                 ->orderBy('id')
@@ -28,17 +31,17 @@ class HomeController extends Controller
                 ->take(6)
                 ->values(),
             'featuredProducts' => Product::active()
-                ->with(['brand', 'category'])
+                ->with(['brand', 'category', 'variants'])
                 ->orderByDesc('view_count')
                 ->limit(8)
                 ->get(),
             'trendProducts' => Product::active()
-                ->with(['brand', 'category'])
+                ->with(['brand', 'category', 'variants'])
                 ->orderByDesc('view_count')
                 ->limit(3)
                 ->get(),
             'newProducts' => Product::active()
-                ->with(['brand', 'category'])
+                ->with(['brand', 'category', 'variants'])
                 ->latest()
                 ->limit(8)
                 ->get(),

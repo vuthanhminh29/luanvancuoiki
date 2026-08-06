@@ -153,6 +153,21 @@
                         <button type="button" class="watch-extra-btn" id="openVtoModal"><i class="fas fa-glasses"></i> Thử kính AI</button>
                         <button class="watch-extra-btn"><i class="fas fa-share-alt"></i> Chia sẻ</button>
                     </div>
+
+                    <div class="atelier-product-guarantee my-3 p-3" style="background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); font-size: 13px; color: var(--ink);">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <i class="fas fa-undo" style="color: var(--accent);" aria-hidden="true"></i>
+                            <span><strong>Đổi trả 7 ngày:</strong> Miễn phí đổi mẫu nếu không vừa khuôn mặt.</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <i class="fas fa-shield-alt" style="color: var(--accent);" aria-hidden="true"></i>
+                            <span><strong>Bảo hành thích nghi:</strong> Đổi tròng kính trong 30 ngày nếu mỏi mắt.</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="fas fa-headset" style="color: var(--accent);" aria-hidden="true"></i>
+                            <span><strong>Tư vấn thị lực:</strong> 1900 6789 (Hỗ trợ 8h00 - 21h30).</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -299,7 +314,7 @@
                     <h2 class="watch-similar-title">Sản phẩm tương tự</h2>
                     <div class="watch-products-grid">
                         @foreach ($relatedProducts as $product)
-                            @include('partials.watch-product-card', ['product' => $product, 'showTryOn' => true])
+                            @include('partials.eyewear-product-card', ['product' => $product, 'showTryOn' => true])
                         @endforeach
                     </div>
                 </div>

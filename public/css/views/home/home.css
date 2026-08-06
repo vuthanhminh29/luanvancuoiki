@@ -1230,27 +1230,30 @@
 /* Slider Arrows */
 .watch-product-slider-arrow {
     position: absolute;
-    top: 40%;
+    top: 50%;
     transform: translateY(-50%);
-    width: 38px;
-    height: 38px;
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 50%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    width: 32px;
+    height: 32px;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
     z-index: 50;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #111827;
-    transition: all 0.3s;
+    color: #475569 !important;
+    font-size: 1.25rem;
+    transition: all 0.2s;
 }
 
 .watch-product-slider-arrow:hover {
-    background: #111827;
-    color: #fff;
-    transform: translateY(-50%) scale(1.1);
+    background: transparent !important;
+    color: #0e5c63 !important;
+    transform: translateY(-50%) scale(1.2);
+    box-shadow: none !important;
 }
 
 .watch-product-slider-arrow.prev { left: -15px; }
