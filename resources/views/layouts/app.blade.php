@@ -92,7 +92,7 @@
         }
     </style>
     @stack('styles')
-    <link rel="stylesheet" href="{{ asset('css/ui-human.css') }}?v={{ file_exists(public_path('css/ui-human.css')) ? filemtime(public_path('css/ui-human.css')) : time() }}">
+    <link rel="stylesheet" href="{{ asset('css/theme.css') }}?v={{ file_exists(public_path('css/theme.css')) ? filemtime(public_path('css/theme.css')) : time() }}">
 </head>
 <body>
     @php
@@ -124,55 +124,67 @@
         </div>
     </div>
 
-    <header class="header">
+    <div class="optical-utility-bar" style="background: #0a3d42; color: #ffffff; padding: 8px 0; font-size: 13px;">
+        <div class="container" style="max-width: 1280px;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-4">
+                    <span><i class="fas fa-user-md" style="color: #4ade80;"></i> Đo thị lực chuyên sâu</span>
+                    <span><i class="fas fa-glasses" style="color: #4ade80;"></i> Thử kính AI</span>
+                    <span><i class="fas fa-shield-alt" style="color: #4ade80;"></i> Bảo hành 12 tháng</span>
+                </div>
+                <div class="d-flex align-items-center gap-4">
+                    <span><i class="fas fa-headset"></i> Hotline: 1900 6789</span>
+                    <a href="{{ route('pages.contact') }}" style="color: #ffffff;"><i class="fas fa-store"></i> Cửa hàng</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header class="header" style="background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000;">
         <div class="container" style="max-width: 1280px; position: relative;">
-            <div class="row">
-                <div class="col-xl-3 col-lg-2">
+            <div class="row align-items-center py-2">
+                <div class="col-xl-3 col-lg-3">
                     <div class="header__logo">
-                        <a href="{{ route('home') }}">
-                            <img src="{{ asset('upload/logo/logo-1.png') }}" alt="{{ config('app.name') }}">
+                        <a href="{{ route('home') }}" class="d-flex align-items-center gap-2" style="text-decoration: none;">
+                            <img src="{{ asset('upload/logo/logo-1.png') }}" alt="{{ config('app.name') }}" style="max-height: 48px;">
+                            <div style="line-height: 1.1;">
+                                <strong style="font-size: 16px; letter-spacing: 0.08em; color: #0a3d42; display: block; font-family: 'Be Vietnam Pro', sans-serif;">ATELIER OPTIQUE</strong>
+                                <span style="font-size: 9px; letter-spacing: 0.15em; color: #64748b; text-transform: uppercase;">PRECISION VISION</span>
+                            </div>
                         </a>
                     </div>
                 </div>
-                <div class="col-xl-6 col-lg-7">
+                <div class="col-xl-6 col-lg-6">
                     <nav class="header__menu">
-                        <ul>
-                            <li><a href="{{ route('home') }}">TRANG CHỦ</a></li>
-                            <li><a href="{{ route('products.index') }}">Sản phẩm</a></li>
-                            @foreach ($headerProductLinks ?? [] as $headerProductLink)
-                                <li><a href="{{ $headerProductLink['url'] }}">{{ $headerProductLink['label'] }}</a></li>
-                            @endforeach
-                            <li><a href="{{ route('blog.index') }}">Bài viết</a></li>
-                            <li><a href="{{ route('pages.contact') }}">LIÊN HỆ</a></li>
+                        <ul class="d-flex align-items-center justify-content-center gap-4 m-0 p-0" style="list-style: none;">
+                            <li><a href="{{ route('home') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Trang chủ</a></li>
+                            <li><a href="{{ route('products.index', ['category' => 'gong-kinh']) }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Gọng kính</a></li>
+                            <li><a href="{{ route('products.index', ['category' => 'trong-kinh']) }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Tròng kính</a></li>
+                            <li><a href="{{ route('pages.contact') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Đo thị lực</a></li>
+                            <li><a href="{{ route('blog.index') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Bài viết</a></li>
+                            <li><a href="{{ route('pages.contact') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Liên hệ</a></li>
                         </ul>
                     </nav>
                 </div>
-                <div class="col-lg-3">
-                    <div class="header__right">
-                        <div class="header__right__auth">
-                            @auth
-                                <a href="{{ route('account.index') }}">{{ auth()->user()->full_name }}</a>
-                            @else
-                                <a href="{{ route('login') }}">Đăng nhập</a>
-                            @endauth
-                        </div>
-                        <ul class="header__right__widget">
-                            <li><span class="icon_search search-switch"></span></li>
-                            <li>
-                                <a id="cart-mini" href="{{ route('cart.index') }}">
-                                    <span class="icon_bag_alt"></span>
-                                    <div class="tip">{{ $cartTotalQuantity }}</div>
-                                </a>
-                            </li>
-                        </ul>
+                <div class="col-xl-3 col-lg-3">
+                    <div class="header__right d-flex align-items-center justify-content-end gap-3" style="padding: 0;">
+                        <span class="icon_search search-switch" aria-label="Tìm kiếm" style="font-size: 18px; cursor: pointer; color: #334155;"></span>
+                        <a href="{{ route('account.index') }}" style="color: #334155; font-size: 18px;" title="Yêu thích"><i class="far fa-heart"></i></a>
+                        <a id="cart-mini" href="{{ route('cart.index') }}" aria-label="Giỏ hàng" class="position-relative" style="color: #334155; font-size: 18px;">
+                            <span class="icon_bag_alt"></span>
+                            <span class="badge badge-danger position-absolute" style="top: -8px; right: -10px; background: #0e5c63; border-radius: 999px; font-size: 10px; padding: 2px 6px;">{{ $cartTotalQuantity }}</span>
+                        </a>
+                        <a href="{{ route('tryon') }}" class="btn text-white d-inline-flex align-items-center gap-2" style="background: #0a3d42; border-radius: 6px; font-weight: 600; font-size: 13px; padding: 8px 14px;">
+                            <i class="fas fa-glasses" aria-hidden="true"></i> THỬ KÍNH AI
+                        </a>
                     </div>
                 </div>
             </div>
             <div class="canvas__open"><i class="fa fa-bars"></i></div>
             <div class="search-dropdown" id="header-search-dropdown">
                 <form action="{{ route('products.index') }}" method="get">
-                    <input type="text" name="q" id="header-search-input" placeholder="Nhập tên sản phẩm cần tìm">
-                    <button type="submit"><span class="icon_search"></span></button>
+                    <input type="text" name="q" id="header-search-input" placeholder="Nhập tên gọng kính, thương hiệu...">
+                    <button type="submit" aria-label="Gửi tìm kiếm"><span class="icon_search"></span></button>
                 </form>
             </div>
         </div>
@@ -192,84 +204,78 @@
 
     <div style="border: 1px solid #e5e7eb;"></div>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer__top">
-                <a href="{{ route('home') }}" class="footer__brand" aria-label="{{ config('app.name') }}">
-                    <img src="{{ asset('upload/logo/logo-1.png') }}" alt="{{ config('app.name') }}">
-                    <span>WARFARER</span>
-                </a>
-                <div class="footer__badges" aria-label="Cam kết dịch vụ">
-                    <span><i class="fa fa-shipping-fast"></i> Giao hàng nhanh</span>
-                    <span><i class="fa fa-sync-alt"></i> Đổi trả rõ ràng</span>
-                    <span><i class="fa fa-lock"></i> Thanh toán an toàn</span>
+    <footer class="footer" style="background: #072b2d; color: #94a3b8; padding: 72px 0 0; font-size: 13px;">
+        <div class="container" style="max-width: 1280px;">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="d-flex align-items-center gap-2 mt-4 mb-3">
+                        {{-- Logo gốc là ảnh nền trắng đục; lọc brightness/invert biến nó thành
+                             ô trắng đặc trên nền tối. Dùng ký hiệu gọng kính vẽ thẳng bằng SVG
+                             để ăn theo màu chữ, không phụ thuộc file ảnh. --}}
+                        <svg width="34" height="18" viewBox="0 0 34 18" fill="none" aria-hidden="true" style="flex: 0 0 auto;">
+                            <path d="M1 4h32M4 4c-1 0-2 1-2 3.5S3.5 13 7 13s5.5-2 5.5-5c0-1.8-1-2.6-3-2.6S4 5.4 4 4Zm26 0c1 0 2 1 2 3.5S29.5 13 26 13s-5.5-2-5.5-5c0-1.8 1-2.6 3-2.6S30 5.4 30 4Z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13 8h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        </svg>
+                        <strong style="font-size: 16px; letter-spacing: 0.08em; color: #ffffff;">ATELIER OPTIQUE</strong>
+                    </div>
+                    <p style="color: #cbd5e1; line-height: 1.6; margin-bottom: 16px;">
+                        Atelier Optique &bull; Nhà chế tác gọng kính & Phòng khám đo thị lực cao cấp.
+                    </p>
+                    <ul class="list-unstyled d-flex flex-column gap-2" style="color: #cbd5e1;">
+                        <li><i class="fas fa-map-marker-alt" style="color: #4ade80; width: 20px;"></i> 123 Nguyễn Trãi, P. Bến Thành, Q.1, TP.HCM</li>
+                        <li><i class="fas fa-phone" style="color: #4ade80; width: 20px;"></i> 1900 6789</li>
+                        <li><i class="fas fa-envelope" style="color: #4ade80; width: 20px;"></i> hello@atelieroptique.vn</li>
+                    </ul>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" style="color: #ffffff; font-size: 16px;"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" style="color: #ffffff; font-size: 16px;"><i class="fab fa-instagram"></i></a>
+                        <a href="#" style="color: #ffffff; font-size: 16px;"><i class="fab fa-tiktok"></i></a>
+                        <a href="#" style="color: #ffffff; font-size: 16px;"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-3 mt-4 mb-4">
+                    <h6 style="color: #ffffff; font-weight: 700; font-size: 14px; letter-spacing: 0.05em; margin-bottom: 16px; text-transform: uppercase;">KHÁM PHÁ</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2" style="color: #cbd5e1;">
+                        <li><a href="{{ route('products.index', ['category' => 'nam']) }}" style="color: inherit; text-decoration: none;">Gọng kính nam</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'nu']) }}" style="color: inherit; text-decoration: none;">Gọng kính nữ</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'kinh-ram']) }}" style="color: inherit; text-decoration: none;">Kính râm</a></li>
+                        <li><a href="{{ route('products.index', ['category' => 'trong-kinh']) }}" style="color: inherit; text-decoration: none;">Tròng kính</a></li>
+                        <li><a href="{{ route('products.index') }}" style="color: inherit; text-decoration: none;">Phụ kiện</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-3 mt-4 mb-4">
+                    <h6 style="color: #ffffff; font-weight: 700; font-size: 14px; letter-spacing: 0.05em; margin-bottom: 16px; text-transform: uppercase;">HỖ TRỢ</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2" style="color: #cbd5e1;">
+                        <li><a href="{{ route('pages.contact') }}" style="color: inherit; text-decoration: none;">Hướng dẫn đo thị lực</a></li>
+                        <li><a href="{{ route('pages.support') }}" style="color: inherit; text-decoration: none;">Chính sách bảo hành</a></li>
+                        <li><a href="{{ route('returns.index') }}" style="color: inherit; text-decoration: none;">Chính sách đổi trả</a></li>
+                        <li><a href="{{ route('checkout.index') }}" style="color: inherit; text-decoration: none;">Thanh toán & giao hàng</a></li>
+                        <li><a href="{{ route('pages.support') }}" style="color: inherit; text-decoration: none;">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-12 mt-4 mb-4">
+                    <h6 style="color: #ffffff; font-weight: 700; font-size: 14px; letter-spacing: 0.05em; margin-bottom: 16px; text-transform: uppercase;">ĐĂNG KÝ NHẬN TIN</h6>
+                    <p style="color: #cbd5e1; margin-bottom: 12px;">Nhận ưu đãi đặc quyền và kiến thức chăm sóc mắt hữu ích.</p>
+                    <form action="#" class="d-flex gap-2 mb-2">
+                        <input type="email" placeholder="Nhập email của bạn..." required style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #ffffff; padding: 10px 14px; flex: 1; font-size: 13px;">
+                        <button type="submit" class="btn" style="background: #0e5c63; color: #ffffff; border-radius: 4px; padding: 0 16px;"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                    <small style="color: #94a3b8; font-size: 11px;">Chúng tôi cam kết bảo mật thông tin của bạn.</small>
                 </div>
             </div>
 
-            <div class="row footer__grid">
-                <div class="col-lg-4 col-md-6 col-sm-12">
-                    <div class="footer__about">
-                        <h6>WARFARER</h6>
-                        <p class="footer__description">Chuyên kính mát, gọng kính và phụ kiện mắt kính chính hãng. Tư vấn sản phẩm phù hợp nhu cầu sử dụng hằng ngày.</p>
-                        <ul class="footer__contact">
-                            <li><i class="fa fa-map-marker-alt"></i> 828 Sư Vạn Hạnh, Phường 13, Quận 10, TP.HCM</li>
-                            <li><i class="fa fa-phone"></i> 0909 000 888</li>
-                            <li><i class="fa fa-envelope"></i> support@warfarer.vn</li>
-                        </ul>
-                        <div class="footer__social">
-                            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                            <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-3 col-sm-6">
-                    <div class="footer__widget">
-                        <h6>Đường dẫn</h6>
-                        <ul>
-                            <li><a href="{{ route('products.index') }}">Cửa hàng</a></li>
-                            <li><a href="{{ route('blog.index') }}">Blogs</a></li>
-                            <li><a href="{{ route('pages.contact') }}">Liên hệ</a></li>
-                            <li><a href="{{ route('pages.support') }}">Trung tâm hỗ trợ</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-3 col-sm-6">
-                    <div class="footer__widget">
-                        <h6>Chính sách</h6>
-                        <ul>
-                            <li><a href="{{ route('pages.support') }}">Vận chuyển</a></li>
-                            <li><a href="{{ route('checkout.index') }}">Thanh toán</a></li>
-                            <li><a href="{{ route('returns.index') }}">Hoàn/đổi</a></li>
-                            <li><a href="{{ route('account.orders.index') }}">Theo dõi đơn hàng</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-12 col-sm-12">
-                    <div class="footer__newsletter">
-                        <h6>Đăng ký nhận tin</h6>
-                        <p class="newsletter__description">Nhận thông tin về sản phẩm mới và ưu đãi đặc biệt</p>
-                        <form action="#" class="newsletter__form">
-                            <div class="newsletter__input-group">
-                                <input type="email" placeholder="Nhập email của bạn" required>
-                                <button type="submit" class="newsletter__button"><i class="fa fa-paper-plane"></i></button>
-                            </div>
-                        </form>
-                        <div class="footer__payment">
-                            <span class="payment__label">Phương thức thanh toán</span>
-                            <div class="payment__icons">
-                                <img src="{{ asset('img/payment/payment-1.png') }}" alt="Visa">
-                                <img src="{{ asset('img/payment/payment-2.png') }}" alt="Mastercard">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 40px 0 0;">
 
-            <div class="footer__bottom">
-                <span>© {{ date('Y') }} WARFARER. Dự án bán kính mắt.</span>
-                <a href="{{ route('account.orders.index') }}">Theo dõi đơn hàng</a>
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 text-muted" style="font-size: 12px; padding: 20px 0 28px;">
+                <span>&copy; {{ date('Y') }} Atelier Optique. All rights reserved.</span>
+                <div class="d-flex flex-wrap gap-4">
+                    <a href="{{ route('pages.support') }}" style="color: inherit; text-decoration: none;">Điều khoản sử dụng</a>
+                    <a href="{{ route('pages.support') }}" style="color: inherit; text-decoration: none;">Chính sách bảo mật</a>
+                </div>
+                <span>Thiết kế bởi Atelier Optique Studio</span>
             </div>
         </div>
     </footer>

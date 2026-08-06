@@ -78,6 +78,16 @@
                                             </a>
                                             <div class="cart-product-copy">
                                                 <a class="cart-product-name" href="{{ route('products.show', $product) }}">{{ $product->name }}</a>
+                                                <div class="cart-product-meta" style="font-size: 12px; font-family: var(--font-mono); color: var(--ink-soft); margin-top: 4px;">
+                                                    @if (!empty($product->frame_size))
+                                                        <span>{{ str_replace([' ', '□', '-'], [' ', '▭', '-'], $product->frame_size) }}</span>
+                                                    @else
+                                                        <span>52▭18-145</span>
+                                                    @endif
+                                                    @if (!empty($variant->color->name))
+                                                        <span> &bull; Màu: {{ $variant->color->name }}</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
 

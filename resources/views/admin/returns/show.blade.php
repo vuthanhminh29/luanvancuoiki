@@ -171,6 +171,13 @@
                                 <img src="{{ $image }}" alt="{{ $orderItem?->product_name ?? 'Sản phẩm' }}">
                                 <div>
                                     <strong>{{ $orderItem?->product_name ?? 'Sản phẩm không còn tồn tại' }}</strong>
+                                    <div style="font-size: 11px; font-family: var(--font-mono, monospace); color: #5a636b; margin: 2px 0;">
+                                        @if (!empty($product?->frame_size))
+                                            <span>{{ str_replace([' ', '□', '-'], [' ', '▭', '-'], $product->frame_size) }}</span>
+                                        @else
+                                            <span>52▭18-145</span>
+                                        @endif
+                                    </div>
                                     <p>{{ $variantText ?: 'Không có biến thể' }}</p>
                                 </div>
                                 <div class="rr-product-money">

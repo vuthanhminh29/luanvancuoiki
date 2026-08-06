@@ -148,6 +148,13 @@
                             <img src="{{ $item->product->image_url ?? asset('upload/no-image.jpg') }}" alt="{{ $item->product_name }}">
                             <div>
                                 <p class="od-product-name">{{ $item->product_name }}</p>
+                                <div class="od-product-spec" style="font-size: 11px; font-family: var(--font-mono); color: var(--ink-soft); margin-bottom: 4px;">
+                                    @if (!empty($item->product->frame_size))
+                                        <span>{{ str_replace([' ', '□', '-'], [' ', '▭', '-'], $item->product->frame_size) }}</span>
+                                    @else
+                                        <span>52▭18-145</span>
+                                    @endif
+                                </div>
                                 <div class="od-product-meta">
                                     <span>Số lượng: <strong>x{{ $item->quantity }}</strong></span>
                                     @if ($returnItemLabels->has($item->id))

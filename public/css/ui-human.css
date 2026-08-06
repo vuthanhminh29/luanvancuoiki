@@ -1,18 +1,80 @@
 /*
-   Human UI pass: calmer retail styling over the legacy theme.
-   This file avoids generated-looking gradients and keeps the shop easy to demo.
+   Hệ token giao diện: màu, typography, spacing, shadow.
+   Sửa giá trị ở :root sẽ áp dụng toàn site.
 */
+
 :root {
-    --ui-ink: #171717;
-    --ui-muted: #667085;
-    --ui-line: #e6e8ec;
-    --ui-soft: #f6f7f9;
-    --ui-paper: #ffffff;
-    --ui-accent: #0f766e;
-    --ui-accent-dark: #115e59;
-    --ui-danger: #b42318;
-    --ui-warm: #9a3412;
-    --ui-shadow: 0 10px 26px rgba(17, 24, 39, .07);
+    /* Màu — 60/30/10, một accent duy nhất mượn từ phản quang AR coating trên tròng kính */
+    --ink:        #14181c;   /* chữ chính — đen ngả xanh */
+    --ink-soft:   #5a636b;   /* chữ phụ */
+    --paper:      #f7f8f9;   /* nền — xám lạnh nhạt */
+    --paper-card: #ffffff;   /* nền card */
+    --accent:     #0e5c63;   /* xanh lục AR coating */
+    --accent-dark: #0a4348;  /* accent hover */
+    --line:       #dfe3e6;   /* hairline border */
+
+    --sale:       #b0322b;
+    --success:    #1f6b4f;
+
+    --font-sans: 'Be Vietnam Pro', system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* Radius thống nhất toàn trang */
+    --radius-sm: 4px;
+    --radius: 4px;
+    --radius-lg: 8px;
+
+    /* Shadows 3 cấp */
+    --shadow-1: 0 1px 2px rgba(20,24,28,.06);
+    --shadow-2: 0 4px 12px rgba(20,24,28,.08);
+    --shadow-3: 0 12px 32px rgba(20,24,28,.12);
+
+    /* Legacy Token Aliases */
+    --ui-ink: var(--ink);
+    --ui-ink-soft: var(--ink-soft);
+    --ui-paper: var(--paper);
+    --ui-paper-soft: #f0f2f5;
+    --ui-accent: var(--accent);
+    --ui-accent-dark: var(--accent-dark);
+    --ui-amber: var(--accent);
+    --ui-line: var(--line);
+    --ui-success: var(--success);
+    --ui-danger: var(--sale);
+    --ui-focus: var(--accent);
+
+    --ui-radius-sm: var(--radius-sm);
+    --ui-radius: var(--radius);
+    --ui-radius-lg: var(--radius-lg);
+
+    --ui-space-1: 0.25rem;
+    --ui-space-2: 0.5rem;
+    --ui-space-3: 0.75rem;
+    --ui-space-4: 1rem;
+    --ui-space-6: 1.5rem;
+    --ui-space-8: 2rem;
+    --ui-space-12: 3rem;
+    --ui-space-16: 4rem;
+
+    --ui-container: 1240px;
+    --ui-reading-width: 68ch;
+    --ui-shadow-optical: var(--shadow-1);
+    --ui-shadow: var(--shadow-2);
+}
+
+/* Quy tắc Accessibility Focus-Visible chuẩn WCAG AA */
+:focus-visible {
+    outline: 2px solid var(--accent) !important;
+    outline-offset: 2px !important;
+    border-radius: var(--radius) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
 html {
@@ -20,11 +82,11 @@ html {
 }
 
 body {
-    background: #fff;
+    background: var(--ui-paper);
     color: var(--ui-ink);
     font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     font-size: 15px;
-    letter-spacing: 0;
+    letter-spacing: -0.01em;
 }
 
 a {
@@ -84,7 +146,7 @@ a:hover {
 .header__menu ul li a {
     color: #202124;
     font-size: 14px;
-    font-weight: 800;
+    font-weight: 600;
     min-height: 84px;
     padding: 31px 0 26px;
     position: relative;
@@ -117,7 +179,7 @@ a:hover {
 .offcanvas__auth a {
     color: #344054;
     font-size: 14px;
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .header__right__widget li {
@@ -147,18 +209,18 @@ a:hover {
 
 .search-dropdown {
     border: 1px solid var(--ui-line) !important;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     box-shadow: var(--ui-shadow) !important;
 }
 
 .search-dropdown form {
     border-color: var(--ui-line) !important;
-    border-radius: 7px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
 }
 
 .flash {
-    border-radius: 8px !important;
+    border-radius: var(--radius-lg) !important;
     box-shadow: 0 1px 0 rgba(17, 24, 39, .04);
 }
 
@@ -182,7 +244,7 @@ a:hover {
 .view-home-banner-inline-1,
 .ebd-promo-banner {
     border: 1px solid var(--ui-line);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     box-shadow: 0 8px 24px rgba(17, 24, 39, .05);
     overflow: hidden;
 }
@@ -241,7 +303,7 @@ a:hover {
 .checkout-choice-card,
 .order-summary {
     border: 1px solid var(--ui-line) !important;
-    border-radius: 8px !important;
+    border-radius: var(--radius-lg) !important;
     box-shadow: none !important;
 }
 
@@ -316,7 +378,7 @@ a:hover {
 .newsletter__button {
     background: var(--ui-ink) !important;
     border-color: var(--ui-ink) !important;
-    border-radius: 7px !important;
+    border-radius: var(--radius-lg) !important;
     color: #fff !important;
     font-weight: 850 !important;
     letter-spacing: 0;
@@ -334,13 +396,20 @@ a:hover {
     color: #fff !important;
 }
 
-.watch-view-all-btn,
-.ebd-tryon-btn,
-.cart__btn a,
-.cart__btn button,
-.btn-address,
-.btn-modal-cancel {
-    border-radius: 7px !important;
+.watch-view-all-btn {
+    background: #ffffff !important;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius) !important;
+    color: var(--ink) !important;
+    font-weight: 600 !important;
+    padding: 10px 32px !important;
+    display: inline-block;
+    transition: transform .2s cubic-bezier(0.16,1,0.3,1), opacity .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease;
+}
+.watch-view-all-btn:hover {
+    background: var(--paper) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
 }
 
 .watch-product-slider-arrow,
@@ -360,7 +429,7 @@ a:hover {
 .ebd-catalog-heading {
     background: #f7f8fa;
     border: 1px solid var(--ui-line);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     margin-bottom: 18px !important;
     max-width: none !important;
     padding: 28px 30px !important;
@@ -414,7 +483,7 @@ a:hover {
 
 .ebd-filter-sidebar {
     border: 1px solid var(--ui-line);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 4px 0 !important;
 }
 
@@ -445,7 +514,7 @@ a:hover {
 
 .ebd-product-card {
     border: 1px solid var(--ui-line);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     padding: 0;
     transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
@@ -488,7 +557,7 @@ a:hover {
 
 .shop__cart__table {
     border: 1px solid var(--ui-line);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
 }
 
@@ -518,7 +587,7 @@ a:hover {
 
 .cart__product__item img {
     border: 1px solid var(--ui-line);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     height: 96px !important;
     object-fit: contain;
     padding: 8px;
@@ -533,7 +602,7 @@ a:hover {
 
 .input-next-cart {
     border: 1px solid var(--ui-line);
-    border-radius: 7px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
 }
 
@@ -568,7 +637,7 @@ a:hover {
 .empty-cart-container .row {
     background: #f7f8fa;
     border: 1px solid var(--ui-line);
-    border-radius: 8px !important;
+    border-radius: var(--radius-lg) !important;
     padding: 46px 22px;
 }
 
@@ -586,7 +655,7 @@ a:hover {
 .auth-card {
     background: #fff !important;
     border: 1px solid var(--ui-line) !important;
-    border-radius: 8px !important;
+    border-radius: var(--radius-lg) !important;
     box-shadow: 0 12px 28px rgba(17, 24, 39, .06) !important;
     max-width: 460px;
     padding: 30px !important;
@@ -610,17 +679,17 @@ a:hover {
 .auth-form .form-control,
 .input-with-icon input {
     border: 1px solid #d0d5dd !important;
-    border-radius: 7px !important;
+    border-radius: var(--radius-lg) !important;
     min-height: 44px !important;
 }
 
 .input-with-icon {
-    border-radius: 7px !important;
+    border-radius: var(--radius-lg) !important;
 }
 
 .btn-submit,
 .btn-register {
-    border-radius: 7px !important;
+    border-radius: var(--radius-lg) !important;
     font-weight: 850 !important;
     letter-spacing: 0;
 }
@@ -687,7 +756,7 @@ a:hover {
 .checkout-card textarea,
 .discount-box input {
     border: 1px solid #d0d5dd !important;
-    border-radius: 7px !important;
+    border-radius: var(--radius-lg) !important;
     color: #1f2937 !important;
     min-height: 42px !important;
 }
@@ -702,7 +771,7 @@ a:hover {
 .address-notice {
     background: #eff6ff !important;
     border: 1px solid #bfdbfe !important;
-    border-radius: 8px !important;
+    border-radius: var(--radius-lg) !important;
     color: #1e3a8a !important;
 }
 
@@ -735,7 +804,7 @@ a:hover {
 
 .order-item-media {
     border: 1px solid var(--ui-line);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     height: 68px;
     width: 68px;
 }
@@ -752,7 +821,7 @@ a:hover {
 
 .discount-box button {
     background: var(--ui-accent) !important;
-    border-radius: 7px !important;
+    border-radius: var(--radius-lg) !important;
     color: #fff !important;
     font-weight: 850 !important;
 }
@@ -790,7 +859,7 @@ a:hover {
 
 .footer__brand img {
     background: #fff;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     height: 50px;
     object-fit: contain;
     padding: 4px 8px;
@@ -882,7 +951,7 @@ a:hover {
     align-items: center;
     background: #1b222b !important;
     border: 1px solid rgba(255, 255, 255, .1);
-    border-radius: 8px !important;
+    border-radius: var(--radius-lg) !important;
     color: #eef2f7 !important;
     display: inline-flex;
     height: 38px !important;
@@ -927,14 +996,14 @@ a:hover {
 .footer__newsletter {
     background: #171c22;
     border: 1px solid rgba(255, 255, 255, .1);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 20px;
 }
 
 .newsletter__input-group {
     background: #0f1318;
     border: 1px solid #2b3440;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     display: grid;
     grid-template-columns: minmax(0, 1fr) 48px;
     overflow: hidden;
@@ -977,7 +1046,7 @@ a:hover {
 
 .payment__icons img {
     background: #fff;
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     filter: grayscale(100%);
     height: 28px !important;
     opacity: .9 !important;
@@ -1114,7 +1183,7 @@ a:hover {
 
 .shop__cart__table {
     border-color: #d9dee8 !important;
-    border-radius: 6px !important;
+    border-radius: var(--radius-lg) !important;
     box-shadow: 0 4px 12px rgba(16, 24, 40, .06) !important;
 }
 
@@ -1163,7 +1232,7 @@ a:hover {
 
 .cart__product__item img,
 .shop__cart__table tbody tr .cart__product__item img {
-    border-radius: 6px !important;
+    border-radius: var(--radius-lg) !important;
     height: 88px !important;
     padding: 8px !important;
     width: 88px !important;
@@ -1181,7 +1250,7 @@ a:hover {
 }
 
 .input-next-cart {
-    border-radius: 6px !important;
+    border-radius: var(--radius-lg) !important;
     display: inline-flex !important;
     align-items: center !important;
     height: 40px !important;
@@ -1225,7 +1294,7 @@ a:hover {
 
 .cart__btn a,
 .cart__btn button {
-    border-radius: 6px !important;
+    border-radius: var(--radius-lg) !important;
     font-size: 14px !important;
     min-height: 44px !important;
     padding: 0 22px !important;
@@ -1234,7 +1303,7 @@ a:hover {
 .cart__total__procced {
     background: #fff !important;
     border-color: #d9dee8 !important;
-    border-radius: 6px !important;
+    border-radius: var(--radius-lg) !important;
     box-shadow: 0 4px 12px rgba(16, 24, 40, .06) !important;
     padding: 20px !important;
 }
@@ -1264,7 +1333,578 @@ a:hover {
 }
 
 .cart__total__procced .primary-btn {
-    border-radius: 6px !important;
+    border-radius: var(--radius-lg) !important;
     font-size: 15px !important;
     min-height: 46px !important;
 }
+
+/* ==========================================================================
+   OPTICAL STUDIO COMPONENTS & UTILITIES
+   ========================================================================== */
+
+/* Utility Bar (Optical Bar Top) */
+.optical-utility-bar {
+    background: var(--ui-paper-soft);
+    border-bottom: 1px solid var(--ui-line);
+    color: var(--ui-ink-soft);
+    font-size: 13px;
+    padding: var(--ui-space-2) 0;
+}
+.optical-utility-bar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.optical-utility-bar__items {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-6);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.optical-utility-bar__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-space-2);
+    font-weight: 500;
+}
+.optical-utility-bar__item i {
+    color: var(--ui-accent);
+    font-size: 14px;
+}
+
+/* Header & AI Try-On Nav CTA */
+.nav-ai-tryon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(14, 92, 99, 0.06);
+    color: var(--accent) !important;
+    border: 1.5px solid var(--accent);
+    padding: 6px 16px !important;
+    border-radius: 999px;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    min-height: auto !important;
+    transition: transform .2s cubic-bezier(0.16,1,0.3,1), opacity .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease;
+}
+.nav-ai-tryon-btn:hover {
+    background: var(--accent);
+    color: #ffffff !important;
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    text-decoration: none !important;
+}
+
+/* 12-Column Atelier Hero Grid */
+.atelier-hero {
+    padding: var(--ui-space-12) 0 var(--ui-space-16);
+    background: var(--ui-paper);
+    border-bottom: 1px solid var(--ui-line);
+    position: relative;
+    overflow: hidden;
+}
+.atelier-hero__grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--ui-space-6);
+    align-items: center;
+}
+.atelier-hero__content {
+    grid-column: span 5;
+}
+.atelier-hero__gap {
+    grid-column: span 1;
+}
+.atelier-hero__visual {
+    grid-column: span 6;
+    position: relative;
+}
+
+.atelier-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ui-amber);
+    margin-bottom: var(--ui-space-3);
+}
+
+.atelier-hero__title {
+    font-family: var(--font-sans);
+    font-size: clamp(2.2rem, 4vw, 3.4rem);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--ui-ink);
+    font-weight: 800;
+    margin-bottom: var(--ui-space-4);
+    letter-spacing: -0.02em;
+}
+.atelier-hero__title em {
+    font-style: italic;
+    color: var(--ui-accent);
+    font-weight: 400;
+}
+
+.atelier-hero__description {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: var(--ui-ink-soft);
+    max-width: var(--ui-reading-width);
+    margin-bottom: var(--ui-space-8);
+}
+
+.atelier-hero__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--ui-space-4);
+}
+
+.btn-atelier-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--ui-accent);
+    color: #ffffff !important;
+    padding: 14px 28px;
+    border-radius: var(--ui-radius);
+    font-weight: 600;
+    font-size: 15px;
+    transition: transform .2s ease, opacity .2s ease, border-color .2s ease, background-color .2s ease;
+    border: 1px solid var(--ui-accent);
+    box-shadow: var(--ui-shadow-optical);
+    text-decoration: none !important;
+}
+.btn-atelier-primary:hover {
+    background: var(--ui-accent-dark);
+    border-color: var(--ui-accent-dark);
+    transform: translateY(-2px);
+}
+
+.btn-atelier-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--ui-ink) !important;
+    padding: 14px 24px;
+    border-radius: var(--ui-radius);
+    font-weight: 600;
+    font-size: 15px;
+    border: 1px solid var(--ui-line);
+    transition: transform .2s ease, opacity .2s ease, border-color .2s ease, background-color .2s ease;
+    text-decoration: none !important;
+}
+.btn-atelier-secondary:hover {
+    background: var(--ui-paper-soft);
+    border-color: var(--ui-ink-soft);
+}
+
+.btn-atelier-link {
+    color: var(--ui-ink-soft) !important;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: underline !important;
+    text-underline-offset: 4px;
+    transition: color 0.2s ease;
+}
+.btn-atelier-link:hover {
+    color: var(--ui-accent) !important;
+}
+
+/* Visual Frame Card inside Hero */
+.atelier-visual-wrapper {
+    position: relative;
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-paper-soft);
+    border: 1px solid var(--ui-line);
+    padding: var(--ui-space-4);
+    box-shadow: var(--ui-shadow-optical);
+}
+.atelier-visual-img {
+    width: 100%;
+    height: auto;
+    max-height: 420px;
+    object-fit: cover;
+    border-radius: var(--ui-radius);
+}
+.atelier-focal-badge {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    background: rgba(253, 251, 247, 0.94);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--ui-line);
+    padding: 10px 16px;
+    border-radius: var(--ui-radius);
+    font-size: 13px;
+    color: var(--ui-ink);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--ui-shadow-optical);
+}
+.atelier-focal-badge code {
+    font-family: monospace;
+    color: var(--ui-amber);
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* Trust Strip Section */
+.atelier-trust-strip {
+    background: var(--ui-paper-soft);
+    border-bottom: 1px solid var(--ui-line);
+    padding: var(--ui-space-6) 0;
+}
+.atelier-trust-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--ui-space-6);
+}
+.atelier-trust-item {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-4);
+}
+.atelier-trust-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--ui-paper);
+    border: 1px solid var(--ui-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ui-accent);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.atelier-trust-text h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 2px 0;
+    color: var(--ui-ink);
+}
+.atelier-trust-text p {
+    font-size: 13px;
+    color: var(--ui-ink-soft);
+    margin: 0;
+}
+
+/* Eyewear Product Card Component */
+.eyewear-card {
+    background: var(--ui-paper);
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius);
+    padding: var(--ui-space-4);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.eyewear-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--ui-shadow-optical);
+    border-color: var(--ui-accent);
+}
+.eyewear-card__badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: var(--ui-amber);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--ui-radius-sm);
+    z-index: 2;
+}
+.eyewear-card__media {
+    position: relative;
+    background: var(--ui-paper-soft);
+    border-radius: var(--ui-radius-sm);
+    padding: var(--ui-space-4);
+    margin-bottom: var(--ui-space-4);
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.eyewear-card__media-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.eyewear-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+.eyewear-card:hover .eyewear-card__img {
+    transform: scale(1.04);
+}
+.eyewear-card__overlay-actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    transform: translateX(6px);
+    transition: transform .2s ease, opacity .2s ease, border-color .2s ease, background-color .2s ease;
+}
+.eyewear-card:hover .eyewear-card__overlay-actions {
+    opacity: 1;
+    transform: translateX(0);
+}
+.eyewear-card__action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--ui-paper);
+    border: 1px solid var(--ui-line);
+    color: var(--ui-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    transition: transform .15s ease, opacity .15s ease, border-color .15s ease, background-color .15s ease;
+    text-decoration: none !important;
+}
+.eyewear-card__action-btn:hover {
+    background: var(--ui-accent);
+    color: #ffffff !important;
+    border-color: var(--ui-accent);
+}
+.eyewear-card__body {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+.eyewear-card__collection {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ui-amber);
+    margin-bottom: 4px;
+}
+.eyewear-card__title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 0 0 var(--ui-space-2) 0;
+}
+.eyewear-card__title a {
+    color: var(--ui-ink);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.eyewear-card__title a:hover {
+    color: var(--ui-accent);
+}
+.eyewear-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--ui-ink-soft);
+    margin-bottom: var(--ui-space-3);
+}
+.eyewear-card__tag {
+    background: var(--ui-paper-soft);
+    padding: 2px 8px;
+    border-radius: var(--ui-radius-sm);
+}
+.eyewear-card__size {
+    font-family: monospace;
+}
+.eyewear-card__pricing {
+    margin-top: auto;
+    margin-bottom: var(--ui-space-4);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+.eyewear-card__price-current {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ui-ink);
+    font-variant-numeric: tabular-nums;
+}
+.eyewear-card__price-old {
+    font-size: 0.9rem;
+    color: var(--ui-ink-soft);
+    text-decoration: line-through;
+    font-variant-numeric: tabular-nums;
+}
+.eyewear-card__footer {
+    padding-top: var(--ui-space-2);
+}
+.eyewear-card__btn-tryon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 14px;
+    background: transparent;
+    color: var(--accent) !important;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 13px;
+    transition: transform .2s cubic-bezier(0.16,1,0.3,1), opacity .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease;
+    text-decoration: none !important;
+}
+.eyewear-card__btn-tryon:hover {
+    background: var(--accent);
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+.eyewear-card__btn-detail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    color: var(--ui-ink) !important;
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: transform .2s ease, opacity .2s ease, border-color .2s ease, background-color .2s ease;
+    text-decoration: none !important;
+}
+.eyewear-card__btn-detail:hover {
+    background: var(--ui-paper-soft);
+}
+
+/* AI Try-On Demonstration Section */
+.atelier-ai-demo {
+    background: var(--ui-paper-soft);
+    border-top: 1px solid var(--ui-line);
+    border-bottom: 1px solid var(--ui-line);
+    padding: var(--ui-space-12) 0;
+}
+.atelier-ai-demo__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--ui-space-8);
+    align-items: center;
+}
+.atelier-section-tag {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ui-amber);
+    margin-bottom: 8px;
+    display: block;
+}
+.atelier-section-heading {
+    font-family: var(--font-sans);
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    letter-spacing: -0.015em;
+    color: var(--ui-ink);
+    font-weight: 700;
+    margin-bottom: var(--ui-space-4);
+}
+
+/* Responsive Overrides */
+@media (max-width: 991px) {
+    .atelier-hero__grid {
+        grid-template-columns: 1fr;
+    }
+    .atelier-hero__content,
+    .atelier-hero__gap,
+    .atelier-hero__visual {
+        grid-column: span 12;
+    }
+    .atelier-hero__gap {
+        display: none;
+    }
+    .atelier-trust-grid {
+        grid-template-columns: 1fr;
+        gap: var(--ui-space-4);
+    }
+    .atelier-ai-demo__grid {
+        grid-template-columns: 1fr;
+    }
+    .optical-utility-bar__items {
+        justify-content: center;
+        gap: var(--ui-space-3);
+    }
+    .optical-utility-bar__item--desktop {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .atelier-hero {
+        padding: var(--ui-space-8) 0 var(--ui-space-12);
+    }
+    .atelier-hero__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .btn-atelier-primary,
+    .btn-atelier-secondary {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* ==========================================================================
+   PERFORMANCE & SKELETON SHIMMER OPTIMIZATIONS
+   ========================================================================== */
+
+@keyframes skeletonShimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+}
+
+.eyewear-card__media-skeleton {
+    background: #f4efe6;
+    background-image: linear-gradient(
+        90deg,
+        #f4efe6 0px,
+        #fdfbf7 40px,
+        #f4efe6 80px
+    );
+    background-size: 300px 100%;
+    background-repeat: no-repeat;
+    animation: skeletonShimmer 1.4s infinite ease-in-out;
+}
+
+/* Rendering performance containment for below-the-fold sections */
+.content-contain-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 600px;
+}
+
+/* Micro-interaction polish for buttons & cards */
+.eyewear-card {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn-atelier-primary {
+    transition: transform .2s cubic-bezier(0.16,1,0.3,1), opacity .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease !important;
+}
+
+.nav-ai-tryon-btn {
+    transition: transform .2s cubic-bezier(0.16,1,0.3,1), opacity .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease !important;
+}
+
+
