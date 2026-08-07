@@ -56,7 +56,7 @@
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge" style="background: var(--accent); color: var(--paper-card); border-radius: 999px; font-size: 10px;">03</span>
                         <div>
-                            <strong style="color: var(--accent);">Thử kính AI</strong>
+                            <strong style="color: var(--accent);">Trải nghiệm kính AI</strong>
                             <small class="text-muted d-none d-md-inline">&bull; Xem trực tiếp trên khuôn mặt</small>
                         </div>
                     </div>
@@ -84,7 +84,7 @@
                     </p>
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <a href="{{ route('tryon') }}" class="btn text-white" style="background: var(--accent-dark); padding: 12px 24px; font-weight: 700; font-size: 14px; border-radius: 4px;">
-                            <i class="fas fa-camera mr-2"></i> THỬ KÍNH AI NGAY
+                            <i class="fas fa-camera mr-2"></i> TRẢI NGHIỆM KÍNH AI NGAY
                         </a>
                         <a href="{{ route('products.index') }}" class="btn" style="border: 1px solid var(--line); color: var(--ink); padding: 12px 24px; font-weight: 600; font-size: 14px; border-radius: 4px;">
                             KHÁM PHÁ BỘ SƯ TẬP

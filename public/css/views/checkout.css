@@ -760,8 +760,8 @@ textarea.form-control {
 }
 
 .form-control:focus {
-    border-color: #0b5fff;
-    box-shadow: 0 0 0 1px #0b5fff;
+    border-color: #0e5c63;
+    box-shadow: 0 0 0 1px #0e5c63;
 }
 
 .address-options {
@@ -809,8 +809,8 @@ textarea.form-control {
 }
 
 .checkout-choice-card.active {
-    border-color: #0b5fff;
-    box-shadow: 0 0 0 1px #0b5fff;
+    border-color: #0e5c63;
+    box-shadow: 0 0 0 1px #0e5c63;
 }
 
 .checkout-choice-card strong {
@@ -854,7 +854,7 @@ textarea.form-control {
     width: 18px;
     height: 18px;
     margin: 2px 0 0;
-    accent-color: #0b5fff;
+    accent-color: #0e5c63;
     flex: 0 0 auto;
 }
 

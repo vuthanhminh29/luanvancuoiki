@@ -16,7 +16,7 @@ body:has(.hc-uq) .canvas__open,
 body:has(.hc-uq) .footer,
 body:has(.hc-uq) .addThis_listSharing{display:none!important}
 .hc-uq,.hc-uq *{box-sizing:border-box}
-.hc-uq{font-family:Arial,'Segoe UI',sans-serif;color:var(--hc-text);background:#fff;letter-spacing:0;overflow:hidden}
+.hc-uq{color:var(--hc-text);background:#fff;letter-spacing:0;overflow:hidden}
 .hc-uq h1,.hc-uq h2,.hc-uq h3,.hc-uq p,.hc-uq a,.hc-uq span,.hc-uq strong{white-space:normal;overflow-wrap:anywhere}
 .hc-uq a{text-decoration:none;color:inherit}
 .hc-uq-wrap{width:min(1120px,calc(100% - 32px));margin:0 auto}

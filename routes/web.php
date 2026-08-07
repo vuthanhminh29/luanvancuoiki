@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\OrderCancellationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReturnRequestController;
+use App\Http\Controllers\StyleAdvisorController;
 use App\Http\Controllers\VnPayController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +33,14 @@ Route::get('/bai-viet', [BlogController::class, 'index'])->middleware('throttle:
 Route::get('/bai-viet/{post:slug}', [BlogController::class, 'show'])->middleware('throttle:web-read')->name('blog.show');
 Route::get('/lien-he', [PageController::class, 'contact'])->name('pages.contact');
 Route::get('/ho-tro', [PageController::class, 'support'])->middleware('throttle:web-read')->name('pages.support');
+
+// Công cụ tư vấn: tìm dáng kính theo khuôn mặt và chọn tròng kính phù hợp.
+Route::get('/tim-dang-kinh', [StyleAdvisorController::class, 'faceShape'])->middleware('throttle:web-read')->name('style.face-shape');
+Route::get('/chon-trong-kinh', [StyleAdvisorController::class, 'lensSelector'])->middleware('throttle:web-read')->name('style.lens-selector');
+
+// Đặt lịch đo thị lực tại cửa hàng. Mở cho cả khách chưa đăng nhập.
+Route::get('/dat-lich-do-mat', [AppointmentController::class, 'create'])->middleware('throttle:web-read')->name('appointments.create');
+Route::post('/dat-lich-do-mat', [AppointmentController::class, 'store'])->middleware('throttle:user-actions')->name('appointments.store');
 
 // Route nhận kết quả thanh toán VNPAY sau khi khách quay lại hoặc VNPAY gọi IPN.
 Route::get('/vnpay/return', [VnPayController::class, 'return'])->name('vnpay.return');

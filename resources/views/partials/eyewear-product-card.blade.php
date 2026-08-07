@@ -72,7 +72,7 @@
 
         @if ($showTryOn)
             <a href="{{ route('tryon', ['id_sp' => $product->id]) }}" class="btn w-100 d-inline-flex align-items-center justify-content-center gap-2" style="border: 1px solid #0e5c63; color: #0e5c63; background: transparent; font-weight: 600; font-size: 12px; border-radius: 4px; padding: 7px 12px; transition: all 0.2s;">
-                <i class="fas fa-camera" aria-hidden="true"></i> THỬ AI
+                <i class="fas fa-camera" aria-hidden="true"></i> TRẢI NGHIỆM AI
             </a>
         @endif
     </div>

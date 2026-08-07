@@ -150,7 +150,8 @@
 
                     <div class="watch-extra-actions">
                         <button class="watch-extra-btn"><i class="far fa-heart"></i> Yêu thích</button>
-                        <button type="button" class="watch-extra-btn" id="openVtoModal"><i class="fas fa-glasses"></i> Thử kính AI</button>
+                        <button type="button" class="watch-extra-btn" id="openVtoModal"><i class="fas fa-glasses"></i> Trải nghiệm AI</button>
+                        <a class="watch-extra-btn" href="{{ route('style.lens-selector', ['frame' => $product->name, 'frame_price' => (int) $product->display_price, 'variant_id' => $selectedVariantId ?: null]) }}"><i class="fas fa-layer-group"></i> Chọn tròng kính</a>
                         <button class="watch-extra-btn"><i class="fas fa-share-alt"></i> Chia sẻ</button>
                     </div>
 

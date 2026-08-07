@@ -644,7 +644,7 @@ body.vto-modal-lock {
 }
 
 .tryon-framefit-pill i {
-    color: #d79a36;
+    color: var(--accent, #0e5c63);
     font-size: 20px;
 }
 
@@ -741,7 +741,7 @@ body.vto-modal-lock {
 }
 
 .tryon-upload-card.is-dragover {
-    box-shadow: 0 0 0 4px rgba(220, 160, 71, .35);
+    box-shadow: 0 0 0 4px rgba(14, 92, 99, .35);
 }
 
 .tryon-upload-card input {
@@ -775,7 +775,7 @@ body.vto-modal-lock {
 }
 
 .tryon-upload-card p span {
-    color: #d39135;
+    color: var(--accent, #0e5c63);
     text-decoration: underline;
     text-underline-offset: 3px;
 }
@@ -870,8 +870,8 @@ body.vto-modal-lock {
 }
 
 .tryon-round-control--image.is-active {
-    color: #d39135;
-    box-shadow: 0 0 0 3px rgba(211, 145, 53, .38), 0 8px 18px rgba(0,0,0,.14);
+    color: var(--accent, #0e5c63);
+    box-shadow: 0 0 0 3px rgba(14, 92, 99, .38), 0 8px 18px rgba(0,0,0,.14);
 }
 
 .tryon-eyebuy-side {
@@ -945,15 +945,15 @@ body.vto-modal-lock {
 .tryon-selected-pricebox {
     margin-bottom: 18px;
     padding: 15px 16px;
-    border: 1px solid #f0dfc4;
+    border: 1px solid var(--line, #dfe3e6);
     border-radius: 8px;
-    background: #fff8ed;
+    background: var(--paper, #f7f8f9);
 }
 
 .tryon-selected-pricebox span {
     display: block;
     margin: 0 0 6px;
-    color: #9a6a28;
+    color: var(--ink-soft, #5a636b);
     font-size: 12px;
     line-height: 1.2;
     font-weight: 900;
@@ -961,7 +961,7 @@ body.vto-modal-lock {
 
 .tryon-ai-modal--eyebuy #tryonSelectedPrice {
     display: block;
-    color: #c9852c;
+    color: #111827;
     font-size: 25px;
     line-height: 1;
     font-weight: 900;
@@ -1066,7 +1066,7 @@ body.vto-modal-lock {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #c9852c;
+    background: #111827;
     color: #fff;
     font-size: 15px;
     line-height: 28px;
@@ -1122,8 +1122,8 @@ body.vto-modal-lock {
 
 .tryon-similar-btn {
     margin-bottom: 13px;
-    background: #f2e7d5;
-    color: #d39135;
+    background: #f4f4f4;
+    color: #111827;
 }
 
 .tryon-buy-row {
@@ -1140,9 +1140,13 @@ body.vto-modal-lock {
 
 .tryon-ai-modal--eyebuy .tryon-ai-bag-btn {
     border-radius: 6px;
-    background: #dca047;
+    background: #111827;
     color: #fff;
     cursor: pointer;
+}
+
+.tryon-ai-modal--eyebuy .tryon-ai-bag-btn:hover {
+    background: #1f2937;
 }
 
 .tryon-heart-outline {
@@ -1165,7 +1169,7 @@ body.vto-modal-lock {
     padding: 0;
     border: 0;
     background: transparent;
-    color: #d39135;
+    color: var(--accent, #0e5c63);
     font-size: 16px;
     font-weight: 900;
     display: inline-flex;
@@ -1242,8 +1246,12 @@ body.vto-modal-lock {
 
 .tryon-fit-confirm {
     border-radius: 6px;
-    background: #dca047;
+    background: #111827;
     color: #fff;
+}
+
+.tryon-fit-confirm:hover {
+    background: #1f2937;
 }
 
 @media (max-width: 991px) {
