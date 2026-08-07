@@ -344,6 +344,15 @@
     color: #111827;
 }
 
+a.watch-extra-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #111827;
+    text-decoration: none;
+}
+
 /* Tabs Section */
 .watch-tabs-section {
     margin-bottom: 3rem;

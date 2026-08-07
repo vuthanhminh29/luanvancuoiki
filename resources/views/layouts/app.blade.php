@@ -17,11 +17,10 @@
     <link rel="stylesheet" href="{{ asset('css/owl.carousel.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/slicknav.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/tryon-ai.css') }}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
 
     <style>
-        body, html, h1, h2, h3, h4, h5, h6, input, button, select, textarea { font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; }
+        body, html, h1, h2, h3, h4, h5, h6, p, input, button, select, textarea { font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; }
         .breadcrumb-option { padding-top: 15px; padding-bottom: 15px; }
         .fa-search { color: black !important; }
         .watch-action-btn:hover i,
@@ -129,7 +128,7 @@
             <div class="d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-4">
                     <span><i class="fas fa-user-md" style="color: #4ade80;"></i> Đo thị lực chuyên sâu</span>
-                    <span><i class="fas fa-glasses" style="color: #4ade80;"></i> Thử kính AI</span>
+                    <span><i class="fas fa-glasses" style="color: #4ade80;"></i> Trải nghiệm kính AI</span>
                     <span><i class="fas fa-shield-alt" style="color: #4ade80;"></i> Bảo hành 12 tháng</span>
                 </div>
                 <div class="d-flex align-items-center gap-4">
@@ -159,8 +158,9 @@
                         <ul class="d-flex align-items-center justify-content-center gap-4 m-0 p-0" style="list-style: none;">
                             <li><a href="{{ route('home') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Trang chủ</a></li>
                             <li><a href="{{ route('products.index', ['category' => 'gong-kinh']) }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Gọng kính</a></li>
-                            <li><a href="{{ route('products.index', ['category' => 'trong-kinh']) }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Tròng kính</a></li>
-                            <li><a href="{{ route('pages.contact') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Đo thị lực</a></li>
+                            <li><a href="{{ route('style.lens-selector') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Tròng kính</a></li>
+                            <li><a href="{{ route('style.face-shape') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Tìm dáng kính</a></li>
+                            <li><a href="{{ route('appointments.create') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Đo thị lực</a></li>
                             <li><a href="{{ route('blog.index') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Bài viết</a></li>
                             <li><a href="{{ route('pages.contact') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Liên hệ</a></li>
                         </ul>
@@ -175,7 +175,7 @@
                             <span class="badge badge-danger position-absolute" style="top: -8px; right: -10px; background: #0e5c63; border-radius: 999px; font-size: 10px; padding: 2px 6px;">{{ $cartTotalQuantity }}</span>
                         </a>
                         <a href="{{ route('tryon') }}" class="btn text-white d-inline-flex align-items-center gap-2" style="background: #0a3d42; border-radius: 6px; font-weight: 600; font-size: 13px; padding: 8px 14px;">
-                            <i class="fas fa-glasses" aria-hidden="true"></i> THỬ KÍNH AI
+                            <i class="fas fa-glasses" aria-hidden="true"></i> TRẢI NGHIỆM KÍNH AI
                         </a>
                     </div>
                 </div>
@@ -248,7 +248,9 @@
                 <div class="col-lg-2 col-md-3 mt-4 mb-4">
                     <h6 style="color: #ffffff; font-weight: 700; font-size: 14px; letter-spacing: 0.05em; margin-bottom: 16px; text-transform: uppercase;">HỖ TRỢ</h6>
                     <ul class="list-unstyled d-flex flex-column gap-2" style="color: #cbd5e1;">
-                        <li><a href="{{ route('pages.contact') }}" style="color: inherit; text-decoration: none;">Hướng dẫn đo thị lực</a></li>
+                        <li><a href="{{ route('appointments.create') }}" style="color: inherit; text-decoration: none;">Đặt lịch đo thị lực</a></li>
+                        <li><a href="{{ route('style.face-shape') }}" style="color: inherit; text-decoration: none;">Tìm dáng kính phù hợp</a></li>
+                        <li><a href="{{ route('style.lens-selector') }}" style="color: inherit; text-decoration: none;">Chọn tròng kính phù hợp</a></li>
                         <li><a href="{{ route('pages.support') }}" style="color: inherit; text-decoration: none;">Chính sách bảo hành</a></li>
                         <li><a href="{{ route('returns.index') }}" style="color: inherit; text-decoration: none;">Chính sách đổi trả</a></li>
                         <li><a href="{{ route('checkout.index') }}" style="color: inherit; text-decoration: none;">Thanh toán & giao hàng</a></li>

@@ -451,12 +451,12 @@
 }
 
 .prose a {
-    color: #2563eb;
+    color: #0e5c63;
     text-decoration: underline;
 }
 
 .prose a:hover {
-    color: #1d4ed8;
+    color: #0a4348;
 }
 
 /* Remove default list styles */

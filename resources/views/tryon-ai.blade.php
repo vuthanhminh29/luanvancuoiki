@@ -1,8 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Thử kính AI - ' . config('app.name'))
+@section('title', 'Trải nghiệm kính AI - ' . config('app.name'))
 
 @push('styles')
+    <link rel="stylesheet" href="{{ asset('css/views/advisor-shared.css') }}?v={{ file_exists(public_path('css/views/advisor-shared.css')) ? filemtime(public_path('css/views/advisor-shared.css')) : time() }}">
     <link rel="stylesheet" href="{{ asset('css/views/tryon-ai.css') }}?v=tryon-fix-20260801-{{ file_exists(public_path('css/views/tryon-ai.css')) ? filemtime(public_path('css/views/tryon-ai.css')) : time() }}">
 @endpush
 
@@ -11,6 +12,21 @@
         $firstTryOn = $firstTryOn ?? null;
         $firstVariantId = $firstTryOn['variantId'] ?? null;
     @endphp
+
+    <nav class="advisor-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ route('home') }}"><i class="fa fa-home" aria-hidden="true"></i> Trang chủ</a>
+        <span aria-hidden="true">/</span>
+        <strong>Trải nghiệm kính AI</strong>
+    </nav>
+
+    <section class="advisor-page tryon-lead">
+        <div class="advisor-container">
+            <header class="advisor-header">
+                <h1>Trải nghiệm kính AI</h1>
+                <p>Bật camera hoặc tải ảnh lên để xem trước dáng kính, chọn nhanh mẫu ưng ý trước khi đặt mua.</p>
+            </header>
+        </div>
+    </section>
 
     <section id="vtoApp" data-tryon-app
         data-jeeliz-base-path="{{ asset('vendor/jeelizGlassesVTOWidget') }}"
@@ -21,6 +37,7 @@
         data-authenticated="{{ auth()->check() ? 'true' : 'false' }}">
         <div class="vto-viewer">
             <div id="JeelizVTOWidget">
+                <img id="tryonUploadedPreview" class="vto-uploaded-preview" src="" alt="">
                 <canvas id="JeelizVTOWidgetCanvas"></canvas>
 
                 <div class="JeelizVTOWidgetControls JeelizVTOWidgetControlsTop">
@@ -39,15 +56,44 @@
                 </div>
             </div>
 
-            <div class="vto-placeholder" id="tryonNoModel">
-                <div class="vto-demo-model">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80" alt="Người mẫu thử kính" class="vto-demo-face-img">
-                    <div class="vto-demo-overlay">
-                        <i class="fas fa-camera"></i>
-                        <span>Nhấn nút <strong>"Bật camera"</strong> để thử kính 3D trực tiếp trên khuôn mặt bạn</span>
+            {{-- Màn hình chọn cách thử: hiện mặc định, JS tự ẩn khi root có class
+                 tryon-camera-active / tryon-image-mode (xem tryon-ai.css). Không đổi
+                 id/class mà tryon-ai.js đang query — chỉ thêm 2 nút proxy gọi .click()
+                 lên #tryonStartCamera / #tryonUploadImage (script riêng bên dưới). --}}
+            <div class="vto-landing" id="vtoLanding">
+                <ol class="vto-landing-steps">
+                    <li><span class="vto-landing-step-num">01</span><span>Chọn kính</span></li>
+                    <li><span class="vto-landing-step-num">02</span><span>Chụp ảnh</span></li>
+                    <li><span class="vto-landing-step-num">03</span><span>Thử ngay</span></li>
+                </ol>
+                <h2 class="vto-landing-title">Chọn cách thử</h2>
+                <div class="vto-landing-methods">
+                    <button type="button" class="vto-method-card" data-proxy-target="tryonStartCamera">
+                        <span class="vto-method-icon" aria-hidden="true"><i class="fas fa-camera"></i></span>
+                        <strong>Dùng camera trực tiếp</strong>
+                        <span>Chụp thẳng bằng webcam để thử ngay</span>
+                    </button>
+                    <button type="button" class="vto-method-card" id="tryonUploadImage">
+                        <span class="vto-method-icon" aria-hidden="true"><i class="far fa-image"></i></span>
+                        <strong>Tải ảnh lên</strong>
+                        <span>Hỗ trợ JPG, PNG, dưới 5MB</span>
+                    </button>
+                </div>
+                <p class="vto-landing-note"><i class="fas fa-lock" aria-hidden="true"></i> Ảnh chỉ dùng để thử kính, không chia sẻ cho bên thứ ba.</p>
+
+                <div class="vto-upload-panel" id="tryonUploadPanel">
+                    <div class="vto-upload-dropzone" id="tryonUploadDropzone">
+                        <input type="file" id="tryonImageInput" accept="image/*" class="visually-hidden">
+                        <i class="far fa-image" aria-hidden="true"></i>
+                        <p><span>Chọn file</span> hoặc kéo ảnh vào đây</p>
+                        <small>Giữ khuôn mặt nhìn thẳng, không đeo kính khi chụp. Tối đa 5MB.</small>
+                        <div class="vto-upload-error" id="tryonUploadError"></div>
                     </div>
+                    <button type="button" class="vto-upload-cancel" id="tryonUploadCancel">Hủy, quay lại</button>
                 </div>
             </div>
+
+            <div class="vto-no-model" id="tryonNoModel"></div>
         </div>
 
         <div class="vto-topbar">
@@ -114,4 +160,17 @@
 @push('scripts')
     <script src="{{ asset('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js') }}?v=tryon-fix-20260801-{{ file_exists(public_path('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js')) ? filemtime(public_path('vendor/jeelizGlassesVTOWidget/dist/JeelizVTOWidget.js')) : time() }}"></script>
     <script src="{{ asset('js/tryon-ai.js') }}?v=tryon-fix-20260801-{{ file_exists(public_path('js/tryon-ai.js')) ? filemtime(public_path('js/tryon-ai.js')) : time() }}"></script>
+    <script>
+        // Chỉ nối 2 nút chọn cách thử sang đúng nút điều khiển thật mà tryon-ai.js
+        // đã lắng nghe (#tryonStartCamera, #tryonUploadImage). Không đụng vào
+        // tryon-ai.js để không ảnh hưởng luồng camera/AR đang chạy ổn định.
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-proxy-target]').forEach(function (proxy) {
+                proxy.addEventListener('click', function () {
+                    const target = document.getElementById(this.dataset.proxyTarget);
+                    target && target.click();
+                });
+            });
+        });
+    </script>
 @endpush

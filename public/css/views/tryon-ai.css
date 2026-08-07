@@ -11,7 +11,13 @@
     box-shadow: 0 32px 80px rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.06);
     display: flex;
     flex-direction: column;
-    font-family: -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* Header đầu trang tái dùng advisor-shared.css để đồng bộ với các trang
+   tư vấn khác (tìm dáng kính, chọn tròng kính, đặt lịch) — thu gọn khoảng
+   trắng dưới vì #vtoApp bên dưới đã tự có margin-top riêng. */
+.tryon-lead {
+    padding-bottom: 4px;
 }
 
 /* ── Camera / canvas area ── */
@@ -36,73 +42,8 @@
     width: auto;
 }
 
-/* Camera-off / no-model placeholder */
-#vtoApp .vto-placeholder {
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    background: #0d0d0d;
-    transition: opacity 0.4s ease, visibility 0.4s ease;
-}
-/* Hide placeholder once camera has started (JS adds is-active on root) */
-#vtoApp.tryon-camera-active .vto-placeholder {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
-/* Show placeholder again when no-model (camera on but no 3D data) */
-#vtoApp.tryon-camera-active.tryon-no-model-active .vto-placeholder {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-}
-#vtoApp .vto-demo-model {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-#vtoApp .vto-demo-face-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 25%;
-    filter: brightness(0.85) contrast(1.05);
-}
-#vtoApp .vto-demo-overlay {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    color: #ffffff;
-    padding: 24px;
-    text-align: center;
-}
-#vtoApp .vto-demo-overlay i {
-    font-size: 32px;
-    background: rgba(255,255,255,0.25);
-    color: #ffffff;
-    width: 68px;
-    height: 68px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    border: 1px solid rgba(255,255,255,0.3);
-}
-#vtoApp .vto-demo-overlay span {
-    font-size: 15px;
-    font-weight: 500;
-    max-width: 290px;
-    line-height: 1.5;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
-}
+/* Màn hình chọn cách thử + banner lỗi "không có model" nằm ở cuối file
+   (mục "Landing chọn cách thử"), thay cho placeholder ảnh stock cũ. */
 
 /* ── Top bar: close + favourite ── */
 #vtoApp .vto-topbar {
@@ -250,7 +191,7 @@
     width: 154px;
     height: 92px;
     border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--line, #dfe3e6);
     background: #fff;
     overflow: hidden;
     cursor: pointer;
@@ -278,7 +219,7 @@
 }
 #vtoApp .tryon-ai-product strong {
     margin: 0;
-    color: #111827;
+    color: var(--ink, #14181c);
     font-size: 12px;
     font-weight: 800;
     line-height: 1.25;
@@ -305,8 +246,8 @@
 }
 #vtoApp .vto-product.is-active,
 #vtoApp .tryon-ai-product.is-active {
-    border-color: #0f766e;
-    background: #f0fdfa;
+    border-color: var(--accent, #0e5c63);
+    background: #eaf5f4;
     box-shadow: 0 0 0 2px rgba(15,118,110,.16), 0 12px 28px rgba(15,23,42,.14);
 }
 #vtoApp .vto-product.no-model,
@@ -406,9 +347,9 @@
 #vtoApp .vto-cart-btn:active { transform: scale(.96); }
 #vtoApp .vto-cart-btn i { font-size: 17px; }
 #vtoApp .vto-save-btn {
-    background: #0f766e;
+    background: var(--accent, #0e5c63);
 }
-#vtoApp .vto-save-btn:hover { background: #115e59; }
+#vtoApp .vto-save-btn:hover { background: var(--accent-dark, #0a4348); }
 #vtoApp .vto-save-btn:disabled,
 #vtoApp .vto-cart-btn:disabled {
     cursor: not-allowed;
@@ -475,7 +416,7 @@ body {
     box-sizing: border-box;
     border-radius: 18px;
     overflow: visible;
-    background: #eef2f6;
+    background: var(--paper, #f7f8f9);
     display: grid;
     grid-template-columns: minmax(0, 1fr) var(--vto-side);
     grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -517,10 +458,10 @@ body {
     bottom: auto;
     min-height: 52px;
     padding: 12px 14px;
-    border: 1px solid #dbe3ec;
+    border: 1px solid var(--line, #dfe3e6);
     border-radius: 8px;
-    background: #fff;
-    color: #334155;
+    background: var(--paper-card, #ffffff);
+    color: var(--ink-soft, #5a636b);
     text-align: left;
     text-shadow: none;
     pointer-events: auto;
@@ -541,14 +482,14 @@ body {
     content: "Camera";
     display: block;
     margin-bottom: 3px;
-    color: #0f766e;
+    color: var(--accent, #0e5c63);
     font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
 }
 
 #vtoApp .vto-status:hover {
-    border-color: #0f766e;
+    border-color: var(--accent, #0e5c63);
     box-shadow: 0 10px 24px rgba(15, 118, 110, .12);
 }
 
@@ -557,15 +498,15 @@ body {
 }
 
 #vtoApp .vto-status.is-active {
-    border-color: #0f766e;
-    background: #f0fdfa;
+    border-color: var(--accent, #0e5c63);
+    background: #eaf5f4;
 }
 
 #vtoApp .vto-toggle-main {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #111827;
+    color: var(--ink, #14181c);
     font-size: 15px;
     font-weight: 900;
 }
@@ -583,11 +524,11 @@ body {
 }
 
 #vtoApp .vto-status.is-active .vto-toggle-main i {
-    background: #0f766e;
+    background: var(--accent, #0e5c63);
 }
 
 #vtoApp .vto-status-message {
-    color: #334155;
+    color: var(--ink-soft, #5a636b);
     font-size: 12px;
     font-weight: 600;
 }
@@ -605,9 +546,9 @@ body {
     max-height: min(420px, calc(100vh - 260px));
     min-height: 0;
     padding: 14px;
-    border: 1px solid #dbe3ec;
+    border: 1px solid var(--line, #dfe3e6);
     border-radius: 8px;
-    background: #fff;
+    background: var(--paper-card, #ffffff);
     box-shadow: none;
     display: grid;
     grid-template-columns: 1fr;
@@ -626,9 +567,9 @@ body {
     display: block;
     margin: -14px -14px 2px;
     padding: 13px 14px 10px;
-    border-bottom: 1px solid #eef2f6;
-    background: #fff;
-    color: #111827;
+    border-bottom: 1px solid var(--line, #dfe3e6);
+    background: var(--paper-card, #ffffff);
+    color: var(--ink, #14181c);
     font-size: 15px;
     font-weight: 900;
 }
@@ -640,7 +581,7 @@ body {
     padding: 10px;
     grid-template-columns: 76px minmax(0, 1fr);
     gap: 6px 10px;
-    border-color: #e2e8f0;
+    border-color: var(--line, #dfe3e6);
     border-radius: 8px;
     box-shadow: none;
     scroll-snap-align: none;
@@ -679,9 +620,9 @@ body {
     height: auto;
     min-height: 0;
     padding: 14px;
-    border: 1px solid #dbe3ec;
+    border: 1px solid var(--line, #dfe3e6);
     border-radius: 8px;
-    background: #fff;
+    background: var(--paper-card, #ffffff);
     box-shadow: none;
     display: grid;
     grid-template-columns: 52px minmax(0, 1fr);
@@ -704,7 +645,7 @@ body {
 }
 
 #vtoApp .vto-info strong {
-    color: #111827;
+    color: var(--ink, #14181c);
     font-size: 14px;
     font-weight: 900;
     line-height: 1.3;
@@ -720,9 +661,9 @@ body {
     grid-area: detail;
     min-height: 54px;
     padding: 10px 12px;
-    border: 1px solid #bae6fd;
+    border: 1px solid var(--line, #dfe3e6);
     border-radius: 8px;
-    background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+    background: linear-gradient(180deg, #f0f9f8 0%, #ffffff 100%);
     color: #0f172a;
     text-decoration: none;
     display: grid;
@@ -732,11 +673,11 @@ body {
 }
 
 #vtoApp .vto-detail-link:hover {
-    border-color: #0284c7;
-    background: #e0f2fe;
+    border-color: var(--accent, #0e5c63);
+    background: #e6f3f2;
     color: #0f172a;
     text-decoration: none;
-    box-shadow: 0 10px 24px rgba(2, 132, 199, .14);
+    box-shadow: 0 10px 24px rgba(14, 92, 99, .14);
     transform: translateY(-1px);
 }
 
@@ -744,7 +685,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #075985;
+    color: var(--accent-dark, #0a4348);
     font-size: 14px;
     font-weight: 900;
     line-height: 1.25;
@@ -754,7 +695,7 @@ body {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #0ea5e9;
+    background: var(--accent, #0e5c63);
     color: #fff;
     display: inline-flex;
     align-items: center;
@@ -763,7 +704,7 @@ body {
 }
 
 #vtoApp .vto-detail-link span {
-    color: #475569;
+    color: var(--ink-soft, #5a636b);
     font-size: 12px;
     font-weight: 600;
     line-height: 1.35;
@@ -867,4 +808,246 @@ body {
         width: 68px;
         height: 68px;
     }
+}
+
+/* ── Landing chọn cách thử (thay placeholder ảnh stock cũ) ───────────── */
+.visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+#vtoApp .vto-uploaded-preview {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #111;
+    opacity: 0;
+    pointer-events: none;
+}
+#vtoApp.tryon-image-mode .vto-uploaded-preview {
+    opacity: 1;
+}
+#vtoApp #JeelizVTOWidgetCanvas {
+    z-index: 2;
+}
+
+#vtoApp .vto-landing {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 32px 24px;
+    background: linear-gradient(180deg, rgba(9,14,18,.94), rgba(9,14,18,.98));
+    text-align: center;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+#vtoApp.tryon-camera-active .vto-landing,
+#vtoApp.tryon-image-mode .vto-landing {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.vto-landing-steps {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.vto-landing-steps li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: rgba(255,255,255,.55);
+}
+.vto-landing-step-num {
+    font-family: var(--font-mono, monospace);
+    font-size: 12px;
+    color: #5eead4;
+}
+
+.vto-landing-title {
+    color: #fff;
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.vto-landing-methods {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 420px;
+}
+
+.vto-method-card {
+    flex: 1 1 170px;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 12px;
+    padding: 22px 16px;
+    cursor: pointer;
+    color: #0f172a;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.vto-method-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0,0,0,.3);
+}
+.vto-method-card:focus-visible {
+    outline: 2px solid #5eead4;
+    outline-offset: 2px;
+}
+.vto-method-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #0e5c63;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+}
+.vto-method-card strong {
+    font-size: 13.5px;
+    font-weight: 700;
+}
+.vto-method-card span:not(.vto-method-icon) {
+    font-size: 11.5px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.vto-landing-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255,255,255,.55);
+    font-size: 11.5px;
+    margin: 0;
+}
+
+/* Bảng tải ảnh — ẩn mặc định, JS bật class tryon-upload-active trên #vtoApp
+   (xem openUploadPanel() trong tryon-ai.js) */
+.vto-upload-panel {
+    display: none;
+    width: 100%;
+    max-width: 380px;
+}
+#vtoApp.tryon-upload-active .vto-upload-panel {
+    display: block;
+}
+#vtoApp.tryon-upload-active .vto-landing-steps,
+#vtoApp.tryon-upload-active .vto-landing-title,
+#vtoApp.tryon-upload-active .vto-landing-methods,
+#vtoApp.tryon-upload-active .vto-landing-note {
+    display: none;
+}
+#vtoApp.tryon-upload-active #JeelizVTOWidget {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.vto-upload-dropzone {
+    position: relative;
+    background: #fff;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 34px 20px;
+    cursor: pointer;
+    color: #0f172a;
+}
+.vto-upload-dropzone.is-dragover {
+    border-color: #0e5c63;
+    background: #eaf5f4;
+}
+.vto-upload-dropzone i {
+    display: block;
+    font-size: 26px;
+    color: #94a3b8;
+    margin-bottom: 10px;
+}
+.vto-upload-dropzone p {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+.vto-upload-dropzone p span {
+    color: #0e5c63;
+    text-decoration: underline;
+}
+.vto-upload-dropzone small {
+    display: block;
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.5;
+}
+.vto-upload-error {
+    min-height: 16px;
+    margin-top: 10px;
+    color: #dc2626;
+    font-size: 12px;
+}
+
+.vto-upload-cancel {
+    display: block;
+    margin: 14px auto 0;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,.7);
+    font-size: 12.5px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Banner báo "chưa có model thử kính" — thay cho việc ghi đè textContent lên
+   cả khối placeholder như bản cũ (khi đó sẽ xoá mất landing UI). */
+#vtoApp .vto-no-model {
+    display: none;
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 12;
+    max-width: 88%;
+    background: rgba(220,38,38,.94);
+    color: #fff;
+    font-size: 12.5px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-align: center;
+}
+#vtoApp.tryon-no-model-active .vto-no-model {
+    display: block;
+}
+
+@media (max-width: 540px) {
+    .vto-landing { padding: 24px 16px; gap: 14px; }
+    .vto-landing-title { font-size: 17px; }
+    .vto-method-card { min-width: 130px; padding: 18px 12px; }
 }
