@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name'))</title>
+    <meta name="description" content="@yield('meta_description', 'Atelier Optique - Thương hiệu gọng kính, tròng kính chính hãng và thử kính AI 3D trực tiếp hàng đầu.')">
+    <meta property="og:title" content="@yield('title', config('app.name'))">
+    <meta property="og:description" content="@yield('meta_description', 'Atelier Optique - Thương hiệu gọng kính, tròng kính chính hãng và thử kính AI 3D trực tiếp hàng đầu.')">
+    <meta property="og:image" content="@yield('og_image', asset('upload/logo/logo-1.png'))">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <link rel="canonical" href="{{ url()->current() }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -170,6 +177,15 @@
                     <div class="header__right d-flex align-items-center justify-content-end gap-3" style="padding: 0;">
                         <span class="icon_search search-switch" aria-label="Tìm kiếm" style="font-size: 18px; cursor: pointer; color: #334155;"></span>
                         <a href="{{ route('account.index') }}" style="color: #334155; font-size: 18px;" title="Yêu thích"><i class="far fa-heart"></i></a>
+                        @auth
+                            <a href="{{ route('account.index') }}" class="header__account" style="color: #334155; font-size: 18px;" title="{{ auth()->user()->full_name }}" aria-label="Tài khoản của tôi">
+                                <i class="far fa-user"></i>
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}" class="header__account" style="color: #334155; font-size: 18px;" title="Đăng nhập" aria-label="Đăng nhập">
+                                <i class="far fa-user"></i>
+                            </a>
+                        @endauth
                         <a id="cart-mini" href="{{ route('cart.index') }}" aria-label="Giỏ hàng" class="position-relative" style="color: #334155; font-size: 18px;">
                             <span class="icon_bag_alt"></span>
                             <span class="badge badge-danger position-absolute" style="top: -8px; right: -10px; background: #0e5c63; border-radius: 999px; font-size: 10px; padding: 2px 6px;">{{ $cartTotalQuantity }}</span>
@@ -190,13 +206,8 @@
         </div>
     </header>
 
-    @if (session('success'))
-        <div class="flash">{{ session('success') }}</div>
-    @endif
-
-    @if (session('error'))
-        <div class="flash error">{{ session('error') }}</div>
-    @endif
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" style="position: fixed; top: 90px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; max-width: 380px; width: calc(100% - 48px); pointer-events: none;"></div>
 
     <main>
         @yield('content')
@@ -291,6 +302,11 @@
         </div>
     </div>
 
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" type="button" aria-label="Trở lại đầu trang" class="btn text-white position-fixed rounded-circle shadow-lg" style="bottom: 28px; right: 28px; width: 44px; height: 44px; background: #0a3d42; display: none; z-index: 1050; border: none; align-items: center; justify-content: center; transition: opacity 0.3s ease, transform 0.2s ease;">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
     <script src="{{ asset('js/jquery-3.3.1.min.js') }}"></script>
     <script src="{{ asset('js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
@@ -301,6 +317,75 @@
     <script src="{{ asset('js/owl.carousel.min.js') }}"></script>
     <script src="{{ asset('js/jquery.nicescroll.min.js') }}"></script>
     <script src="{{ asset('js/main.js') }}"></script>
+    <script>
+        window.showToast = function (message, type, title) {
+            type = type || 'success';
+            var container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            var isSuccess = type === 'success';
+            var bg = isSuccess ? '#ffffff' : '#ffffff';
+            var border = isSuccess ? '#0e5c63' : '#ef4444';
+            var iconColor = isSuccess ? '#0e5c63' : '#ef4444';
+            var iconClass = isSuccess ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+            var defaultTitle = isSuccess ? 'Thành công' : 'Thông báo';
+
+            var toast = document.createElement('div');
+            toast.style.cssText = 'background:' + bg + '; border-left: 4px solid ' + border + '; color: #1e293b; pointer-events: auto; transform: translateX(120%); transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; opacity: 0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); border-radius: 8px; padding: 14px 16px;';
+
+            toast.innerHTML = `
+                <div style="display: flex; align-items: start; gap: 12px;">
+                    <i class="${iconClass}" style="color: ${iconColor}; font-size: 18px; margin-top: 2px; flex-shrink: 0;"></i>
+                    <div style="flex: 1;">
+                        <strong style="display: block; font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">${title || defaultTitle}</strong>
+                        <span style="font-size: 13px; line-height: 1.4; color: #334155;">${message}</span>
+                    </div>
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; font-size: 16px; color: #94a3b8; cursor: pointer; padding: 0; line-height: 1; margin-left: 4px;">&times;</button>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(function () {
+                toast.style.transform = 'translateX(0)';
+                toast.style.opacity = '1';
+            });
+
+            setTimeout(function () {
+                toast.style.transform = 'translateX(120%)';
+                toast.style.opacity = '0';
+                setTimeout(function () {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 350);
+            }, 4000);
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {
+                window.addEventListener('scroll', function () {
+                    if (window.scrollY > 300) {
+                        backToTopBtn.style.display = 'flex';
+                    } else {
+                        backToTopBtn.style.display = 'none';
+                    }
+                });
+                backToTopBtn.addEventListener('click', function () {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            @if (session('success'))
+                showToast(@json(session('success')), 'success', 'Giỏ hàng & Đơn hàng');
+            @endif
+
+            @if (session('error'))
+                showToast(@json(session('error')), 'error', 'Thông báo');
+            @endif
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

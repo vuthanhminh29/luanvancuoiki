@@ -58,7 +58,10 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
-            'engine' => null,
+            // MySQL của WAMP đặt default_storage_engine = MyISAM. Để null thì migration
+            // mới sẽ tạo bảng MyISAM: mất transaction và khóa ngoại. 43 bảng còn lại
+            // của dự án đều là InnoDB nên phải ép engine tại đây.
+            'engine' => 'InnoDB',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

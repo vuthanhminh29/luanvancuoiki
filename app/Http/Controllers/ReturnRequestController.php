@@ -9,6 +9,7 @@ use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -179,5 +180,54 @@ class ReturnRequestController extends Controller
         return view('returns.show', [
             'returnRequest' => $return->load(['order.items', 'items.orderItem', 'reason']),
         ]);
+    }
+
+    // Đơn chỉ gửi được yêu cầu hoàn/đổi khi đã ở một trong các trạng thái sau khi nhận hàng.
+    private function isOrderEligible(Order $order): bool
+    {
+        return in_array($order->status, self::ELIGIBLE_ORDER_STATUSES, true);
+    }
+
+    // Câu giải thích hiển thị ở trang chi tiết đơn khi khách bấm hoàn/đổi không đúng lúc.
+    // Nêu rõ lý do và bước tiếp theo, không dùng thông báo chung chung.
+    private function returnIneligibleMessage(Order $order): string
+    {
+        return match ($order->status) {
+            'PENDING', 'AWAITING_PAYMENT', 'CONFIRMED', 'DELAY' =>
+                'Đơn hàng chưa được giao nên chưa thể gửi yêu cầu hoàn/đổi. Vui lòng gửi lại sau khi nhận hàng.',
+            'DELIVERING' =>
+                'Đơn hàng đang trên đường giao. Vui lòng gửi yêu cầu sau khi bạn đã nhận được hàng.',
+            'CANCELLED' =>
+                'Đơn hàng đã hủy nên không thể gửi yêu cầu hoàn/đổi.',
+            'LOST_IN_TRANSIT' =>
+                'Đơn hàng bị thất lạc khi vận chuyển. Vui lòng gọi hotline 1900 6789 để được xử lý riêng.',
+            default =>
+                'Đơn hàng ở trạng thái hiện tại không thể gửi yêu cầu hoàn/đổi.',
+        };
+    }
+
+    // Những dòng sản phẩm trong đơn còn có thể gửi yêu cầu hoàn/đổi.
+    private function returnableItems(Order $order): Collection
+    {
+        return $order->items
+            ->filter(fn (OrderItem $item) => $this->remainingReturnQuantity($order, $item) > 0)
+            ->values();
+    }
+
+    // Số lượng còn được phép hoàn/đổi của một dòng sản phẩm.
+    //
+    // Bảng return_request_items đặt UNIQUE trên order_item_id, tức mỗi dòng sản phẩm
+    // chỉ gắn được đúng MỘT yêu cầu. Vì vậy khi dòng đó đã nằm trong một yêu cầu bất kỳ
+    // (kể cả yêu cầu bị từ chối) thì phải trả về 0 — nếu tính theo số lượng còn lại,
+    // khách sẽ gửi được form rồi chết ở INSERT vì trùng khóa.
+    // Khách vẫn hoàn/đổi được các dòng sản phẩm khác trong cùng đơn.
+    private function remainingReturnQuantity(Order $order, OrderItem $item): int
+    {
+        $alreadyRequested = ReturnRequestItem::query()
+            ->where('order_item_id', $item->id)
+            ->whereHas('returnRequest', fn ($query) => $query->where('order_id', $order->id))
+            ->exists();
+
+        return $alreadyRequested ? 0 : (int) $item->quantity;
     }
 }

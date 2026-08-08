@@ -1701,3 +1701,46 @@
         max-width: calc((100vw - 5rem) / 2) !important;
     }
 }
+
+/* ==========================================================================
+   Thanh "Trải nghiệm thị lực" đầu trang
+   Ba khối (nhãn - các bước - CTA) trước đây nằm trong flex-wrap: link
+   "BẮT ĐẦU NGAY" bị đẩy xuống dòng hai vì tổng chiều rộng vượt container 1280.
+   Giữ nowrap và cắt bớt phần mô tả theo breakpoint để luôn nằm gọn một dòng.
+   ========================================================================== */
+.atelier-experience-bar__row {
+    flex-wrap: nowrap;
+}
+
+.atelier-experience-bar__label,
+.atelier-experience-bar__row > a {
+    white-space: nowrap;
+}
+
+.atelier-experience-bar__steps {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.atelier-experience-bar__steps strong {
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   Ảnh hero
+   Banner admin upload là ảnh ngang (~1900x550). Khung cũ cao cố định 380px +
+   object-fit: cover cắt mất phần lớn chiều ngang, chữ in trong ảnh đứt giữa.
+   Dùng contain để ảnh nào cũng hiện đủ, chiều cao thu lại cho bớt khoảng trống.
+   ========================================================================== */
+.atelier-hero__img {
+    display: block;
+    height: 260px;
+    object-fit: contain;
+    background: var(--paper);
+}
+
+@media (max-width: 991.98px) {
+    .atelier-hero__img {
+        height: 200px;
+    }
+}

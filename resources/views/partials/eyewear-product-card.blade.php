@@ -42,7 +42,7 @@
 
     <div class="eyewear-card__media" style="background: #f8fafc; height: 200px; display: flex; align-items: center; justify-content: center; padding: 16px; position: relative; overflow: hidden;">
         <a href="{{ route('products.show', $product) }}" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
-            <img src="{{ $productImage }}" alt="{{ $displayName }}" style="max-height: 160px; max-width: 100%; object-fit: contain; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onerror="this.onerror=null;this.src='{{ $fallbackImage }}';">
+            <img src="{{ $productImage }}" alt="{{ $displayName }}" loading="lazy" decoding="async" style="max-height: 160px; max-width: 100%; object-fit: contain; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onerror="this.onerror=null;this.src='{{ $fallbackImage }}';">
         </a>
     </div>
 

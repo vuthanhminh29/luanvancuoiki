@@ -9,9 +9,13 @@
     <link href="{{ asset('admin_assets/img/favicon.ico') }}" rel="icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('admin_assets/css/font-awesome-all.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin_assets/css/bootstrap-icons.css') }}" rel="stylesheet">
     <link href="{{ asset('admin_assets/lib/owlcarousel/assets/owl.carousel.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin_assets/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin_assets/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -27,9 +31,18 @@
         .sidebar::-webkit-scrollbar { display: none; }
         .sidebar.pe-4 { padding-right: 0 !important; }
         .sidebar.pb-3 { padding-bottom: 0 !important; }
+        /* Sidebar là position: fixed (đặt trong admin_assets/css/style.css) nên nằm
+           ngoài luồng, không chiếm chỗ. Vì vậy .content BẮT BUỘC có margin-left bằng
+           đúng bề rộng sidebar. Theme gốc dùng cặp 250px/250px; ở đây sidebar được
+           nới lên 280px nên margin cũng phải 280px, sai số bao nhiêu là chồng lấn bấy nhiêu. */
         .content { margin-left: 280px; background: #f3f6fa; }
         .sidebar, .sidebar .navbar { background: #111827 !important; }
-        .sidebar .navbar { align-content: flex-start; align-items: flex-start; display: flex; flex-direction: column; height: 100vh; justify-content: flex-start !important; min-height: 100%; padding: 16px 0 0; }
+        /* flex-wrap: nowrap là bắt buộc. Bootstrap đặt .navbar { flex-wrap: wrap },
+           kết hợp với flex-direction: column + chiều cao cố định thì menu dài hơn
+           màn hình sẽ cuốn sang CỘT THỨ HAI, đẩy toàn bộ menu sang phải đúng bằng
+           bề rộng logo (203px) và cắt cụt chữ. Chiều cao để auto cho menu dài ra,
+           .sidebar (height:100vh, overflow-y:auto) lo phần cuộn. */
+        .sidebar .navbar { align-content: flex-start; align-items: flex-start; display: flex; flex-wrap: nowrap; flex-direction: column; height: auto; justify-content: flex-start !important; min-height: 100%; padding: 16px 0 0; }
         .sidebar .navbar-brand { align-items: center; display: flex; flex: 0 0 auto; margin: 0 0 12px 26px !important; min-height: 42px; }
         .sidebar .navbar-brand h3 { color: #fff !important; font-size: 25px; font-weight: 800; letter-spacing: 0; margin: 0; }
         .sidebar .navbar .navbar-nav { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: space-between; margin-top: 0 !important; min-height: 0; padding: 0 14px 16px 0; width: 100%; }
@@ -122,13 +135,12 @@
         .ck-content .image { max-width: 80%; margin: 20px auto; }
         @media (min-width: 992px) {
             .sidebar.open { margin-left: -280px; }
-            .content { width: calc(100% - 280px); }
-            .content.open { width: 100%; margin-left: 0; }
+            .content.open { margin-left: 0; width: 100%; }
         }
         @media (max-width: 991px) {
             .sidebar { margin-left: -280px; }
             .sidebar.open { margin-left: 0; }
-            .content { width: 100%; margin-left: 0; }
+            .content { margin-left: 0; width: 100%; }
             .admin-row { grid-template-columns: 1fr; min-width: 0; }
             .checkout-shell { grid-template-columns: 1fr; }
         }
@@ -137,12 +149,15 @@
 <body>
 @php
     $isRoute = fn (...$patterns) => request()->routeIs(...$patterns);
-    $adminRoleCodes = auth()->check()
-        ? \Illuminate\Support\Facades\DB::table('user_roles')
-            ->join('roles', 'roles.id', '=', 'user_roles.role_id')
-            ->where('user_roles.user_id', auth()->id())
-            ->pluck('roles.code')
-            ->all()
+    $userId = auth()->id();
+    $adminRoleCodes = $userId
+        ? \Illuminate\Support\Facades\Cache::remember("users.{$userId}.role_codes", 300, function () use ($userId) {
+            return \Illuminate\Support\Facades\DB::table('user_roles')
+                ->join('roles', 'roles.id', '=', 'user_roles.role_id')
+                ->where('user_roles.user_id', $userId)
+                ->pluck('roles.code')
+                ->all();
+        })
         : [];
     $isAdminUser = in_array('ADMIN', $adminRoleCodes, true);
 @endphp
@@ -256,11 +271,11 @@
         </div>
     </div>
 
-    <a href="#" class="btn btn-lg btn-danger btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top" style="position: fixed; right: 28px; bottom: 28px; z-index: 1050; display: none;" aria-label="Trở lại đầu trang"><i class="bi bi-arrow-up"></i></a>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('js/jquery-3.3.1.min.js') }}"></script>
+<script src="{{ asset('admin_assets/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ asset('admin_assets/lib/chart/chart.min.js') }}"></script>
 <script src="{{ asset('admin_assets/lib/easing/easing.min.js') }}"></script>
 <script src="{{ asset('admin_assets/lib/waypoints/waypoints.min.js') }}"></script>
@@ -270,6 +285,91 @@
 <script src="{{ asset('admin_assets/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js') }}"></script>
 <script src="{{ asset('admin_assets/js/main.js') }}"></script>
 <script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
+<!-- Admin Page Dynamic Loading Overlay -->
+<div id="adminPageOverlay" style="position: fixed; top: 64px; left: 280px; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); z-index: 1040; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.18s ease;">
+    <div style="background: #ffffff; padding: 16px 24px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; border: 1px solid #e2e8f0;">
+        <div class="spinner-border text-primary" role="status" style="width: 22px; height: 22px; border-width: 3px;">
+            <span class="visually-hidden">Đang tải...</span>
+        </div>
+        <span style="font-size: 14px; font-weight: 700; color: #0f172a;">Đang tải trang...</span>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var contentArea = document.querySelector('.content .container-fluid');
+    var overlay = document.getElementById('adminPageOverlay');
+    if (!contentArea) return;
+
+    function showLoading() {
+        if (overlay) {
+            overlay.style.pointerEvents = 'auto';
+            overlay.style.opacity = '1';
+        }
+    }
+
+    function hideLoading() {
+        if (overlay) {
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+        }
+    }
+
+    document.addEventListener('click', function (e) {
+        var link = e.target.closest('.sidebar a');
+        if (!link) return;
+
+        var url = link.getAttribute('href');
+        if (!url || url === '#' || url.startsWith('javascript:') || link.target === '_blank' || e.ctrlKey || e.metaKey) return;
+
+        e.preventDefault();
+
+        document.querySelectorAll('.sidebar a').forEach(function (el) { el.classList.remove('active'); });
+        link.classList.add('active');
+
+        showLoading();
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (res) { return res.text(); })
+        .then(function (html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+
+            doc.querySelectorAll('head style, head link[rel="stylesheet"]').forEach(function (styleNode) {
+                var href = styleNode.getAttribute('href');
+                if (href && !document.head.querySelector('link[href="' + href + '"]')) {
+                    document.head.appendChild(styleNode.cloneNode(true));
+                } else if (styleNode.tagName === 'STYLE') {
+                    document.head.appendChild(styleNode.cloneNode(true));
+                }
+            });
+
+            var newContainer = doc.querySelector('.content .container-fluid');
+            if (newContainer) {
+                contentArea.innerHTML = newContainer.innerHTML;
+                document.title = doc.title || document.title;
+                history.pushState(null, '', url);
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            } else {
+                window.location.href = url;
+            }
+        })
+        .catch(function () {
+            window.location.href = url;
+        })
+        .finally(function () {
+            setTimeout(hideLoading, 100);
+        });
+    });
+
+    window.addEventListener('popstate', function () {
+        window.location.reload();
+    });
+});
+</script>
+
 <script>
 class LaravelUploadAdapter {
     constructor(loader, uploadUrl) {

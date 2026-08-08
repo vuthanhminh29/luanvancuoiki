@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Category;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -29,6 +30,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Laravel mặc định render phân trang bằng view Tailwind, nhưng dự án chạy Bootstrap.
+        // Không khai báo dòng này thì các lớp responsive của Tailwind không tồn tại,
+        // khối "Previous/Next" cho mobile và dãy số trang cho desktop hiện ra CÙNG LÚC,
+        // kèm mấy con số bị bọc thành ô vuông rời rạc.
+        Paginator::useBootstrapFive();
+
         if ($this->app->environment('production') && str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceRootUrl((string) config('app.url'));
             URL::forceScheme('https');

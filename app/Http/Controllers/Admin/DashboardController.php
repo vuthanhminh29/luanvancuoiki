@@ -36,10 +36,9 @@ class DashboardController extends Controller
             ->selectRaw("SUM(CASE WHEN type = 'EXCHANGE' AND status = 'PENDING' THEN 1 ELSE 0 END) as exchange_only")
             ->first();
 
-        $stock = Inventory::query()
-            ->whereHas('warehouse', fn ($query) => $query->where('status', 'ACTIVE')->where('type', '!=', \App\Services\InventoryService::QUARANTINE_TYPE))
-            ->selectRaw('COALESCE(SUM(quantity), 0) as total_stock')
-            ->first();
+        $totalStock = (float) DB::table('inventories')
+            ->where('warehouse_id', 1)
+            ->sum('quantity');
 
         $lowStockItems = ProductVariant::query()
             ->join('products', 'products.id', '=', 'product_variants.product_id')
@@ -88,7 +87,7 @@ class DashboardController extends Controller
         return view('admin.dashboard', [
             'orderStats' => $orderStats,
             'returnStats' => $returnStats,
-            'availableStock' => max(0, (float) $stock->total_stock),
+            'availableStock' => max(0, $totalStock),
             'activeProducts' => Product::active()->count(),
             'totalVariants' => ProductVariant::count(),
             'activeCategories' => Category::active()->count(),
