@@ -138,6 +138,23 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('success', 'Sản phẩm trong giỏ hàng không còn hợp lệ.');
         }
 
+        foreach ($variants as $variant) {
+            $requestedQty = (int) ($cart[$variant->id] ?? 0);
+            $stock = (int) DB::table('inventories')
+                ->where('warehouse_id', 1)
+                ->where('variant_id', $variant->id)
+                ->value('quantity');
+
+            if ($requestedQty > $stock) {
+                $name = $variant->product?->name ?? 'Sản phẩm';
+                if ($stock <= 0) {
+                    return redirect()->route('cart.index')->with('error', 'Sản phẩm "' . $name . '" hiện đã hết hàng.');
+                }
+
+                return redirect()->route('cart.index')->with('error', 'Sản phẩm "' . $name . '" chỉ còn ' . $stock . ' sản phẩm trong kho. Vui lòng giảm số lượng trong giỏ.');
+            }
+        }
+
         $subtotal = $this->cartSubtotal($variants, $cart);
         [$promotion, $discountMessage] = $this->appliedPromotion($subtotal);
 
@@ -348,6 +365,18 @@ class CheckoutController extends Controller
 
         if ($promotion->usage_limit !== null && (int) $promotion->used_count >= (int) $promotion->usage_limit) {
             return [null, 'Mã giảm giá đã hết lượt sử dụng.'];
+        }
+
+        if ($promotion->usage_per_user !== null && Auth::check()) {
+            $userUsedCount = Order::query()
+                ->where('user_id', Auth::id())
+                ->where('promotion_id', $promotion->id)
+                ->where('status', '!=', 'CANCELLED')
+                ->count();
+
+            if ($userUsedCount >= (int) $promotion->usage_per_user) {
+                return [null, 'Bạn đã dùng hết số lượt cho phép của mã giảm giá này.'];
+            }
         }
 
         if ($subtotal < (float) $promotion->min_order_amount) {

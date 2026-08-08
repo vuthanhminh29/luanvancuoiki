@@ -220,23 +220,17 @@ class WarehouseAdminController extends Controller
         ]);
 
         $type = $data['type'];
-        $sourceWarehouseId = filled($data['source_warehouse_id'] ?? null) ? (int) $data['source_warehouse_id'] : null;
-        $targetWarehouseId = filled($data['target_warehouse_id'] ?? null) ? (int) $data['target_warehouse_id'] : null;
+        $sourceWarehouseId = filled($data['source_warehouse_id'] ?? null) ? (int) $data['source_warehouse_id'] : 1;
+        $targetWarehouseId = filled($data['target_warehouse_id'] ?? null) ? (int) $data['target_warehouse_id'] : 1;
 
         if ($type === 'IMPORT') {
             $sourceWarehouseId = null;
+            $targetWarehouseId = $targetWarehouseId ?: 1;
         }
 
         if ($type === 'EXPORT') {
             $targetWarehouseId = null;
-        }
-
-        if ($type === 'IMPORT') {
-            $this->assertActiveWarehouse($targetWarehouseId, 'Phiếu nhập cần chọn kho nhận hàng.', 'target_warehouse_id');
-        }
-
-        if ($type === 'EXPORT') {
-            $this->assertActiveWarehouse($sourceWarehouseId, 'Phiếu xuất cần chọn kho xuất hàng.', 'source_warehouse_id');
+            $sourceWarehouseId = $sourceWarehouseId ?: 1;
         }
 
         $items = collect($data['variant_id'])

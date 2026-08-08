@@ -94,58 +94,21 @@ class InventoryService
      * Chọn theo TỪNG biến thể chứ không chọn một kho chung cho cả đơn — đơn có
      * nhiều sản phẩm nằm ở các kho khác nhau vẫn trừ đúng chỗ.
      */
-    public function sellableWarehouseIdFor(int $variantId): ?int
-    {
-        $warehouseId = Inventory::query()
-            ->where('variant_id', $variantId)
-            ->where('quantity', '>', 0)
-            ->whereHas('warehouse', fn ($query) => $query
-                ->where('status', 'ACTIVE')
-                ->where('type', '!=', self::QUARANTINE_TYPE))
-            ->orderByDesc('quantity')
-            ->value('warehouse_id');
-
-        if ($warehouseId) {
-            return (int) $warehouseId;
-        }
-
-        return $this->defaultSellableWarehouseId();
-    }
-
-    public function defaultSellableWarehouseId(): ?int
-    {
-        $warehouseId = Warehouse::query()
-            ->where('status', 'ACTIVE')
-            ->where('type', '!=', self::QUARANTINE_TYPE)
-            ->orderBy('id')
-            ->value('id');
-
-        return $warehouseId ? (int) $warehouseId : null;
-    }
-
     /**
-     * Kho chứa hàng lỗi. Chưa có thì tự tạo để nghiệp vụ hoàn/đổi không bị chặn.
+     * Lấy ID kho trung tâm duy nhất của hệ thống (Kho ID 1).
      */
+    public function defaultSellableWarehouseId(): int
+    {
+        return 1;
+    }
+
+    public function sellableWarehouseIdFor(int $variantId): int
+    {
+        return 1;
+    }
+
     public function quarantineWarehouseId(): int
     {
-        $warehouseId = Warehouse::query()
-            ->where('type', self::QUARANTINE_TYPE)
-            ->orderByRaw("status = 'ACTIVE' desc")
-            ->orderBy('id')
-            ->value('id');
-
-        if ($warehouseId) {
-            return (int) $warehouseId;
-        }
-
-        return (int) Warehouse::create([
-            'warehouse_code' => 'KHOLOI',
-            'name' => 'Kho hàng lỗi / chờ xử lý',
-            'type' => self::QUARANTINE_TYPE,
-            'capacity' => 100000,
-            'address_detail' => 'Khu vực lưu hàng khách hoàn/đổi về, chưa bán lại được.',
-            'min_stock_level' => 0,
-            'status' => 'ACTIVE',
-        ])->id;
+        return 1;
     }
 }

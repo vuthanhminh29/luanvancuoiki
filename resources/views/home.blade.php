@@ -3,7 +3,7 @@
 @section('title', 'Trang chủ - ' . config('app.name'))
 
 @php
-    $homeDesignVersion = '20260630-100fix-3';
+    $homeDesignVersion = '20260808-layout-fix-1';
     $homeLayout = $homeLayout ?? collect();
     $homeSectionStyle = function (string $key) use ($homeLayout) {
         $section = $homeLayout[$key] ?? null;
@@ -12,7 +12,9 @@
             return '';
         }
 
-        $styles = ['order:' . (int) $section->sort_order];
+        // Nhân 10 để chừa khe cho các section tĩnh (thanh cam kết, why-us...)
+        // chèn xen giữa hai section do admin sắp xếp.
+        $styles = ['order:' . ((int) $section->sort_order * 10)];
 
         if ((int) $section->status !== 1) {
             $styles[] = 'display:none';
@@ -32,16 +34,16 @@
 @section('content')
     <div class="home-layout-stack" style="display:flex;flex-direction:column;">
     <!-- SECTION 1: Top Optical Experience Flow Bar -->
-    <section class="atelier-experience-bar" style="background: var(--paper); border-bottom: 1px solid var(--line); padding: 10px 0; font-size: 13px;">
+    <section class="atelier-experience-bar" style="order: 0; background: var(--paper); border-bottom: 1px solid var(--line); padding: 10px 0; font-size: 13px;">
         <div class="container" style="max-width: 1280px;">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <span style="font-weight: 700; color: var(--accent-dark); text-transform: uppercase; font-size: 11px; letter-spacing: 0.08em;">TRẢI NGHIỆM THỊ LỰC</span>
-                <div class="d-flex align-items-center gap-4">
+            <div class="atelier-experience-bar__row d-flex align-items-center justify-content-between gap-3">
+                <span class="atelier-experience-bar__label" style="font-weight: 700; color: var(--accent-dark); text-transform: uppercase; font-size: 11px; letter-spacing: 0.08em;">TRẢI NGHIỆM THỊ LỰC</span>
+                <div class="atelier-experience-bar__steps d-none d-lg-flex align-items-center gap-3">
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge" style="background: var(--line); color: var(--ink-soft); border-radius: 999px; font-size: 10px;">01</span>
                         <div>
                             <strong style="color: var(--ink);">Chọn dáng mặt</strong>
-                            <small class="text-muted d-none d-md-inline">&bull; Xác định tỷ lệ khuôn mặt</small>
+                            <small class="text-muted d-none d-xxl-inline">&bull; Xác định tỷ lệ khuôn mặt</small>
                         </div>
                     </div>
                     <i class="fas fa-chevron-right text-muted" style="font-size: 10px;"></i>
@@ -49,7 +51,7 @@
                         <span class="badge" style="background: var(--line); color: var(--ink-soft); border-radius: 999px; font-size: 10px;">02</span>
                         <div>
                             <strong style="color: var(--ink);">Tìm gọng phù hợp</strong>
-                            <small class="text-muted d-none d-md-inline">&bull; Gợi ý theo phong cách</small>
+                            <small class="text-muted d-none d-xxl-inline">&bull; Gợi ý theo phong cách</small>
                         </div>
                     </div>
                     <i class="fas fa-chevron-right text-muted" style="font-size: 10px;"></i>
@@ -57,7 +59,7 @@
                         <span class="badge" style="background: var(--accent); color: var(--paper-card); border-radius: 999px; font-size: 10px;">03</span>
                         <div>
                             <strong style="color: var(--accent);">Trải nghiệm kính AI</strong>
-                            <small class="text-muted d-none d-md-inline">&bull; Xem trực tiếp trên khuôn mặt</small>
+                            <small class="text-muted d-none d-xxl-inline">&bull; Xem trực tiếp trên khuôn mặt</small>
                         </div>
                     </div>
                 </div>
@@ -67,10 +69,9 @@
     </section>
 
     <!-- SECTION 2: 12-Column Atelier Hero Grid -->
-    {{-- Hero bỏ border-bottom và padding dưới: banner ngay bên dưới cũng nền trắng,
-         có đường kẻ ở giữa sẽ thành hai khối trắng rời nhau. Để hai phần liền một mảng,
-         phần phân cách thật là dải xám của thanh cam kết phía sau. --}}
-    <section class="atelier-hero" style="{{ $homeSectionStyle('banner') }}; background: var(--paper-card); padding: 48px 0 {{ empty($midBanner) ? '48px' : '0' }};">
+    {{-- Hero không kẻ border-bottom: phần phân cách thật là dải xám
+         của thanh cam kết ngay phía sau. --}}
+    <section class="atelier-hero" style="{{ $homeSectionStyle('banner') }}; background: var(--paper-card); padding: 48px 0;">
        <div class="container" style="max-width: 1280px;">
             <div class="row align-items-center">
                 <div class="col-lg-5 mb-4 mb-lg-0">
@@ -97,7 +98,10 @@
                         @php
                             $heroImage = isset($banners) && $banners->count() > 0 ? $banners->first()->image_src : asset('upload/banner/banner-kinh-1.jpg');
                         @endphp
-                        <img src="{{ $heroImage }}" alt="Gọng kính Atelier Optique" style="width: 100%; height: 380px; object-fit: cover; border-radius: 6px;" fetchpriority="high" loading="eager">
+                        {{-- Banner admin upload thường là ảnh ngang có sẵn chữ (1900x550).
+                             object-fit: cover ở khung 664x380 sẽ cắt mất một nửa chiều ngang
+                             và chữ trong ảnh bị đứt giữa chừng, nên dùng contain. --}}
+                        <img class="atelier-hero__img" src="{{ $heroImage }}" alt="Gọng kính Atelier Optique" style="width: 100%; border-radius: 6px;" fetchpriority="high" loading="eager">
                         <div class="position-absolute d-flex align-items-center gap-3 px-3 py-2" style="bottom: 20px; right: 20px; background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 6px; font-size: 12px;">
                             <span style="font-family: var(--font-mono); font-weight: 700; color: var(--accent);">52 &square; 18 &mdash; 145</span>
                             <span class="text-muted" style="font-size: 10px;">Eye &bull; Bridge &bull; Temple</span>
@@ -108,23 +112,8 @@
         </div>
     </section>
 
-    <!-- SECTION 2B: Banner ngang giữa hero và thanh cam kết -->
-    @if (!empty($midBanner))
-        <section class="atelier-mid-banner" style="background: var(--paper-card); padding: 32px 0 48px;">
-            <div class="container" style="max-width: 1280px;">
-                <a href="{{ $midBanner->link_url ?: route('products.index') }}"
-                   style="display: block; border-radius: 6px; overflow: hidden; border: 1px solid var(--line);">
-                    <img src="{{ $midBanner->image_src }}"
-                         alt="{{ $midBanner->title ?: 'Ưu đãi Atelier Optique' }}"
-                         style="width: 100%; height: 220px; object-fit: cover; display: block;"
-                         loading="lazy">
-                </a>
-            </div>
-        </section>
-    @endif
-
     <!-- SECTION 3: Trust Strip Section -->
-    <section class="atelier-trust-strip" style="background: var(--paper); border-bottom: 1px solid var(--line); padding: 20px 0;">
+    <section class="atelier-trust-strip" style="order: 15; background: var(--paper); border-bottom: 1px solid var(--line); padding: 20px 0;">
         <div class="container" style="max-width: 1280px;">
             <div class="row align-items-center text-center text-md-left">
                 <div class="col-md-3 mb-2 mb-md-0">
@@ -167,7 +156,7 @@
         </div>
     </section>
     <!-- SECTION 4: Featured Collections Grid -->
-    <section class="atelier-collections-section py-5" style="background: var(--paper-card); border-bottom: 1px solid var(--line);">
+    <section class="atelier-collections-section py-5" style="{{ $homeSectionStyle('categories') }}; background: var(--paper-card); border-bottom: 1px solid var(--line);">
         <div class="container" style="max-width: 1280px;">
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--ink); letter-spacing: 0.05em; margin: 0; text-transform: uppercase;">BỘ SƯ TẬP NỔI BẬT</h2>
@@ -221,10 +210,10 @@
                 <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--ink); letter-spacing: 0.05em; margin: 0; text-transform: uppercase;">SẢN PHẨM MỚI</h2>
             </div>
             <div class="watch-product-slider-container position-relative" style="padding: 0 10px;">
-                <button class="watch-product-slider-arrow prev position-absolute" onclick="scrollProductSlider('new-products-track', 'prev')" style="left: -20px; top: 50%; transform: translateY(-50%); z-index: 20; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); font-size: 18px; transition: all 0.2s;" aria-label="Sản phẩm trước">
+                <button class="watch-product-slider-arrow prev position-absolute" onclick="scrollProductSlider('new-products-track', 'prev')" aria-label="Sản phẩm trước">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <button class="watch-product-slider-arrow next position-absolute" onclick="scrollProductSlider('new-products-track', 'next')" style="right: -20px; top: 50%; transform: translateY(-50%); z-index: 20; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); font-size: 18px; transition: all 0.2s;" aria-label="Sản phẩm tiếp theo">
+                <button class="watch-product-slider-arrow next position-absolute" onclick="scrollProductSlider('new-products-track', 'next')" aria-label="Sản phẩm tiếp theo">
                     <i class="fas fa-chevron-right"></i>
                 </button>
 
@@ -252,10 +241,10 @@
                 <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--ink); letter-spacing: 0.05em; margin: 0; text-transform: uppercase;">SẢN PHẨM BÁN CHẠY</h2>
             </div>
             <div class="watch-product-slider-container position-relative" style="padding: 0 10px;">
-                <button class="watch-product-slider-arrow prev position-absolute" onclick="scrollProductSlider('best-seller-track', 'prev')" style="left: -20px; top: 50%; transform: translateY(-50%); z-index: 20; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); font-size: 18px; transition: all 0.2s;" aria-label="Sản phẩm trước">
+                <button class="watch-product-slider-arrow prev position-absolute" onclick="scrollProductSlider('best-seller-track', 'prev')" aria-label="Sản phẩm trước">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <button class="watch-product-slider-arrow next position-absolute" onclick="scrollProductSlider('best-seller-track', 'next')" style="right: -20px; top: 50%; transform: translateY(-50%); z-index: 20; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); font-size: 18px; transition: all 0.2s;" aria-label="Sản phẩm tiếp theo">
+                <button class="watch-product-slider-arrow next position-absolute" onclick="scrollProductSlider('best-seller-track', 'next')" aria-label="Sản phẩm tiếp theo">
                     <i class="fas fa-chevron-right"></i>
                 </button>
 
@@ -306,8 +295,10 @@
                 </div>
             </div>
         </div>
+    </section>
+
     <!-- SECTION 6: Why Choose Atelier Optique Badges -->
-    <section class="atelier-why-us py-4" style="background: var(--paper); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+    <section class="atelier-why-us py-4" style="order: 55; background: var(--paper); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
         <div class="container" style="max-width: 1280px;">
             <div class="row align-items-center text-center text-md-left">
                 <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
