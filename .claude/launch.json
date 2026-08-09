@@ -6,6 +6,7 @@
       "runtimeExecutable": "C:\\wamp64\\bin\\php\\php8.4.0\\php.exe",
       "runtimeArgs": ["artisan", "serve", "--host=127.0.0.1", "--port=8000"],
       "port": 8000,
+      "autoPort": false,
       "url": "http://127.0.0.1:8000"
     }
   ]
