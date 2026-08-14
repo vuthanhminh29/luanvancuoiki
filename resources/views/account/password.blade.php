@@ -33,7 +33,10 @@
                         <a href="{{ route('account.index') }}" class="menu-item"><i class="fa fa-user"></i><span>Hồ sơ</span></a>
                         <a href="{{ route('account.orders.index') }}" class="menu-item"><i class="fa fa-shopping-bag"></i><span>Đơn mua</span></a>
                         <a href="{{ route('account.password.edit') }}" class="menu-item active"><i class="fa fa-lock"></i><span>Đổi mật khẩu</span></a>
-                        <a href="{{ route('logout.get') }}" class="menu-item"><i class="fa fa-sign-out-alt"></i><span>Đăng xuất</span></a>
+                        <form method="post" action="{{ route('logout') }}" class="logout-menu-form">
+                            @csrf
+                            <button type="submit" class="menu-item"><i class="fa fa-sign-out-alt"></i><span>Đăng xuất</span></button>
+                        </form>
                     </div>
                 </div>
             </div>

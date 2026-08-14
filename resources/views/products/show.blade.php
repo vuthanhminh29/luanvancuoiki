@@ -12,10 +12,13 @@
     @php
         $firstVariant = $product->variants->firstWhere('status', 'ACTIVE') ?? $product->variants->first();
         $variantStock = collect($variantStock ?? []);
-        $selectedVariantId = $firstVariant ? (int) old('variant_id', $firstVariant->id) : 0;
-        $selectedVariantStock = $selectedVariantId > 0 ? max(1, (int) $variantStock->get($selectedVariantId, 0)) : 1;
+        $selectedVariantId = $firstVariant ? (int) $firstVariant->id : 0;
+        $selectedVariantStock = $selectedVariantId > 0 ? max(0, (int) $variantStock->get($selectedVariantId, 0)) : 0;
         $discount = $product->sale_price ? max(0, round((($product->base_price - $product->sale_price) / max(1, $product->base_price)) * 100)) : 0;
         $firstTryOn = $tryOnPayload->first();
+        $canAddToCart = $firstVariant && $selectedVariantStock > 0;
+        $firstTryOnVariantId = (int) ($firstTryOn['variantId'] ?? 0);
+        $firstTryOnStock = $firstTryOnVariantId > 0 ? max(0, (int) $variantStock->get($firstTryOnVariantId, 0)) : 0;
         $reviewCount = $reviewStats['count'] ?? $visibleReviews->count();
         $reviewAverage = (float) ($reviewStats['average'] ?? 0);
         $reviewStars = max(0, min(5, (int) round($reviewAverage ?: 5)));
@@ -123,7 +126,7 @@
                         {!! $descriptionHtml !!}
                     </div>
 
-                    @if ($firstVariant)
+                    @if ($canAddToCart)
                         <form action="{{ route('cart.store') }}" method="post">
                             @csrf
                             <input type="hidden" name="variant_id" value="{{ $firstVariant->id }}">
@@ -134,7 +137,7 @@
                                     <input type="number" name="quantity" id="productQty" value="1" min="1" max="{{ $selectedVariantStock }}" class="watch-qty-input">
                                     <button type="button" class="watch-qty-btn" onclick="increaseQty({{ $selectedVariantStock }})">+</button>
                                 </div>
-                                <span class="watch-stock-text">Sản phẩm co san</span>
+                                <span class="watch-stock-text">Còn {{ $selectedVariantStock }} sản phẩm</span>
                             </div>
 
                             <div class="watch-button-group">
@@ -150,7 +153,7 @@
                         </form>
                     @else
                         <div class="watch-out-of-stock">
-                            <button class="watch-stock-btn" disabled>Het hang</button>
+                            <button class="watch-stock-btn" disabled>Hết hàng</button>
                         </div>
                     @endif
 
@@ -425,7 +428,7 @@
 
                         <div class="tryon-side-actions">
                             <div class="tryon-buy-row">
-                                @if ($firstTryOn['variantId'] ?? null)
+                                @if ($firstTryOnVariantId > 0 && $firstTryOnStock > 0)
                                     <form action="{{ route('cart.store') }}" method="post" class="tryon-ai-cart-form" id="tryonCartForm">
                                         @csrf
                                         <input type="hidden" name="variant_id" id="tryonCartVariantId" value="{{ $firstTryOn['variantId'] }}">

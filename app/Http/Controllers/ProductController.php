@@ -162,10 +162,16 @@ class ProductController extends Controller
 
         $orderItem = $this->reviewOrderItemFor($product);
 
+        if (! $orderItem) {
+            return redirect(route('products.show', $product) . '#reviews')
+                ->withErrors(['review' => 'Chỉ khách hàng đã mua và nhận sản phẩm này mới được đánh giá.'])
+                ->withInput();
+        }
+
         ProductReview::create([
             'user_id' => Auth::id(),
             'product_id' => $product->id,
-            'order_item_id' => $orderItem?->id,
+            'order_item_id' => $orderItem->id,
             'rating' => (int) $data['rating'],
             'content' => trim((string) $data['content']),
             'status' => 'VISIBLE',

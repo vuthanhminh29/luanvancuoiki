@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/dang-nhap', [AdminAuthController::class, 'showLogin'])->name('login');
     Route::post('/dang-nhap', [AdminAuthController::class, 'login'])->middleware('throttle:admin-auth')->name('login.store');
-    Route::get('/dang-xuat', [AdminAuthController::class, 'logout'])->name('logout.get');
     Route::post('/dang-xuat', [AdminAuthController::class, 'logout'])->name('logout');
 
     Route::middleware(['admin', 'throttle:admin'])->group(function () {

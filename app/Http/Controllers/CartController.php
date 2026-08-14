@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Inventory;
 use App\Models\ProductVariant;
+use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -31,6 +33,14 @@ class CartController extends Controller
         $cart = $this->limitedCart($this->normalizedCart(session('cart', [])));
         $requestedQuantity = (int) ($data['quantity'] ?? 1);
         $remainingQuantity = self::MAX_TOTAL_QUANTITY - $this->totalQuantity($cart);
+        $availableStock = $this->sellableStockFor($variant->id);
+        $remainingStock = $availableStock - (int) ($cart[$variant->id] ?? 0);
+
+        if ($availableStock <= 0 || $remainingStock <= 0) {
+            session(['cart' => $cart]);
+
+            return back()->with('error', 'Sản phẩm này hiện đã hết hàng.');
+        }
 
         if ($remainingQuantity <= 0) {
             session(['cart' => $cart]);
@@ -38,12 +48,12 @@ class CartController extends Controller
             return back()->with('error', 'Mỗi đơn chỉ đặt tối đa ' . self::MAX_TOTAL_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
         }
 
-        $quantity = min($requestedQuantity, $remainingQuantity);
+        $quantity = min($requestedQuantity, $remainingQuantity, $remainingStock);
         $cart[$variant->id] = ($cart[$variant->id] ?? 0) + $quantity;
         session(['cart' => $cart]);
 
         if ($quantity < $requestedQuantity) {
-            return back()->with('success', 'Chỉ thêm được ' . $quantity . ' sản phẩm vì mỗi đơn chỉ đặt tối đa ' . self::MAX_TOTAL_QUANTITY . ' sản phẩm.');
+            return back()->with('success', 'Chỉ thêm được ' . $quantity . ' sản phẩm vì giỏ hàng đã chạm giới hạn hoặc tồn kho không đủ.');
         }
 
         return back()->with('success', 'Đã thêm sản phẩm vào giỏ hàng.');
@@ -78,6 +88,16 @@ class CartController extends Controller
             session(['cart' => $cart]);
 
             return back()->with('error', 'Mỗi đơn chỉ đặt tối đa ' . self::MAX_TOTAL_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
+        }
+
+        $stockByVariant = $this->sellableStockForMany(array_keys($updatedCart));
+
+        foreach ($updatedCart as $variantId => $quantity) {
+            if ($quantity > (int) ($stockByVariant[$variantId] ?? 0)) {
+                session(['cart' => $cart]);
+
+                return back()->with('error', 'Số lượng cập nhật vượt quá tồn kho hiện có.');
+            }
         }
 
         session(['cart' => $updatedCart]);
@@ -157,5 +177,35 @@ class CartController extends Controller
     private function totalQuantity(array $cart): int
     {
         return array_sum(array_map('intval', $cart));
+    }
+
+    private function sellableStockFor(int $variantId): int
+    {
+        return (int) ($this->sellableStockForMany([$variantId])[$variantId] ?? 0);
+    }
+
+    private function sellableStockForMany(array $variantIds): array
+    {
+        $variantIds = collect($variantIds)
+            ->map(fn ($variantId) => filter_var($variantId, FILTER_VALIDATE_INT))
+            ->filter(fn ($variantId) => $variantId !== false)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($variantIds === []) {
+            return [];
+        }
+
+        return Inventory::query()
+            ->whereIn('variant_id', $variantIds)
+            ->whereHas('warehouse', fn ($query) => $query
+                ->where('status', 'ACTIVE')
+                ->where('type', '!=', InventoryService::QUARANTINE_TYPE))
+            ->selectRaw('variant_id, COALESCE(SUM(quantity), 0) as available_stock')
+            ->groupBy('variant_id')
+            ->pluck('available_stock', 'variant_id')
+            ->map(fn ($stock) => max(0, (int) $stock))
+            ->all();
     }
 }

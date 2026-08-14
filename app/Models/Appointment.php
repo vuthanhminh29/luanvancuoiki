@@ -35,6 +35,7 @@ class Appointment extends Model
         'price',
         'appointment_date',
         'appointment_time',
+        'slot_lock_key',
         'customer_name',
         'customer_phone',
         'customer_email',
@@ -76,6 +77,11 @@ class Appointment extends Model
         }
 
         return Carbon::parse($this->appointment_date->format('Y-m-d') . ' ' . $this->appointment_time);
+    }
+
+    public static function slotLockKeyFor(string $date, string $time): string
+    {
+        return Carbon::parse($date)->format('Y-m-d') . '|' . trim($time);
     }
 
     public function statusLabel(): string

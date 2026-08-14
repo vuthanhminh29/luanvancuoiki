@@ -24,6 +24,9 @@ class VnPayController extends Controller
 {
     private const MAX_CART_QUANTITY = 10;
 
+    /**
+     * Xử lý kết quả VNPay khi người dùng quay lại website.
+     */
     public function return(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail): RedirectResponse
     {
         $result = $vnPay->verify($request->query());
@@ -62,6 +65,8 @@ class VnPayController extends Controller
             return redirect()->route('checkout.index')->with('error', 'Thanh toán VNPay chưa thành công: ' . $result['message']);
         }
 
+        $shouldSendConfirmation = ! $order || $order->payment_status !== 'PAID';
+
         try {
             $order = $order
                 ? $this->markPaid($order, $result)
@@ -72,7 +77,10 @@ class VnPayController extends Controller
 
         $this->forgetPendingDraft($txnRef);
         session()->forget('cart');
-        $orderConfirmationEmail->send($order);
+
+        if ($shouldSendConfirmation) {
+            $orderConfirmationEmail->send($order);
+        }
 
         if (Auth::id() === $order->user_id) {
             return redirect()->route('account.orders.show', $order)->with('success', 'Thanh toán VNPay thành công.');
@@ -81,6 +89,9 @@ class VnPayController extends Controller
         return redirect()->route('home')->with('success', 'Thanh toán VNPay thành công.');
     }
 
+    /**
+     * Xử lý thông báo thanh toán từ VNPay.
+     */
     public function ipn(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail): JsonResponse
     {
         $result = $vnPay->verify($request->all());
@@ -128,11 +139,17 @@ class VnPayController extends Controller
         return response()->json(['RspCode' => '00', 'Message' => 'Confirm Success']);
     }
 
+    /**
+     * Tìm đơn hàng theo mã giao dịch VNPay.
+     */
     private function findOrder(array $result): ?Order
     {
         return Order::where('order_code', $result['txn_ref'] ?? '')->first();
     }
 
+    /**
+     * Lấy đơn VNPay đang lưu tạm.
+     */
     private function pendingDraft(string $txnRef): ?array
     {
         if ($txnRef === '') {
@@ -142,6 +159,9 @@ class VnPayController extends Controller
         return session("pending_vnpay_checkouts.{$txnRef}") ?: Cache::get("pending_vnpay_checkout:{$txnRef}");
     }
 
+    /**
+     * Xóa đơn VNPay đang lưu tạm.
+     */
     private function forgetPendingDraft(string $txnRef): void
     {
         if ($txnRef === '') {
@@ -152,6 +172,9 @@ class VnPayController extends Controller
         Cache::forget("pending_vnpay_checkout:{$txnRef}");
     }
 
+    /**
+     * Tạo đơn đã thanh toán từ dữ liệu VNPay lưu tạm.
+     */
     private function createPaidOrderFromDraft(array $draft, array $result): Order
     {
         return DB::transaction(function () use ($draft, $result) {
@@ -233,6 +256,9 @@ class VnPayController extends Controller
         });
     }
 
+    /**
+     * Đánh dấu đơn hàng đã thanh toán.
+     */
     private function markPaid(Order $order, array $result): Order
     {
         $order->update([
@@ -246,6 +272,9 @@ class VnPayController extends Controller
         return $order->refresh();
     }
 
+    /**
+     * Ghi nhận thanh toán VNPay bị hủy hoặc lỗi.
+     */
     private function cancelOrderPayment(Order $order, array $result, string $code, string $message): void
     {
         if ($order->payment_status !== 'PAID') {
@@ -254,6 +283,9 @@ class VnPayController extends Controller
         }
     }
 
+    /**
+     * Lưu giao dịch VNPay thành công.
+     */
     private function saveSuccessfulPayment(Order $order, array $result): void
     {
         Payment::updateOrCreate([
@@ -271,6 +303,9 @@ class VnPayController extends Controller
         ]);
     }
 
+    /**
+     * Lưu giao dịch VNPay thất bại.
+     */
     private function markFailed(Order $order, array $result, string $code, string $message): void
     {
         Payment::updateOrCreate([
@@ -287,6 +322,9 @@ class VnPayController extends Controller
         ]);
     }
 
+    /**
+     * Thêm mã giao dịch VNPay vào ghi chú đơn.
+     */
     private function appendPaymentNote(?string $note, string $transactionNo): ?string
     {
         if ($transactionNo === '') {

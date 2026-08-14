@@ -82,8 +82,7 @@ Route::middleware('guest')->group(function () {
 
 // Các route bên dưới bắt buộc đăng nhập vì có dữ liệu cá nhân, đơn hàng hoặc thao tác mua hàng.
 Route::middleware('auth')->group(function () {
-    // Đăng xuất hỗ trợ cả GET và POST để tương thích giao diện cũ/mới.
-    Route::get('/dang-xuat', [AuthController::class, 'logout'])->name('logout.get');
+    // Đăng xuất là thao tác thay đổi session nên chỉ nhận POST.
     Route::post('/dang-xuat', [AuthController::class, 'logout'])->name('logout');
 
     // Khu vực tài khoản: hồ sơ, mật khẩu, địa chỉ và lịch sử đơn hàng.

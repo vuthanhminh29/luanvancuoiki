@@ -7,6 +7,7 @@ use App\Services\AppointmentNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -90,20 +91,31 @@ class AppointmentController extends Controller
 
         $service = self::SERVICES[$validated['service_code']];
 
-        $appointment = Appointment::create([
-            'user_id' => Auth::id(),
-            'code' => $this->generateCode(),
-            'service_code' => $validated['service_code'],
-            'service_name' => $service['name'],
-            'price' => $service['price'],
-            'appointment_date' => $validated['appointment_date'],
-            'appointment_time' => $validated['appointment_time'],
-            'customer_name' => $validated['customer_name'],
-            'customer_phone' => $validated['customer_phone'],
-            'customer_email' => $validated['customer_email'],
-            'note' => $validated['note'] ?? null,
-            'status' => Appointment::STATUS_PENDING,
-        ]);
+        try {
+            $appointment = Appointment::create([
+                'user_id' => Auth::id(),
+                'code' => $this->generateCode(),
+                'service_code' => $validated['service_code'],
+                'service_name' => $service['name'],
+                'price' => $service['price'],
+                'appointment_date' => $validated['appointment_date'],
+                'appointment_time' => $validated['appointment_time'],
+                'slot_lock_key' => Appointment::slotLockKeyFor($validated['appointment_date'], $validated['appointment_time']),
+                'customer_name' => $validated['customer_name'],
+                'customer_phone' => $validated['customer_phone'],
+                'customer_email' => $validated['customer_email'],
+                'note' => $validated['note'] ?? null,
+                'status' => Appointment::STATUS_PENDING,
+            ]);
+        } catch (QueryException $exception) {
+            if ($this->isSlotLockConflict($exception)) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['appointment_time' => 'Khung giờ này vừa có khách khác đặt. Vui lòng chọn khung giờ khác.']);
+            }
+
+            throw $exception;
+        }
 
         $notification->bookingReceived($appointment);
 
@@ -174,41 +186,52 @@ class AppointmentController extends Controller
                 ->withErrors(['appointment_time' => 'Khung giờ mới đã qua. Vui lòng chọn khung giờ khác.']);
         }
 
-        $result = DB::transaction(function () use ($appointment, $data): Appointment|string {
-            $lockedAppointment = Appointment::lockForUpdate()->find($appointment->id);
+        try {
+            $result = DB::transaction(function () use ($appointment, $data): Appointment|string {
+                $lockedAppointment = Appointment::lockForUpdate()->find($appointment->id);
 
-            if (! $lockedAppointment) {
-                return 'Không tìm thấy lịch hẹn.';
+                if (! $lockedAppointment) {
+                    return 'Không tìm thấy lịch hẹn.';
+                }
+
+                if (! $this->matchesContact($lockedAppointment, $data['code'], $data['contact'])) {
+                    return 'Không tìm thấy lịch hẹn phù hợp với thông tin đã nhập.';
+                }
+
+                if (! $lockedAppointment->canReschedule()) {
+                    return 'Lịch hẹn này không còn được phép đổi lịch.';
+                }
+
+                if ($this->slotIsFull($data['appointment_date'], $data['appointment_time'], $lockedAppointment->id)) {
+                    return 'Khung giờ mới đã có lịch hẹn. Vui lòng chọn khung giờ khác.';
+                }
+
+                if ($this->slotIsPast($data['appointment_date'], $data['appointment_time'])) {
+                    return 'Khung giờ mới đã qua. Vui lòng chọn khung giờ khác.';
+                }
+
+                $lockedAppointment->forceFill([
+                    'appointment_date' => $data['appointment_date'],
+                    'appointment_time' => $data['appointment_time'],
+                    'slot_lock_key' => Appointment::slotLockKeyFor($data['appointment_date'], $data['appointment_time']),
+                    'status' => Appointment::STATUS_PENDING,
+                    'confirmed_at' => null,
+                    'reschedule_count' => $lockedAppointment->reschedule_count + 1,
+                    'last_rescheduled_at' => now(),
+                    'reschedule_reason' => $data['reschedule_reason'] ?? null,
+                ])->save();
+
+                return $lockedAppointment->fresh();
+            });
+        } catch (QueryException $exception) {
+            if ($this->isSlotLockConflict($exception)) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['appointment_time' => 'Khung giờ mới vừa có khách khác đặt. Vui lòng chọn khung giờ khác.']);
             }
 
-            if (! $this->matchesContact($lockedAppointment, $data['code'], $data['contact'])) {
-                return 'Không tìm thấy lịch hẹn phù hợp với thông tin đã nhập.';
-            }
-
-            if (! $lockedAppointment->canReschedule()) {
-                return 'Lịch hẹn này không còn được phép đổi lịch.';
-            }
-
-            if ($this->slotIsFull($data['appointment_date'], $data['appointment_time'], $lockedAppointment->id)) {
-                return 'Khung giờ mới đã có lịch hẹn. Vui lòng chọn khung giờ khác.';
-            }
-
-            if ($this->slotIsPast($data['appointment_date'], $data['appointment_time'])) {
-                return 'Khung giờ mới đã qua. Vui lòng chọn khung giờ khác.';
-            }
-
-            $lockedAppointment->forceFill([
-                'appointment_date' => $data['appointment_date'],
-                'appointment_time' => $data['appointment_time'],
-                'status' => Appointment::STATUS_PENDING,
-                'confirmed_at' => null,
-                'reschedule_count' => $lockedAppointment->reschedule_count + 1,
-                'last_rescheduled_at' => now(),
-                'reschedule_reason' => $data['reschedule_reason'] ?? null,
-            ])->save();
-
-            return $lockedAppointment->fresh();
-        });
+            throw $exception;
+        }
 
         if (is_string($result)) {
             return back()->withInput()->withErrors(['appointment_date' => $result]);
@@ -267,13 +290,19 @@ class AppointmentController extends Controller
     private function slotIsFull(string $date, string $time, ?int $excludeAppointmentId = null): bool
     {
         $count = Appointment::query()
-            ->whereDate('appointment_date', $date)
+            ->where('appointment_date', Carbon::parse($date)->toDateString())
             ->where('appointment_time', $time)
             ->whereIn('status', Appointment::ACTIVE_SLOT_STATUSES)
             ->when($excludeAppointmentId !== null, fn ($query) => $query->whereKeyNot($excludeAppointmentId))
             ->count();
 
         return $count >= self::SLOT_CAPACITY;
+    }
+
+    private function isSlotLockConflict(QueryException $exception): bool
+    {
+        return str_contains($exception->getMessage(), 'appointments_slot_lock_key_unique')
+            || str_contains($exception->getMessage(), 'slot_lock_key');
     }
 
     private function slotIsPast(string $date, string $time): bool

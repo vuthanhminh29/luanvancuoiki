@@ -38,6 +38,7 @@ class Order extends Model
         'shipping_fee' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'delivered_at' => 'datetime',
+        'order_confirmation_email_sent_at' => 'datetime',
         'cancel_requested_at' => 'datetime',
         'cancel_confirmed_at' => 'datetime',
     ];

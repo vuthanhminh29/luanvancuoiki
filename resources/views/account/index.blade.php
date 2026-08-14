@@ -63,10 +63,13 @@
                             <i class="fa fa-lock"></i>
                             <span>Đổi mật khẩu</span>
                         </a>
-                        <a href="{{ route('logout.get') }}" class="menu-item">
-                            <i class="fa fa-sign-out-alt"></i>
-                            <span>Đăng xuất</span>
-                        </a>
+                        <form method="post" action="{{ route('logout') }}" class="logout-menu-form">
+                            @csrf
+                            <button type="submit" class="menu-item">
+                                <i class="fa fa-sign-out-alt"></i>
+                                <span>Đăng xuất</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

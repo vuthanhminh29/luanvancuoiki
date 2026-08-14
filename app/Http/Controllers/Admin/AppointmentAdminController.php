@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Services\AppointmentNotificationService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,24 +58,37 @@ class AppointmentAdminController extends Controller
 
     public function confirm(Appointment $appointment, AppointmentNotificationService $notification): RedirectResponse
     {
-        $result = DB::transaction(function () use ($appointment): true|string {
-            $lockedAppointment = Appointment::lockForUpdate()->find($appointment->id);
+        try {
+            $result = DB::transaction(function () use ($appointment): true|string {
+                $lockedAppointment = Appointment::lockForUpdate()->find($appointment->id);
 
-            if (! $lockedAppointment) {
-                return 'Không tìm thấy lịch hẹn.';
+                if (! $lockedAppointment) {
+                    return 'Không tìm thấy lịch hẹn.';
+                }
+
+                if (! $lockedAppointment->canConfirm()) {
+                    return 'Chỉ lịch đang chờ xác nhận mới có thể xác nhận.';
+                }
+
+                $lockedAppointment->forceFill([
+                    'status' => Appointment::STATUS_CONFIRMED,
+                    'confirmed_at' => now(),
+                    'slot_lock_key' => $lockedAppointment->slot_lock_key
+                        ?: Appointment::slotLockKeyFor(
+                            $lockedAppointment->appointment_date->format('Y-m-d'),
+                            $lockedAppointment->appointment_time
+                        ),
+                ])->save();
+
+                return true;
+            });
+        } catch (QueryException $exception) {
+            if (str_contains($exception->getMessage(), 'slot_lock_key')) {
+                return back()->with('error', 'Khung giờ này đang bị trùng với lịch khác. Vui lòng đổi hoặc hủy lịch trùng trước.');
             }
 
-            if (! $lockedAppointment->canConfirm()) {
-                return 'Chỉ lịch đang chờ xác nhận mới có thể xác nhận.';
-            }
-
-            $lockedAppointment->forceFill([
-                'status' => Appointment::STATUS_CONFIRMED,
-                'confirmed_at' => now(),
-            ])->save();
-
-            return true;
-        });
+            throw $exception;
+        }
 
         if ($result !== true) {
             return back()->with('error', $result);
@@ -108,6 +122,7 @@ class AppointmentAdminController extends Controller
                 'status' => Appointment::STATUS_CANCELLED,
                 'cancelled_at' => now(),
                 'cancel_reason' => $data['cancel_reason'],
+                'slot_lock_key' => null,
             ])->save();
 
             return true;
@@ -138,6 +153,7 @@ class AppointmentAdminController extends Controller
             $lockedAppointment->forceFill([
                 'status' => Appointment::STATUS_COMPLETED,
                 'completed_at' => now(),
+                'slot_lock_key' => null,
             ])->save();
 
             return true;
@@ -164,6 +180,7 @@ class AppointmentAdminController extends Controller
             $lockedAppointment->forceFill([
                 'status' => Appointment::STATUS_NO_SHOW,
                 'no_show_at' => now(),
+                'slot_lock_key' => null,
             ])->save();
 
             return true;
