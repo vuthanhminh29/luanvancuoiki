@@ -10,6 +10,7 @@
 @section('content')
     @php
         $todayIso = now()->toDateString();
+        $currentUser = auth()->user();
     @endphp
 
     <nav class="advisor-breadcrumb" aria-label="Breadcrumb">
@@ -50,10 +51,11 @@
                         </div>
                     </dl>
 
-                    <p class="appt-confirm-note">Vui lòng có mặt trước giờ hẹn 10 phút. Cần đổi lịch, gọi hotline 1900 6789.</p>
+                    <p class="appt-confirm-note">Vui lòng có mặt trước giờ hẹn 10 phút. Cần đổi lịch, bạn có thể tra cứu bằng mã lịch hẹn và email đã đăng ký.</p>
 
                     <div class="appt-confirm-actions">
                         <a class="advisor-btn advisor-btn--ghost" href="{{ route('home') }}">Về trang chủ</a>
+                        <a class="advisor-btn advisor-btn--ghost" href="{{ route('appointments.lookup', ['code' => $confirmed->code]) }}">Tra cứu lịch</a>
                         <a class="advisor-btn advisor-btn--solid" href="{{ route('appointments.create') }}">Đặt thêm lịch khác</a>
                     </div>
                 </div>
@@ -71,7 +73,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('appointments.store') }}" method="post" class="appt-wizard" id="apptForm" novalidate>
+                <form action="{{ route('appointments.store') }}" method="post" class="appt-wizard" id="apptForm" data-slots-url="{{ route('appointments.unavailable-slots') }}" novalidate>
                     @csrf
                     <input type="hidden" name="service_code" id="apptServiceCode" value="{{ old('service_code') }}">
                     <input type="hidden" name="appointment_time" id="apptTime" value="{{ old('appointment_time') }}">
@@ -112,7 +114,10 @@
                                 <span>Chọn giờ</span>
                                 <div class="appt-time-grid" role="group" aria-label="Khung giờ">
                                     @foreach ($timeSlots as $slot)
-                                        <button type="button" class="appt-time-btn" data-time="{{ $slot }}">{{ $slot }}</button>
+                                        <button type="button" class="appt-time-btn" data-time="{{ $slot }}">
+                                            <span>{{ $slot }}</span>
+                                            <small></small>
+                                        </button>
                                     @endforeach
                                 </div>
                             </div>
@@ -129,15 +134,15 @@
                         <div class="appt-form-grid">
                             <label class="appt-field">
                                 <span>Họ và tên *</span>
-                                <input type="text" name="customer_name" maxlength="100" value="{{ old('customer_name') }}" required>
+                                <input type="text" name="customer_name" maxlength="100" value="{{ old('customer_name', $currentUser?->full_name) }}" required>
                             </label>
                             <label class="appt-field">
                                 <span>Số điện thoại *</span>
-                                <input type="tel" name="customer_phone" maxlength="15" value="{{ old('customer_phone') }}" required>
+                                <input type="tel" name="customer_phone" maxlength="15" value="{{ old('customer_phone', $currentUser?->phone) }}" required>
                             </label>
                             <label class="appt-field appt-field--wide">
-                                <span>Email (không bắt buộc)</span>
-                                <input type="email" name="customer_email" maxlength="190" value="{{ old('customer_email') }}">
+                                <span>Email *</span>
+                                <input type="email" name="customer_email" maxlength="190" value="{{ old('customer_email', $currentUser?->email) }}" required>
                             </label>
                             <label class="appt-field appt-field--wide">
                                 <span>Ghi chú (không bắt buộc)</span>
@@ -168,6 +173,7 @@
             const timeInput = document.getElementById('apptTime');
             const dateInput = document.getElementById('apptDate');
             const summaryBox = document.getElementById('apptSummary');
+            const slotsUrl = form.dataset.slotsUrl;
             let selectedServiceName = '';
             let selectedServicePrice = 0;
 
@@ -211,8 +217,45 @@
                 if (nextBtn) nextBtn.disabled = !(dateInput.value && timeInput.value);
             }
 
+            async function refreshUnavailableSlots() {
+                if (!slotsUrl || !dateInput || !dateInput.value) return;
+
+                const url = new URL(slotsUrl, window.location.origin);
+                url.searchParams.set('date', dateInput.value);
+
+                try {
+                    const response = await fetch(url.toString(), {
+                        headers: { 'Accept': 'application/json' }
+                    });
+
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+
+                    form.querySelectorAll('.appt-time-btn').forEach((btn) => {
+                        const slot = data.slots?.[btn.dataset.time];
+                        const disabled = slot && slot.available === false;
+                        const label = btn.querySelector('small');
+
+                        btn.disabled = disabled;
+                        btn.classList.toggle('is-disabled', disabled);
+                        if (label) label.textContent = disabled ? slot.label : '';
+
+                        if (disabled && timeInput.value === btn.dataset.time) {
+                            btn.classList.remove('is-selected');
+                            timeInput.value = '';
+                        }
+                    });
+
+                    checkScheduleReady();
+                } catch (error) {
+                    console.warn('Không thể tải khung giờ khả dụng.', error);
+                }
+            }
+
             form.querySelectorAll('.appt-time-btn').forEach((btn) => {
                 btn.addEventListener('click', function () {
+                    if (this.disabled) return;
                     form.querySelectorAll('.appt-time-btn').forEach((b) => b.classList.remove('is-selected'));
                     this.classList.add('is-selected');
                     timeInput.value = this.dataset.time;
@@ -220,7 +263,10 @@
                 });
             });
 
-            dateInput && dateInput.addEventListener('change', checkScheduleReady);
+            dateInput && dateInput.addEventListener('change', function () {
+                refreshUnavailableSlots();
+                checkScheduleReady();
+            });
 
             function updateSummary() {
                 if (!summaryBox) return;
@@ -234,6 +280,8 @@
                     '<div><span>Dịch vụ</span><strong>' + selectedServiceName + ' &mdash; ' + priceText + '</strong></div>' +
                     '<div><span>Thời gian</span><strong>' + timeInput.value + ', ' + dateText + '</strong></div>';
             }
+
+            refreshUnavailableSlots();
         });
     </script>
 @endpush

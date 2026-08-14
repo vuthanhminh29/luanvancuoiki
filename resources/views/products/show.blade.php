@@ -24,11 +24,7 @@
             ->filter()
             ->values();
 
-        while ($thumbnailImages->count() < 3) {
-            $thumbnailImages->push($thumbnailImages->last() ?: asset('upload/no-image.jpg'));
-        }
 
-        $thumbnailImages = $thumbnailImages->take(3);
         $rawDescription = trim((string) $product->description);
 
         if ($rawDescription === '') {
@@ -75,16 +71,26 @@
                         @endif
                         <img src="{{ $product->image_url }}" alt="{{ $product->name }}" id="mainProductImage" class="watch-main-img">
                     </div>
-                    <div class="watch-thumbnails">
-                        @foreach ($thumbnailImages as $thumbnailImage)
-                            @php
-                                $fallbackImage = $loop->first ? $product->image_url : $thumbnailImages->get($loop->index - 1, $product->image_url);
-                            @endphp
-                            <div class="watch-thumb {{ $loop->first ? 'active' : '' }}">
-                                <img src="{{ $thumbnailImage }}" alt="{{ $product->name }}" data-fallback="{{ $fallbackImage }}" onerror="this.onerror=null;this.src=this.dataset.fallback;" onclick="changeMainImage(this)">
-                            </div>
-                        @endforeach
-                    </div>
+<div class="watch-thumb-slider">
+    <button type="button" class="watch-thumb-arrow" onclick="scrollThumbs(-1)" aria-label="Ảnh trước">
+        <i class="fa fa-chevron-left"></i>
+    </button>
+
+    <div class="watch-thumbnails" id="watchThumbnails">
+        @foreach ($thumbnailImages as $thumbnailImage)
+            @php
+                $fallbackImage = $loop->first ? $product->image_url : $thumbnailImages->get($loop->index - 1, $product->image_url);
+            @endphp
+            <div class="watch-thumb {{ $loop->first ? 'active' : '' }}">
+                <img src="{{ $thumbnailImage }}" alt="{{ $product->name }}" data-fallback="{{ $fallbackImage }}" onerror="this.onerror=null;this.src=this.dataset.fallback;" onclick="changeMainImage(this)">
+            </div>
+        @endforeach
+    </div>
+
+    <button type="button" class="watch-thumb-arrow" onclick="scrollThumbs(1)" aria-label="Ảnh sau">
+        <i class="fa fa-chevron-right"></i>
+    </button>
+</div>
                 </div>
 
                 <div class="watch-info-col">
@@ -459,8 +465,22 @@
         function changeMainImage(thumbnail) {
             const mainImage = document.getElementById('mainProductImage');
             mainImage.src = thumbnail.src;
+
             document.querySelectorAll('.watch-thumb').forEach(t => t.classList.remove('active'));
             thumbnail.parentElement.classList.add('active');
+        }
+
+        function scrollThumbs(direction) {
+            const list = document.getElementById('watchThumbnails');
+            if (!list) return;
+
+            const item = list.querySelector('.watch-thumb');
+            const step = item ? item.offsetWidth + 12 : 120;
+
+            list.scrollBy({
+                left: direction * step,
+                behavior: 'smooth'
+            });
         }
 
         function increaseQty(max) {

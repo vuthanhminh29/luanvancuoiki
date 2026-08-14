@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminRouteAliasController;
+use App\Http\Controllers\Admin\AppointmentAdminController;
 use App\Http\Controllers\Admin\BannerAdminController;
 use App\Http\Controllers\Admin\BusinessAdminController;
 use App\Http\Controllers\Admin\CategoryAdminController;
@@ -62,6 +63,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/don-hang/{order}', [OrderAdminController::class, 'show'])->name('orders.show');
         Route::put('/don-hang/{order}/trang-thai', [OrderAdminController::class, 'updateStatus'])->name('orders.status');
         Route::patch('/don-hang/{order}/huy', [OrderAdminController::class, 'cancel'])->name('orders.cancel');
+
+        Route::get('/lich-do-mat', [AppointmentAdminController::class, 'index'])->name('appointments.index');
+        Route::patch('/lich-do-mat/{appointment}/xac-nhan', [AppointmentAdminController::class, 'confirm'])->name('appointments.confirm');
+        Route::patch('/lich-do-mat/{appointment}/huy', [AppointmentAdminController::class, 'cancel'])->name('appointments.cancel');
+        Route::patch('/lich-do-mat/{appointment}/hoan-tat', [AppointmentAdminController::class, 'complete'])->name('appointments.complete');
+        Route::patch('/lich-do-mat/{appointment}/khong-den', [AppointmentAdminController::class, 'noShow'])->name('appointments.no-show');
 
         Route::get('/hoan-doi', [ReturnAdminController::class, 'index'])->name('returns.index');
         Route::get('/hoan-doi/{return}', [ReturnAdminController::class, 'show'])->name('returns.show');

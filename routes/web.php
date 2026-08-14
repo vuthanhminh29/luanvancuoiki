@@ -41,6 +41,9 @@ Route::get('/chon-trong-kinh', [StyleAdvisorController::class, 'lensSelector'])-
 // Đặt lịch đo thị lực tại cửa hàng. Mở cho cả khách chưa đăng nhập.
 Route::get('/dat-lich-do-mat', [AppointmentController::class, 'create'])->middleware('throttle:web-read')->name('appointments.create');
 Route::post('/dat-lich-do-mat', [AppointmentController::class, 'store'])->middleware('throttle:user-actions')->name('appointments.store');
+Route::get('/lich-hen/khung-gio-khong-kha-dung', [AppointmentController::class, 'unavailableSlots'])->middleware('throttle:web-read')->name('appointments.unavailable-slots');
+Route::get('/tra-cuu-lich-hen', [AppointmentController::class, 'lookup'])->middleware('throttle:web-read')->name('appointments.lookup');
+Route::patch('/tra-cuu-lich-hen/{appointment}/doi-lich', [AppointmentController::class, 'reschedule'])->middleware('throttle:user-actions')->name('appointments.reschedule');
 
 // Route nhận kết quả thanh toán VNPAY sau khi khách quay lại hoặc VNPAY gọi IPN.
 Route::get('/vnpay/return', [VnPayController::class, 'return'])->name('vnpay.return');

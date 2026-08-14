@@ -195,6 +195,8 @@
                     </div>
                 </div>
 
+                <a href="{{ route('admin.appointments.index') }}" class="nav-item nav-link {{ $isRoute('admin.appointments.*') ? 'active' : '' }}"><i class="far fa-calendar-check me-2"></i>Lịch đo mắt</a>
+
                 @if ($isAdminUser)
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.reports.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fas fa-chart-bar me-2"></i>Báo cáo</a>
