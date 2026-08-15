@@ -34,9 +34,8 @@ Route::get('/bai-viet/{post:slug}', [BlogController::class, 'show'])->middleware
 Route::get('/lien-he', [PageController::class, 'contact'])->name('pages.contact');
 Route::get('/ho-tro', [PageController::class, 'support'])->middleware('throttle:web-read')->name('pages.support');
 
-// Công cụ tư vấn: tìm dáng kính theo khuôn mặt và chọn tròng kính phù hợp.
+// Công cụ tư vấn: tìm dáng kính theo khuôn mặt.
 Route::get('/tim-dang-kinh', [StyleAdvisorController::class, 'faceShape'])->middleware('throttle:web-read')->name('style.face-shape');
-Route::get('/chon-trong-kinh', [StyleAdvisorController::class, 'lensSelector'])->middleware('throttle:web-read')->name('style.lens-selector');
 
 // Đặt lịch đo thị lực tại cửa hàng. Mở cho cả khách chưa đăng nhập.
 Route::get('/dat-lich-do-mat', [AppointmentController::class, 'create'])->middleware('throttle:web-read')->name('appointments.create');

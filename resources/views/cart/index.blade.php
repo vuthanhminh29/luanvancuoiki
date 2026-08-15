@@ -14,6 +14,9 @@
         $hasCartErrors = isset($errors) && $errors->any();
         $cartMessage = session('error') ?: session('success') ?: ($hasCartErrors ? $errors->first() : null);
         $formatMoney = fn ($value) => number_format((float) $value, 0, ',', '.') . 'đ';
+        $totalBeforeDiscount = (float) $items->sum('original_line_total');
+        $discount = (float) $items->sum('discount_total');
+        $halfPayment = $totalPayment / 2;
     @endphp
 
     <section class="cart-page">
@@ -32,7 +35,7 @@
                         <p class="cart-kicker">Đơn hàng của bạn</p>
                         <h1>Giỏ hàng</h1>
                     </div>
-                    <div class="cart-count">{{ $totalQuantity }}/{{ $orderMaxQuantity }} sản phẩm</div>
+                    <div class="cart-count">{{ $totalQuantity }} sản phẩm</div>
                 </header>
 
                 @if ($cartMessage)
@@ -69,6 +72,7 @@
                                     @php
                                         $variant = $item['variant'];
                                         $product = $variant->product;
+                                        $lensOption = $item['lens_option'] ?? null;
                                     @endphp
 
                                     <article class="cart-item">
@@ -88,10 +92,26 @@
                                                         <span> &bull; Màu: {{ $variant->color->name }}</span>
                                                     @endif
                                                 </div>
+                                                @if ($lensOption)
+                                                    <div class="cart-lens-option">
+                                                        <i class="fa fa-layer-group"></i>
+                                                        <div>
+                                                            <strong>Tròng kính: {{ $lensOption['name'] }}</strong>
+                                                            <span>+{{ $formatMoney($lensOption['price']) }} / sản phẩm</span>
+                                                        </div>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
 
-                                        <div class="cart-price" data-label="Đơn giá">{{ $formatMoney($variant->display_price) }}</div>
+                                        <div class="cart-price" data-label="Đơn giá">
+                                            @if ($lensOption)
+                                                <div>{{ $formatMoney($item['unit_price']) }}</div>
+                                                <small>Gọng {{ $formatMoney($item['frame_unit_price']) }} + tròng {{ $formatMoney($item['lens_unit_price']) }}</small>
+                                            @else
+                                                {{ $formatMoney($variant->display_price) }}
+                                            @endif
+                                        </div>
 
                                         <div class="cart-quantity" data-label="Số lượng">
                                             <div class="input-next-cart">
@@ -139,11 +159,15 @@
                         </div>
                         <div class="cart-summary-row">
                             <span>Số lượng</span>
-                            <strong>{{ $totalQuantity }}/{{ $orderMaxQuantity }}</strong>
+                            <strong>{{ $totalQuantity }}</strong>
                         </div>
                         <div class="cart-summary-row">
                             <span>Tạm tính</span>
-                            <strong>{{ $formatMoney($totalPayment) }}</strong>
+                            <strong>{{ $formatMoney($totalBeforeDiscount) }}</strong>
+                        </div>
+                        <div class="cart-summary-row">
+                            <span>Giảm giá</span>
+                            <strong>{{ $discount > 0 ? '-' : '' }}{{ $formatMoney($discount) }}</strong>
                         </div>
                         <div class="cart-summary-row muted">
                             <span>Phí vận chuyển</span>
@@ -154,6 +178,11 @@
                             <span>Tổng</span>
                             <strong>{{ $formatMoney($totalPayment) }}</strong>
                         </div>
+                        <div class="cart-summary-total">
+                            <span>Nửa giá</span>
+                            <strong>{{ $formatMoney($halfPayment) }}</strong>
+                        </div>
+
                         <a href="{{ route('checkout.index') }}" class="cart-checkout-btn" id="cart-checkout-link">
                             Thanh toán
                         </a>

@@ -11,7 +11,6 @@ use App\Http\Controllers\Admin\CategoryAdminController;
 use App\Http\Controllers\Admin\CustomerAdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeLayoutAdminController;
-use App\Http\Controllers\Admin\LensOptionAdminController;
 use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\PostAdminController;
 use App\Http\Controllers\Admin\ProductAdminController;
@@ -49,13 +48,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/danh-muc/{category}/sua', [CategoryAdminController::class, 'edit'])->name('categories.edit');
         Route::put('/danh-muc/{category}', [CategoryAdminController::class, 'update'])->name('categories.update');
         Route::patch('/danh-muc/{category}/an', [CategoryAdminController::class, 'hidden'])->name('categories.hidden');
-
-        Route::get('/trong-kinh', [LensOptionAdminController::class, 'index'])->name('lens-options.index');
-        Route::get('/trong-kinh/them', [LensOptionAdminController::class, 'create'])->name('lens-options.create');
-        Route::post('/trong-kinh', [LensOptionAdminController::class, 'store'])->name('lens-options.store');
-        Route::get('/trong-kinh/{lensOption}/sua', [LensOptionAdminController::class, 'edit'])->name('lens-options.edit');
-        Route::put('/trong-kinh/{lensOption}', [LensOptionAdminController::class, 'update'])->name('lens-options.update');
-        Route::patch('/trong-kinh/{lensOption}/an', [LensOptionAdminController::class, 'hidden'])->name('lens-options.hidden');
 
         Route::get('/don-hang', [OrderAdminController::class, 'index'])->name('orders.index');
         Route::get('/don-hang/cho-xac-nhan', [OrderAdminController::class, 'unconfirmed'])->name('orders.unconfirmed');

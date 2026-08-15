@@ -5,16 +5,21 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Inventory;
+use App\Models\LensOption;
 use App\Models\ProductVariant;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CartController extends Controller
 {
     private const MAX_TOTAL_QUANTITY = 10;
 
+    /**
+     * Hiển thị giỏ hàng hiện tại.
+     */
     public function index(): View
     {
         return view('cart.index', [
@@ -22,35 +27,60 @@ class CartController extends Controller
         ]);
     }
 
+    /**
+     * Thêm sản phẩm vào giỏ hàng.
+     */
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:' . self::MAX_TOTAL_QUANTITY],
+            'lens_option_code' => ['nullable', 'string', Rule::exists('lens_options', 'code')->where('status', 'ACTIVE')],
         ]);
 
         $variant = ProductVariant::active()->findOrFail($data['variant_id']);
         $cart = $this->limitedCart($this->normalizedCart(session('cart', [])));
+        $cartLensOptions = $this->normalizedCartLensOptions((array) session('cart_lens_options', []), $cart);
         $requestedQuantity = (int) ($data['quantity'] ?? 1);
         $remainingQuantity = self::MAX_TOTAL_QUANTITY - $this->totalQuantity($cart);
         $availableStock = $this->sellableStockFor($variant->id);
         $remainingStock = $availableStock - (int) ($cart[$variant->id] ?? 0);
 
         if ($availableStock <= 0 || $remainingStock <= 0) {
-            session(['cart' => $cart]);
+            session(['cart' => $cart, 'cart_lens_options' => $cartLensOptions]);
 
             return back()->with('error', 'Sản phẩm này hiện đã hết hàng.');
         }
 
         if ($remainingQuantity <= 0) {
-            session(['cart' => $cart]);
+            session(['cart' => $cart, 'cart_lens_options' => $cartLensOptions]);
 
             return back()->with('error', 'Mỗi đơn chỉ đặt tối đa ' . self::MAX_TOTAL_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
         }
 
         $quantity = min($requestedQuantity, $remainingQuantity, $remainingStock);
         $cart[$variant->id] = ($cart[$variant->id] ?? 0) + $quantity;
-        session(['cart' => $cart]);
+
+        if ($request->has('lens_option_code') && empty($data['lens_option_code'])) {
+            unset($cartLensOptions[$variant->id]);
+        }
+
+        if (! empty($data['lens_option_code'])) {
+            $lensOption = LensOption::active()
+                ->where('code', $data['lens_option_code'])
+                ->firstOrFail();
+
+            $cartLensOptions[$variant->id] = [
+                'code' => $lensOption->code,
+                'name' => $lensOption->name,
+                'price' => (float) $lensOption->price,
+            ];
+        }
+
+        session([
+            'cart' => $cart,
+            'cart_lens_options' => $this->normalizedCartLensOptions($cartLensOptions, $cart),
+        ]);
 
         if ($quantity < $requestedQuantity) {
             return back()->with('success', 'Chỉ thêm được ' . $quantity . ' sản phẩm vì giỏ hàng đã chạm giới hạn hoặc tồn kho không đủ.');
@@ -59,6 +89,9 @@ class CartController extends Controller
         return back()->with('success', 'Đã thêm sản phẩm vào giỏ hàng.');
     }
 
+    /**
+     * Cập nhật số lượng trong giỏ hàng.
+     */
     public function update(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -67,6 +100,7 @@ class CartController extends Controller
         ]);
 
         $cart = $this->limitedCart($this->normalizedCart(session('cart', [])));
+        $cartLensOptions = $this->normalizedCartLensOptions((array) session('cart_lens_options', []), $cart);
         $updatedCart = $cart;
 
         foreach ($data['quantities'] ?? [] as $variantId => $quantity) {
@@ -85,7 +119,7 @@ class CartController extends Controller
         }
 
         if ($this->totalQuantity($updatedCart) > self::MAX_TOTAL_QUANTITY) {
-            session(['cart' => $cart]);
+            session(['cart' => $cart, 'cart_lens_options' => $cartLensOptions]);
 
             return back()->with('error', 'Mỗi đơn chỉ đặt tối đa ' . self::MAX_TOTAL_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
         }
@@ -94,30 +128,42 @@ class CartController extends Controller
 
         foreach ($updatedCart as $variantId => $quantity) {
             if ($quantity > (int) ($stockByVariant[$variantId] ?? 0)) {
-                session(['cart' => $cart]);
+                session(['cart' => $cart, 'cart_lens_options' => $cartLensOptions]);
 
                 return back()->with('error', 'Số lượng cập nhật vượt quá tồn kho hiện có.');
             }
         }
 
-        session(['cart' => $updatedCart]);
+        session([
+            'cart' => $updatedCart,
+            'cart_lens_options' => $this->normalizedCartLensOptions($cartLensOptions, $updatedCart),
+        ]);
 
         return back()->with('success', 'Giỏ hàng đã được cập nhật.');
     }
 
+    /**
+     * Xóa một sản phẩm khỏi giỏ hàng.
+     */
     public function destroy(int $variant): RedirectResponse
     {
         $cart = session('cart', []);
+        $cartLensOptions = (array) session('cart_lens_options', []);
         unset($cart[$variant]);
-        session(['cart' => $cart]);
+        unset($cartLensOptions[$variant]);
+        session(['cart' => $cart, 'cart_lens_options' => $cartLensOptions]);
 
         return back()->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
     }
 
+    /**
+     * Lấy thông tin chi tiết các sản phẩm trong giỏ.
+     */
     private function cartItems()
     {
         $cart = $this->limitedCart($this->normalizedCart(session('cart', [])));
-        session(['cart' => $cart]);
+        $cartLensOptions = $this->normalizedCartLensOptions((array) session('cart_lens_options', []), $cart);
+        session(['cart' => $cart, 'cart_lens_options' => $cartLensOptions]);
 
         if ($cart === []) {
             return collect();
@@ -127,17 +173,32 @@ class CartController extends Controller
             ->with(['product.brand', 'color', 'lensSize'])
             ->whereIn('id', array_keys($cart))
             ->get()
-            ->map(function (ProductVariant $variant) use ($cart) {
+            ->map(function (ProductVariant $variant) use ($cart, $cartLensOptions) {
                 $quantity = (int) ($cart[$variant->id] ?? 0);
+                $originalUnitPrice = (float) ($variant->variant_price ?: $variant->product?->base_price ?: 0);
+                $currentUnitPrice = (float) $variant->display_price;
+                $lensOption = $cartLensOptions[$variant->id] ?? null;
+                $lensUnitPrice = (float) ($lensOption['price'] ?? 0);
+                $originalConfiguredPrice = $originalUnitPrice + $lensUnitPrice;
+                $configuredPrice = $currentUnitPrice + $lensUnitPrice;
 
                 return [
                     'variant' => $variant,
                     'quantity' => $quantity,
-                    'line_total' => $variant->display_price * $quantity,
+                    'lens_option' => $lensOption,
+                    'frame_unit_price' => $currentUnitPrice,
+                    'lens_unit_price' => $lensUnitPrice,
+                    'unit_price' => $configuredPrice,
+                    'original_line_total' => $originalConfiguredPrice * $quantity,
+                    'line_total' => $configuredPrice * $quantity,
+                    'discount_total' => max(0, ($originalUnitPrice - $currentUnitPrice) * $quantity),
                 ];
             });
     }
 
+    /**
+     * Chuẩn hóa dữ liệu giỏ hàng.
+     */
     private function normalizedCart(array $cart): array
     {
         $normalized = [];
@@ -156,6 +217,9 @@ class CartController extends Controller
         return $normalized;
     }
 
+    /**
+     * Giới hạn tổng số lượng sản phẩm trong giỏ.
+     */
     private function limitedCart(array $cart): array
     {
         $limited = [];
@@ -172,6 +236,40 @@ class CartController extends Controller
         }
 
         return $limited;
+    }
+
+    /**
+     * Tính tổng số lượng sản phẩm trong giỏ.
+     */
+    private function normalizedCartLensOptions(array $cartLensOptions, array $cart): array
+    {
+        return [];
+
+        $normalized = [];
+
+        foreach (array_keys($cart) as $variantId) {
+            $option = $cartLensOptions[$variantId] ?? $cartLensOptions[(string) $variantId] ?? null;
+
+            if (! is_array($option)) {
+                continue;
+            }
+
+            $code = trim((string) ($option['code'] ?? ''));
+            $name = trim((string) ($option['name'] ?? ''));
+            $price = max(0, (float) ($option['price'] ?? 0));
+
+            if ($code === '' || $name === '') {
+                continue;
+            }
+
+            $normalized[(int) $variantId] = [
+                'code' => $code,
+                'name' => $name,
+                'price' => $price,
+            ];
+        }
+
+        return $normalized;
     }
 
     private function totalQuantity(array $cart): int

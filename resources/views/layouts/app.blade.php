@@ -90,11 +90,29 @@
         .payment__icons { display: flex; flex-wrap: wrap; gap: .5rem; }
         .payment__icons img { height: 28px; width: auto; filter: grayscale(100%) brightness(1.2); opacity: .7; transition: all .2s; }
         .payment__icons img:hover { filter: grayscale(0); opacity: 1; }
+        .floating-socials { align-items: center; bottom: 28px; display: flex; gap: 10px; left: 28px; position: fixed; z-index: 1050; }
+        .floating-socials button,.floating-socials a { align-items: center; background: #fff; border: 1px solid rgba(15,23,42,.08); border-radius: 999px; box-shadow: 0 12px 28px rgba(15,23,42,.16); display: inline-flex; font-size: 18px; height: 44px; justify-content: center; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, opacity .18s ease, width .18s ease; width: 44px; }
+        .floating-socials button { background: #0a3d42; color: #fff; cursor: pointer; }
+        .floating-socials button:hover,.floating-socials a:hover { box-shadow: 0 16px 34px rgba(15,23,42,.22); transform: translateY(-4px); }
+        .floating-socials .social-link { border-width: 0; opacity: 0; overflow: hidden; pointer-events: none; transform: translateX(-10px) scale(.82); width: 0; }
+        .floating-socials:hover .social-link,.floating-socials:focus-within .social-link,.floating-socials.is-open .social-link { border-width: 1px; opacity: 1; pointer-events: auto; transform: translateX(0) scale(1); width: 44px; }
+        .floating-socials .fb { color: #1877f2; }
+        .floating-socials .ig { color: #e1306c; }
+        .floating-socials .zalo { color: #0068ff; font-size: 13px; font-weight: 900; letter-spacing: -.04em; }
+        .floating-socials .yt { color: #ff0000; }
+        .floating-socials .fb:hover { background: #1877f2; color: #fff; }
+        .floating-socials .ig:hover { background: #e1306c; color: #fff; }
+        .floating-socials .zalo:hover { background: #0068ff; color: #fff; }
+        .floating-socials .yt:hover { background: #ff0000; color: #fff; }
         @media (max-width: 767px) {
             .footer { padding: 2.5rem 0 0; }
             .newsletter__input-group { flex-direction: column; }
             .newsletter__button { width: 100%; }
             .footer__social, .payment__icons { justify-content: center; }
+            .floating-socials { bottom: 84px; left: 16px; }
+            .floating-socials button,.floating-socials a { height: 40px; width: 40px; }
+            .floating-socials .social-link { width: 0; }
+            .floating-socials:hover .social-link,.floating-socials:focus-within .social-link,.floating-socials.is-open .social-link { width: 40px; }
         }
     </style>
     @stack('styles')
@@ -164,8 +182,7 @@
                     <nav class="header__menu">
                         <ul class="d-flex align-items-center justify-content-center gap-4 m-0 p-0" style="list-style: none;">
                             <li><a href="{{ route('home') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Trang chủ</a></li>
-                            <li><a href="{{ route('products.index', ['category' => 'gong-kinh']) }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Gọng kính</a></li>
-                            <li><a href="{{ route('style.lens-selector') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Tròng kính</a></li>
+                            <li><a href="{{ route('products.index') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Gọng kính</a></li>
                             <li><a href="{{ route('style.face-shape') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Tìm dáng kính</a></li>
                             <li><a href="{{ route('appointments.create') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Đo thị lực</a></li>
                             <li><a href="{{ route('blog.index') }}" style="font-weight: 600; color: #1e293b; font-size: 14px;">Bài viết</a></li>
@@ -261,7 +278,6 @@
                     <ul class="list-unstyled d-flex flex-column gap-2" style="color: #cbd5e1;">
                         <li><a href="{{ route('appointments.create') }}" style="color: inherit; text-decoration: none;">Đặt lịch đo thị lực</a></li>
                         <li><a href="{{ route('style.face-shape') }}" style="color: inherit; text-decoration: none;">Tìm dáng kính phù hợp</a></li>
-                        <li><a href="{{ route('style.lens-selector') }}" style="color: inherit; text-decoration: none;">Chọn tròng kính phù hợp</a></li>
                         <li><a href="{{ route('pages.support') }}" style="color: inherit; text-decoration: none;">Chính sách bảo hành</a></li>
                         <li><a href="{{ route('returns.index') }}" style="color: inherit; text-decoration: none;">Chính sách đổi trả</a></li>
                         <li><a href="{{ route('checkout.index') }}" style="color: inherit; text-decoration: none;">Thanh toán & giao hàng</a></li>
@@ -303,6 +319,24 @@
     </div>
 
     <!-- Back to Top Button -->
+    @php
+        // Dán link thật vào đây là được. Ví dụ: 'facebook' => 'https://facebook.com/ten-page'
+        $floatingSocialLinks = [
+            'facebook' => 'https://hcmus.edu.vn/',
+            'instagram' => 'https://www.youtube.com/@kinhhaitrieu',
+            'zalo' => 'https://www.youtube.com/@kinhhaitrieu',
+            'youtube' => 'https://www.youtube.com/@kinhhaitrieu',
+        ];
+    @endphp
+
+    <div class="floating-socials" aria-label="Kênh liên hệ nhanh">
+        <button type="button" aria-label="Mở kênh liên hệ" title="Liên hệ" data-social-toggle><i class="fas fa-share-alt"></i></button>
+        <a class="social-link fb" href="{{ $floatingSocialLinks['facebook'] }}" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a class="social-link ig" href="{{ $floatingSocialLinks['instagram'] }}" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"><i class="fab fa-instagram"></i></a>
+        <a class="social-link zalo" href="{{ $floatingSocialLinks['zalo'] }}" target="_blank" rel="noopener" aria-label="Zalo" title="Zalo">Zalo</a>
+        <a class="social-link yt" href="{{ $floatingSocialLinks['youtube'] }}" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"><i class="fab fa-youtube"></i></a>
+    </div>
+
     <button id="backToTopBtn" type="button" aria-label="Trở lại đầu trang" class="btn text-white position-fixed rounded-circle shadow-lg" style="bottom: 28px; right: 28px; width: 44px; height: 44px; background: #0a3d42; display: none; z-index: 1050; border: none; align-items: center; justify-content: center; transition: opacity 0.3s ease, transform 0.2s ease;">
         <i class="fas fa-chevron-up"></i>
     </button>
@@ -374,6 +408,13 @@
                 });
                 backToTopBtn.addEventListener('click', function () {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            var socialToggle = document.querySelector('[data-social-toggle]');
+            if (socialToggle) {
+                socialToggle.addEventListener('click', function () {
+                    socialToggle.closest('.floating-socials').classList.toggle('is-open');
                 });
             }
 

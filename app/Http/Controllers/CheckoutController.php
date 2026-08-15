@@ -23,20 +23,29 @@ class CheckoutController extends Controller
 {
     private const MAX_CART_QUANTITY = 10;
 
+    /**
+     * Hiển thị trang thanh toán.
+     */
     public function index(): View
     {
         $cart = session('cart', []);
+        $cartLensOptions = $this->normalizedCartLensOptions((array) session('cart_lens_options', []), $cart);
         $items = ProductVariant::query()
             ->with(['product.brand', 'color', 'lensSize'])
             ->whereIn('id', array_keys($cart))
             ->get()
-            ->map(function (ProductVariant $variant) use ($cart) {
+            ->map(function (ProductVariant $variant) use ($cart, $cartLensOptions) {
                 $quantity = (int) ($cart[$variant->id] ?? 0);
+                $lensOption = $cartLensOptions[$variant->id] ?? null;
+                $lensUnitPrice = (float) ($lensOption['price'] ?? 0);
+                $unitPrice = (float) $variant->display_price + $lensUnitPrice;
 
                 return [
                     'variant' => $variant,
                     'quantity' => $quantity,
-                    'line_total' => $variant->display_price * $quantity,
+                    'lens_option' => $lensOption,
+                    'unit_price' => $unitPrice,
+                    'line_total' => $unitPrice * $quantity,
                 ];
             });
         $subtotal = (float) $items->sum('line_total');
@@ -56,6 +65,9 @@ class CheckoutController extends Controller
         ]);
     }
 
+    /**
+     * Áp dụng mã giảm giá cho đơn hàng.
+     */
     public function applyPromotion(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -73,8 +85,9 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Mỗi đơn chỉ đặt tối đa ' . self::MAX_CART_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
         }
 
+        $cartLensOptions = $this->normalizedCartLensOptions((array) session('cart_lens_options', []), $cart);
         $variants = $this->cartVariants($cart);
-        $subtotal = $this->cartSubtotal($variants, $cart);
+        $subtotal = $this->cartSubtotal($variants, $cart, $cartLensOptions);
         [$promotion, $message] = $this->promotionFromCode((string) $data['promotion_code'], $subtotal);
 
         if (! $promotion) {
@@ -91,6 +104,9 @@ class CheckoutController extends Controller
             ->with('success', 'Đã áp dụng mã giảm giá ' . $promotion->promotion_code . '.');
     }
 
+    /**
+     * Gỡ mã giảm giá đang áp dụng.
+     */
     public function removePromotion(Request $request): RedirectResponse
     {
         session()->forget('checkout_promotion_code');
@@ -101,6 +117,9 @@ class CheckoutController extends Controller
             ->with('success', 'Đã bỏ mã giảm giá.');
     }
 
+    /**
+     * Tạo đơn hàng hoặc chuyển sang thanh toán VNPay.
+     */
     public function store(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail): RedirectResponse
     {
         $data = $request->validate([
@@ -155,7 +174,8 @@ class CheckoutController extends Controller
             }
         }
 
-        $subtotal = $this->cartSubtotal($variants, $cart);
+        $cartLensOptions = $this->normalizedCartLensOptions((array) session('cart_lens_options', []), $cart);
+        $subtotal = $this->cartSubtotal($variants, $cart, $cartLensOptions);
         [$promotion, $discountMessage] = $this->appliedPromotion($subtotal);
 
         if ($discountMessage !== null) {
@@ -175,7 +195,7 @@ class CheckoutController extends Controller
 
         if ($data['payment_method'] === 'VNPAY') {
             try {
-                $draft = $this->storePendingVnPayCheckout($data, $cart, $variants, $shippingAddress, $promotion, $discountAmount);
+                $draft = $this->storePendingVnPayCheckout($data, $cart, $variants, $cartLensOptions, $shippingAddress, $promotion, $discountAmount);
                 $paymentOrder = new Order([
                     'order_code' => $draft['order_code'],
                     'total_amount' => $draft['total_amount'],
@@ -187,18 +207,21 @@ class CheckoutController extends Controller
             }
         }
 
-        $order = $this->createOrder($data, $cart, $variants, $shippingAddress, $promotion, $discountAmount);
+        $order = $this->createOrder($data, $cart, $variants, $cartLensOptions, $shippingAddress, $promotion, $discountAmount);
         $orderConfirmationEmail->send($order);
 
-        session()->forget(['cart', 'checkout_promotion_code']);
+        session()->forget(['cart', 'cart_lens_options', 'checkout_promotion_code']);
 
         return redirect()->route('account.orders.show', $order)->with('success', 'Đặt hàng thành công.');
     }
 
-    private function createOrder(array $data, array $cart, $variants, string $shippingAddress, ?Promotion $promotion, float $discountAmount): Order
+    /**
+     * Tạo đơn hàng và các dòng sản phẩm.
+     */
+    private function createOrder(array $data, array $cart, $variants, array $cartLensOptions, string $shippingAddress, ?Promotion $promotion, float $discountAmount): Order
     {
-        return DB::transaction(function () use ($data, $cart, $variants, $shippingAddress, $promotion, $discountAmount) {
-            $subtotal = $variants->sum(fn (ProductVariant $variant) => $variant->display_price * (int) $cart[$variant->id]);
+        return DB::transaction(function () use ($data, $cart, $variants, $cartLensOptions, $shippingAddress, $promotion, $discountAmount) {
+            $subtotal = $this->cartSubtotal($variants, $cart, $cartLensOptions);
             $shippingFee = 0;
             $discountAmount = min($discountAmount, (float) $subtotal);
 
@@ -225,13 +248,15 @@ class CheckoutController extends Controller
 
             foreach ($variants as $variant) {
                 $quantity = (int) $cart[$variant->id];
-                $unitPrice = $variant->display_price;
+                $lensOption = $cartLensOptions[$variant->id] ?? null;
+                $unitPrice = (float) $variant->display_price + (float) ($lensOption['price'] ?? 0);
+                $productName = Str::limit($variant->product->name . ($lensOption ? ' + Tròng kính: ' . $lensOption['name'] : ''), 200, '');
 
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $variant->product_id,
                     'variant_id' => $variant->id,
-                    'product_name' => $variant->product->name,
+                    'product_name' => $productName,
                     'sku' => $variant->sku,
                     'color_name' => $variant->color->name ?? null,
                     'lens_size_name' => $variant->lensSize->name ?? null,
@@ -246,9 +271,12 @@ class CheckoutController extends Controller
         });
     }
 
-    private function storePendingVnPayCheckout(array $data, array $cart, $variants, string $shippingAddress, ?Promotion $promotion, float $discountAmount): array
+    /**
+     * Lưu tạm đơn VNPay trước khi thanh toán xong.
+     */
+    private function storePendingVnPayCheckout(array $data, array $cart, $variants, array $cartLensOptions, string $shippingAddress, ?Promotion $promotion, float $discountAmount): array
     {
-        $subtotal = $variants->sum(fn (ProductVariant $variant) => $variant->display_price * (int) $cart[$variant->id]);
+        $subtotal = $this->cartSubtotal($variants, $cart, $cartLensOptions);
         $shippingFee = 0;
         $discountAmount = min($discountAmount, (float) $subtotal);
         $expiresAt = now()->addMinutes((int) config('vnpay.expire_time', 30));
@@ -264,6 +292,7 @@ class CheckoutController extends Controller
                 'note' => isset($data['note']) ? trim((string) $data['note']) : null,
             ],
             'cart' => $cart,
+            'cart_lens_options' => $cartLensOptions,
             'shipping_address' => $shippingAddress,
             'subtotal_amount' => $subtotal,
             'discount_amount' => $discountAmount,
@@ -280,6 +309,9 @@ class CheckoutController extends Controller
         return $draft;
     }
 
+    /**
+     * Chuẩn hóa giỏ hàng trong session.
+     */
     private function normalizedCart(): array
     {
         return collect(session('cart', []))
@@ -287,6 +319,9 @@ class CheckoutController extends Controller
             ->all();
     }
 
+    /**
+     * Lấy các biến thể sản phẩm trong giỏ.
+     */
     private function cartVariants(array $cart)
     {
         return ProductVariant::query()
@@ -295,9 +330,50 @@ class CheckoutController extends Controller
             ->get();
     }
 
-    private function cartSubtotal($variants, array $cart): float
+    /**
+     * Tính tạm tính của giỏ hàng.
+     */
+    private function cartSubtotal($variants, array $cart, array $cartLensOptions = []): float
     {
-        return (float) $variants->sum(fn (ProductVariant $variant) => $variant->display_price * (int) $cart[$variant->id]);
+        return (float) $variants->sum(function (ProductVariant $variant) use ($cart, $cartLensOptions) {
+            $lensUnitPrice = (float) ($cartLensOptions[$variant->id]['price'] ?? 0);
+
+            return ((float) $variant->display_price + $lensUnitPrice) * (int) $cart[$variant->id];
+        });
+    }
+
+    /**
+     * Tính tổng số lượng sản phẩm trong giỏ.
+     */
+    private function normalizedCartLensOptions(array $cartLensOptions, array $cart): array
+    {
+        return [];
+
+        $normalized = [];
+
+        foreach (array_keys($cart) as $variantId) {
+            $option = $cartLensOptions[$variantId] ?? $cartLensOptions[(string) $variantId] ?? null;
+
+            if (! is_array($option)) {
+                continue;
+            }
+
+            $code = trim((string) ($option['code'] ?? ''));
+            $name = trim((string) ($option['name'] ?? ''));
+            $price = max(0, (float) ($option['price'] ?? 0));
+
+            if ($code === '' || $name === '') {
+                continue;
+            }
+
+            $normalized[(int) $variantId] = [
+                'code' => $code,
+                'name' => $name,
+                'price' => $price,
+            ];
+        }
+
+        return $normalized;
     }
 
     private function totalQuantity(array $cart): int
@@ -305,6 +381,9 @@ class CheckoutController extends Controller
         return array_sum(array_map('intval', $cart));
     }
 
+    /**
+     * Lấy mã giảm giá đang áp dụng.
+     */
     private function currentPromotion(float $subtotal): ?Promotion
     {
         [$promotion] = $this->appliedPromotion($subtotal);
@@ -312,6 +391,9 @@ class CheckoutController extends Controller
         return $promotion;
     }
 
+    /**
+     * Kiểm tra mã giảm giá trong session.
+     */
     private function appliedPromotion(float $subtotal): array
     {
         $code = (string) session('checkout_promotion_code', '');
@@ -331,6 +413,9 @@ class CheckoutController extends Controller
         return [$promotion, null];
     }
 
+    /**
+     * Tìm và kiểm tra điều kiện của mã giảm giá.
+     */
     private function promotionFromCode(string $code, float $subtotal): array
     {
         $code = Str::upper(trim($code));

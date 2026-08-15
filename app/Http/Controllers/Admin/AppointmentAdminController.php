@@ -8,6 +8,7 @@ use App\Services\AppointmentNotificationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -41,6 +42,33 @@ class AppointmentAdminController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        try {
+            $selectedDate = $filters['date'] !== '' ? Carbon::parse($filters['date']) : today();
+        } catch (\Throwable) {
+            $selectedDate = today();
+        }
+
+        $weekStart = $selectedDate->copy()->startOfWeek(Carbon::MONDAY);
+        $weekEnd = $selectedDate->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $calendarAppointments = Appointment::query()
+            ->with('user')
+            ->whereBetween('appointment_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->when($filters['status'] !== '', fn ($query) => $query->where('status', $filters['status']))
+            ->when($filters['keyword'] !== '', function ($query) use ($filters) {
+                $keyword = '%' . $filters['keyword'] . '%';
+
+                $query->where(function ($inner) use ($keyword) {
+                    $inner->where('code', 'like', $keyword)
+                        ->orWhere('customer_name', 'like', $keyword)
+                        ->orWhere('customer_phone', 'like', $keyword)
+                        ->orWhere('customer_email', 'like', $keyword);
+                });
+            })
+            ->orderBy('appointment_date')
+            ->orderBy('appointment_time')
+            ->get();
+
         $summary = [
             'total' => Appointment::count(),
             'pending' => Appointment::where('status', Appointment::STATUS_PENDING)->count(),
@@ -53,6 +81,10 @@ class AppointmentAdminController extends Controller
             'filters' => $filters,
             'summary' => $summary,
             'statuses' => $this->statuses(),
+            'calendarAppointments' => $calendarAppointments,
+            'selectedDate' => $selectedDate,
+            'weekStart' => $weekStart,
+            'weekEnd' => $weekEnd,
         ]);
     }
 

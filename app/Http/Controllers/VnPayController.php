@@ -76,7 +76,7 @@ class VnPayController extends Controller
         }
 
         $this->forgetPendingDraft($txnRef);
-        session()->forget('cart');
+        session()->forget(['cart', 'cart_lens_options']);
 
         if ($shouldSendConfirmation) {
             $orderConfirmationEmail->send($order);
@@ -186,6 +186,7 @@ class VnPayController extends Controller
             $cart = collect($draft['cart'])
                 ->mapWithKeys(fn ($quantity, $variantId) => [(int) $variantId => (int) $quantity])
                 ->all();
+            $cartLensOptions = $this->normalizedCartLensOptions((array) ($draft['cart_lens_options'] ?? []), $cart);
 
             if (array_sum(array_map('intval', $cart)) > self::MAX_CART_QUANTITY) {
                 throw new RuntimeException('Mỗi đơn chỉ đặt tối đa ' . self::MAX_CART_QUANTITY . ' sản phẩm. Vui lòng giảm số lượng trong giỏ.');
@@ -200,7 +201,7 @@ class VnPayController extends Controller
                 throw new RuntimeException('Sản phẩm trong giỏ hàng không còn hợp lệ, chưa thể tạo đơn sau thanh toán.');
             }
 
-            $subtotal = $variants->sum(fn (ProductVariant $variant) => $variant->display_price * (int) $cart[$variant->id]);
+            $subtotal = $this->cartSubtotal($variants, $cart, $cartLensOptions);
             $shippingFee = (float) ($draft['shipping_fee'] ?? 0);
             $discountAmount = min((float) ($draft['discount_amount'] ?? 0), (float) $subtotal);
             $totalAmount = max(0, $subtotal - $discountAmount) + $shippingFee;
@@ -233,13 +234,15 @@ class VnPayController extends Controller
 
             foreach ($variants as $variant) {
                 $quantity = (int) $cart[$variant->id];
-                $unitPrice = $variant->display_price;
+                $lensOption = $cartLensOptions[$variant->id] ?? null;
+                $unitPrice = (float) $variant->display_price + (float) ($lensOption['price'] ?? 0);
+                $productName = Str::limit($variant->product->name . ($lensOption ? ' + Tròng kính: ' . $lensOption['name'] : ''), 200, '');
 
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $variant->product_id,
                     'variant_id' => $variant->id,
-                    'product_name' => $variant->product->name,
+                    'product_name' => $productName,
                     'sku' => $variant->sku,
                     'color_name' => $variant->color->name ?? null,
                     'lens_size_name' => $variant->lensSize->name ?? null,
@@ -286,6 +289,46 @@ class VnPayController extends Controller
     /**
      * Lưu giao dịch VNPay thành công.
      */
+    private function cartSubtotal($variants, array $cart, array $cartLensOptions = []): float
+    {
+        return (float) $variants->sum(function (ProductVariant $variant) use ($cart, $cartLensOptions) {
+            $lensUnitPrice = (float) ($cartLensOptions[$variant->id]['price'] ?? 0);
+
+            return ((float) $variant->display_price + $lensUnitPrice) * (int) $cart[$variant->id];
+        });
+    }
+
+    private function normalizedCartLensOptions(array $cartLensOptions, array $cart): array
+    {
+        return [];
+
+        $normalized = [];
+
+        foreach (array_keys($cart) as $variantId) {
+            $option = $cartLensOptions[$variantId] ?? $cartLensOptions[(string) $variantId] ?? null;
+
+            if (! is_array($option)) {
+                continue;
+            }
+
+            $code = trim((string) ($option['code'] ?? ''));
+            $name = trim((string) ($option['name'] ?? ''));
+            $price = max(0, (float) ($option['price'] ?? 0));
+
+            if ($code === '' || $name === '') {
+                continue;
+            }
+
+            $normalized[(int) $variantId] = [
+                'code' => $code,
+                'name' => $name,
+                'price' => $price,
+            ];
+        }
+
+        return $normalized;
+    }
+
     private function saveSuccessfulPayment(Order $order, array $result): void
     {
         Payment::updateOrCreate([

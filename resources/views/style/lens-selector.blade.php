@@ -101,6 +101,7 @@
                             @csrf
                             <input type="hidden" name="variant_id" value="{{ $frameVariantId }}">
                             <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="lens_option_code" id="lensCartOptionCode" value="">
                             <button type="submit" class="advisor-btn advisor-btn--ghost lens-summary-cta">
                                 <i class="fas fa-shopping-bag" aria-hidden="true"></i> Thêm vào giỏ hàng
                             </button>
@@ -111,7 +112,7 @@
                         </button>
                     @endif
 
-                    <p class="lens-summary-note">"Thêm vào giỏ hàng" thêm gọng kính theo giá gốc; lớp tráng tròng kính bên trên sẽ được nhân viên xác nhận qua yêu cầu tư vấn.</p>
+                    <p class="lens-summary-note">"Thêm vào giỏ hàng" sẽ thêm gọng kính kèm tròng kính đang chọn và tính tạm tính trong giỏ hàng.</p>
                 </aside>
             </div>
         </div>
@@ -143,6 +144,7 @@
             const summaryPlaceholder = document.getElementById('lensSummaryPlaceholder');
             const summaryTotal = document.getElementById('lensSummaryTotal');
             const contactBtn = document.getElementById('lensContactBtn');
+            const cartLensInput = document.getElementById('lensCartOptionCode');
             const formatter = new Intl.NumberFormat('vi-VN');
 
             // Nhiều tab hiển thị trùng một số lựa chọn (nhu cầu/tính năng có thể
@@ -166,11 +168,13 @@
                 summaryList.querySelectorAll('.lens-summary-row[data-lens-row]').forEach((row) => row.remove());
 
                 let total = framePrice;
+                let selectedCode = '';
                 if (seen.size === 0) {
                     summaryPlaceholder.hidden = false;
                 } else {
                     summaryPlaceholder.hidden = true;
                     seen.forEach((item, code) => {
+                        selectedCode = code;
                         total += item.price;
                         const row = document.createElement('div');
                         row.className = 'lens-summary-row';
@@ -182,6 +186,9 @@
                 }
 
                 summaryTotal.textContent = formatter.format(total) + 'đ';
+                if (cartLensInput) {
+                    cartLensInput.value = selectedCode;
+                }
 
                 let subject = 'Yêu cầu tư vấn tròng kính';
                 let bodyLines = [];

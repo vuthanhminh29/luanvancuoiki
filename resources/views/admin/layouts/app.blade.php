@@ -210,14 +210,6 @@
                 </div>
                 @endif
 
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle {{ $isRoute('admin.lens-options.*') ? 'active' : '' }}" data-bs-toggle="dropdown"><i class="fas fa-layer-group me-2"></i>Tròng kính</a>
-                    <div class="dropdown-menu bg-transparent border-0">
-                        <a href="{{ route('admin.lens-options.create') }}" class="dropdown-item {{ $isRoute('admin.lens-options.create') ? 'active' : '' }}">Thêm mới</a>
-                        <a href="{{ route('admin.lens-options.index') }}" class="dropdown-item {{ $isRoute('admin.lens-options.index', 'admin.lens-options.edit') ? 'active' : '' }}">Tất cả</a>
-                    </div>
-                </div>
-
                 <a href="{{ route('admin.warehouses.index') }}" class="nav-item nav-link {{ $isRoute('admin.warehouses.*') ? 'active' : '' }}"><i class="fas fa-warehouse me-2"></i>Quản lý kho</a>
                 
                 @if ($isAdminUser)

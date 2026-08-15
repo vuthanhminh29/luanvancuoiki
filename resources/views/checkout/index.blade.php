@@ -231,6 +231,7 @@
                                     @php
                                         $variant = $item['variant'];
                                         $product = $variant->product;
+                                        $lensOption = $item['lens_option'] ?? null;
                                     @endphp
                                     <div class="order-item">
                                         <div class="order-item-media">
@@ -249,6 +250,11 @@
                                                     <span> &bull; {{ $variant->color->name }}</span>
                                                 @endif
                                             </div>
+                                            @if ($lensOption)
+                                                <div class="order-item-lens">
+                                                    Tròng kính: {{ $lensOption['name'] }} (+{{ number_format((float) $lensOption['price'], 0, ',', '.') }}đ)
+                                                </div>
+                                            @endif
                                             <div class="order-item-qty">Số lượng: {{ $item['quantity'] }}</div>
                                         </div>
                                         <div class="order-item-price">
