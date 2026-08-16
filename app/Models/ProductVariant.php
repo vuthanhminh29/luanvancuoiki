@@ -22,26 +22,37 @@ class ProductVariant extends Model
 
     public function product(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Product::class);
     }
 
     public function color(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Color::class);
     }
 
     public function lensSize(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(LensSize::class);
     }
 
     public function scopeActive($query)
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $query->where('status', 'ACTIVE');
     }
 
     public function getDisplayPriceAttribute(): float
     {
-        return (float) ($this->variant_price ?: $this->product?->display_price ?: 0);
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
+        if ($this->product && $this->product->sale_price) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
+            return (float) $this->product->sale_price;
+        }
+
+        // Luong: Tra ve ket qua cuoi cung cua ham.
+        return (float) ($this->variant_price ?: $this->product?->base_price ?: 0);
     }
 }

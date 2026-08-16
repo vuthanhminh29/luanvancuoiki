@@ -749,4 +749,15 @@ a.watch-extra-btn {
         font-size: 0.8125rem;
         padding: 0.5rem;
     }
+
+    .pa-gallery-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.pa-gallery-input-row .pa-file {
+    flex: 1;
+}
 }

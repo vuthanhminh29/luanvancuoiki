@@ -11,16 +11,19 @@ class ProductReview extends Model
 
     public function user(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(User::class);
     }
 
     public function product(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Product::class);
     }
 
     public function orderItem(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(OrderItem::class);
     }
 }

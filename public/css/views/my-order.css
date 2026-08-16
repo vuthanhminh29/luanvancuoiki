@@ -30,6 +30,9 @@
 .order-badge.success { color:#047857; background:#ecfdf5; border-color:#a7f3d0; }
 .order-badge.danger { color:#b91c1c; background:#fef2f2; border-color:#fecaca; }
 .order-badge.return { color:#3730a3; background:#eef2ff; border-color:#c7d2fe; }
+.order-badge.return-progress { color:#0f766e; background:#ecfeff; border-color:#99f6e4; }
+.order-badge.return-done { color:#075985; background:#f0f9ff; border-color:#bae6fd; }
+.order-badge.return-rejected { color:#9f1239; background:#fff1f2; border-color:#fecdd3; }
 .order-badge.dark { color:#374151; background:#f3f4f6; border-color:#d1d5db; }
 .order-products { padding:16px; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
 .order-product { min-width:0; display:flex; gap:11px; padding:10px; border:1px solid #eef0f3; border-radius:8px; background:#fff; }

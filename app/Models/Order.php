@@ -46,35 +46,41 @@ class Order extends Model
     // Đơn hàng thuộc về một khách hàng.
     public function user(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(User::class);
     }
 
     // Một đơn hàng có nhiều dòng sản phẩm.
     public function items(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(OrderItem::class);
     }
 
     // Một đơn hàng có thể phát sinh nhiều yêu cầu hoàn đổi.
     public function returnRequests(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(ReturnRequest::class);
     }
 
     // Một đơn hàng có thể có nhiều bản ghi thanh toán, ví dụ thanh toán lại hoặc IPN.
     public function payments(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(Payment::class);
     }
 
     // Đơn hàng có thể áp dụng một mã khuyến mãi.
     public function promotion(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Promotion::class);
     }
 
     public function hasReturnableStatus(): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return in_array($this->status, ['DELIVERED', 'RETURN_PENDING', 'RETURNED', 'EXCHANGED'], true);
     }
 }

@@ -45,18 +45,18 @@
         .sidebar .navbar { align-content: flex-start; align-items: flex-start; display: flex; flex-wrap: nowrap; flex-direction: column; height: auto; justify-content: flex-start !important; min-height: 100%; padding: 16px 0 0; }
         .sidebar .navbar-brand { align-items: center; display: flex; flex: 0 0 auto; margin: 0 0 12px 26px !important; min-height: 42px; }
         .sidebar .navbar-brand h3 { color: #fff !important; font-size: 25px; font-weight: 800; letter-spacing: 0; margin: 0; }
-        .sidebar .navbar .navbar-nav { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: space-between; margin-top: 0 !important; min-height: 0; padding: 0 14px 16px 0; width: 100%; }
+        .sidebar .navbar .navbar-nav { display: flex; flex: 1 1 auto; flex-direction: column; gap: 7px; justify-content: flex-start; margin-top: 0 !important; min-height: 0; padding: 0 14px 18px 0; width: 100%; }
         .sidebar .navbar .navbar-nav .nav-link {
             align-items: center;
             border-left: 0 !important;
             border-radius: 0 26px 26px 0;
             color: #cbd5e1 !important;
             display: flex;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 800;
             gap: 13px;
             margin: 0;
-            min-height: 43px;
+            min-height: 45px;
             padding: 0 18px 0 34px;
             position: relative;
             transition: background-color .15s ease, color .15s ease;
@@ -82,8 +82,16 @@
         .sidebar .navbar .nav-link.active i { background: transparent !important; }
         .sidebar .navbar .dropdown-toggle::after { top: calc(50% - 3px); right: 14px; }
         .sidebar .dropdown-menu { background: #0f172a !important; border-radius: 0 16px 16px 0; margin: 0 0 4px 0; padding: 4px 0; }
-        .sidebar .dropdown-item { color:#cbd5e1 !important; font-size:13px; font-weight:700; min-height:27px; padding:5px 22px 5px 66px; }
+        .sidebar .dropdown-item { color:#cbd5e1 !important; font-size:13px; font-weight:700; min-height:30px; padding:6px 22px 6px 66px; }
         .sidebar .dropdown-item:hover { color: #fff !important; background: #1d4ed8 !important; }
+        .sidebar.sidebar-compact { border-radius: 0 0 24px 0; height: auto; max-height: calc(100vh - 14px); min-height: 0; padding-bottom: 22px !important; }
+        .sidebar.sidebar-compact .navbar { min-height: 0; padding: 20px 0 0; }
+        .sidebar.sidebar-compact .navbar-brand { margin-bottom: 16px !important; min-height: 42px; }
+        .sidebar.sidebar-compact .navbar-brand h3 { font-size: 25px; }
+        .sidebar.sidebar-compact .navbar .navbar-nav { flex: 0 0 auto; gap: 10px; padding-bottom: 0; }
+        .sidebar.sidebar-compact .navbar .navbar-nav .nav-link { font-size: 15px; min-height: 52px; padding-left: 36px; }
+        .sidebar.sidebar-compact .navbar .navbar-nav .nav-link i { font-size: 18px; }
+        .sidebar.sidebar-compact .navbar .navbar-nav .nav-link.active { box-shadow: 0 10px 24px rgba(37,99,235,.24); }
         .content .navbar { min-height: 72px; background: #fff !important; border-bottom: 1px solid #e5e7eb; box-shadow: none; }
         .content .navbar .form-control { min-height: 42px; min-width: 230px; border-radius: 6px; }
         .content .navbar .sidebar-toggler { width: 46px; height: 46px; }
@@ -163,7 +171,7 @@
 @endphp
 
 <div class="container-xxl position-relative bg-white d-flex p-0">
-    <div class="sidebar pe-4 pb-3">
+    <div class="sidebar pe-4 pb-3 {{ $isAdminUser ? '' : 'sidebar-compact' }}">
         <nav class="navbar bg-light navbar-light">
             <a href="{{ route('admin.dashboard') }}" class="navbar-brand mx-4 mb-3"><h3>ADMIN PANEL</h3></a>
             <div class="navbar-nav w-100">
@@ -196,6 +204,7 @@
                 </div>
 
                 <a href="{{ route('admin.appointments.index') }}" class="nav-item nav-link {{ $isRoute('admin.appointments.*') ? 'active' : '' }}"><i class="far fa-calendar-check me-2"></i>Lịch đo mắt</a>
+                <a href="{{ route('admin.posts.index') }}" class="nav-item nav-link {{ $isRoute('admin.posts.*') ? 'active' : '' }}"><i class="fas fa-newspaper me-2"></i>Bài viết</a>
 
                 @if ($isAdminUser)
                 <div class="nav-item dropdown">
@@ -216,7 +225,6 @@
                 <a href="{{ route('admin.promotions.index') }}" class="nav-item nav-link {{ $isRoute('admin.promotions.*') ? 'active' : '' }}"><i class="fas fa-tags me-2"></i>Khuyến mãi</a>
                 <a href="{{ route('admin.customers.index') }}" class="nav-item nav-link {{ $isRoute('admin.customers.*') ? 'active' : '' }}"><i class="fas fa-users me-2"></i>Thành viên</a>
                 <a href="{{ route('admin.tryon-snapshots.index') }}" class="nav-item nav-link {{ $isRoute('admin.tryon-snapshots.*') ? 'active' : '' }}"><i class="fas fa-camera-retro me-2"></i>Thử kính</a>
-                <a href="{{ route('admin.posts.index') }}" class="nav-item nav-link {{ $isRoute('admin.posts.*') ? 'active' : '' }}"><i class="fas fa-newspaper me-2"></i>Bài viết</a>
                 <a href="{{ route('admin.banners.index') }}" class="nav-item nav-link {{ $isRoute('admin.banners.*') ? 'active' : '' }}"><i class="fas fa-images me-2"></i>Banners</a>
                 <a href="{{ route('admin.home-layout.index') }}" class="nav-item nav-link {{ $isRoute('admin.home-layout.*') ? 'active' : '' }}"><i class="fas fa-layer-group me-2"></i>Bố cục trang chủ</a>
                 <a href="{{ route('admin.business.index') }}" class="nav-item nav-link {{ $isRoute('admin.business.*') ? 'active' : '' }}"><i class="fas fa-briefcase me-2"></i>Thương hiệu & Cửa hàng</a>

@@ -39,6 +39,9 @@
 .od-badge.success { color:#047857; background:#ecfdf5; border-color:#a7f3d0; }
 .od-badge.danger { color:#b91c1c; background:#fef2f2; border-color:#fecaca; }
 .od-badge.return { color:#3730a3; background:#eef2ff; border-color:#c7d2fe; }
+.od-badge.return-progress { color:#0f766e; background:#ecfeff; border-color:#99f6e4; }
+.od-badge.return-done { color:#075985; background:#f0f9ff; border-color:#bae6fd; }
+.od-badge.return-rejected { color:#9f1239; background:#fff1f2; border-color:#fecdd3; }
 .od-badge.dark { color:#374151; background:#f3f4f6; border-color:#d1d5db; }
 .od-progress { margin-top:16px; position:relative; display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; }
 .od-progress:before { content:""; position:absolute; left:7%; right:7%; top:18px; height:2px; background:#e5e7eb; }

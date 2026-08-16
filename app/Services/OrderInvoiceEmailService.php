@@ -11,34 +11,53 @@ class OrderInvoiceEmailService
 {
     public function send(Order $order): bool
     {
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $order->loadMissing(['user', 'items']);
+        // Luong: Gan ket qua xu ly vao bien $email.
         $email = $this->customerEmail($order);
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($email === null) {
+            // Luong: Ghi log de theo doi va chan doan qua trinh xu ly.
             Log::warning('Order invoice email skipped because customer email is missing.', [
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'order_id' => $order->id,
             ]);
 
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return false;
         }
 
+        // Luong: Bat dau khoi xu ly co the phat sinh loi.
         try {
+            // Luong: Gui email dang text theo noi dung da tao.
             Mail::raw(
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->emailBody($order),
+                // Luong: Dinh nghia callback ngan gon cho thao tac hien tai.
                 fn ($message) => $message
+                    // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                     ->to($email)
+                    // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                     ->subject('Hóa đơn đơn hàng ' . ($order->order_code ?: '#' . $order->id))
             );
+        // Luong: Bat va xu ly loi phat sinh trong khoi try.
         } catch (\Throwable $exception) {
+            // Luong: Ghi log de theo doi va chan doan qua trinh xu ly.
             Log::error('Order invoice email could not be sent.', [
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'order_id' => $order->id,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'email' => $email,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'message' => $exception->getMessage(),
             ]);
 
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return false;
         }
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return true;
     }
 

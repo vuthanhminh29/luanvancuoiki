@@ -51,36 +51,43 @@ class User extends Authenticatable
 
     public function getAuthPassword(): string
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return (string) $this->password_hash;
     }
 
     public function getNameAttribute(): string
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return (string) ($this->full_name ?: $this->email);
     }
 
     public function addresses(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(UserAddress::class);
     }
 
     public function orders(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(Order::class);
     }
 
     public function productReviews(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(ProductReview::class);
     }
 
     public function returnRequests(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(ReturnRequest::class);
     }
 
     public function roles(): BelongsToMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsToMany(Role::class, 'user_roles');
     }
 }

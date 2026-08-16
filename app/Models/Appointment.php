@@ -67,71 +67,96 @@ class Appointment extends Model
 
     public function user(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(User::class);
     }
 
     public function scheduledAt(): ?Carbon
     {
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $this->appointment_date || ! $this->appointment_time) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return null;
         }
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return Carbon::parse($this->appointment_date->format('Y-m-d') . ' ' . $this->appointment_time);
     }
 
     public static function slotLockKeyFor(string $date, string $time): string
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return Carbon::parse($date)->format('Y-m-d') . '|' . trim($time);
     }
 
     public function statusLabel(): string
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return match ($this->status) {
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             self::STATUS_PENDING => 'Chờ xác nhận',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             self::STATUS_CONFIRMED => 'Đã xác nhận',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             self::STATUS_COMPLETED => 'Hoàn tất',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             self::STATUS_CANCELLED => 'Đã hủy',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             self::STATUS_NO_SHOW => 'Khách không đến',
+            // Luong: Danh dau mot nhanh xu ly trong cau truc switch.
             default => $this->status ?: '-',
         };
     }
 
     public function isActiveSlot(): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return in_array($this->status, self::ACTIVE_SLOT_STATUSES, true);
     }
 
     public function canConfirm(): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->status === self::STATUS_PENDING;
     }
 
     public function canCancel(): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return in_array($this->status, [self::STATUS_PENDING, self::STATUS_CONFIRMED], true);
     }
 
     public function canComplete(): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->status === self::STATUS_CONFIRMED;
     }
 
     public function canMarkNoShow(): bool
     {
+        // Luong: Gan ket qua xu ly vao bien $scheduledAt.
         $scheduledAt = $this->scheduledAt();
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->status === self::STATUS_CONFIRMED
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             && $scheduledAt !== null
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             && $scheduledAt->isPast();
     }
 
     public function canReschedule(): bool
     {
+        // Luong: Gan ket qua xu ly vao bien $scheduledAt.
         $scheduledAt = $this->scheduledAt();
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return in_array($this->status, self::RESCHEDULABLE_STATUSES, true)
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             && $this->reschedule_count < self::MAX_RESCHEDULE_COUNT
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             && $scheduledAt !== null
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             && $scheduledAt->gt(now()->addHours(self::RESCHEDULE_NOTICE_HOURS));
     }
 }

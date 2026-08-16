@@ -13,11 +13,13 @@ class Inventory extends Model
 
     public function warehouse(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Warehouse::class);
     }
 
     public function variant(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(ProductVariant::class);
     }
 }

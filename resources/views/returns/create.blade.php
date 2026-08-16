@@ -80,10 +80,10 @@
 
             <div class="form-group">
                 <label>Lý do</label>
-                <select name="reason_id" class="form-control" required>
+                <select name="reason_id" class="form-control" data-return-reason-select required>
                     <option value="">-- Chọn lý do --</option>
                     @foreach ($reasons as $reason)
-                        <option value="{{ $reason->id }}" @selected(old('reason_id') == $reason->id)>{{ $reason->name }}</option>
+                        <option value="{{ $reason->id }}" data-code="{{ $reason->code }}" data-type="{{ $reason->type }}" @selected(old('reason_id') == $reason->id)>{{ $reason->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -95,7 +95,7 @@
 
             <div class="form-group">
                 <label>Mô tả thêm</label>
-                <textarea name="reason_detail" rows="4" maxlength="1000" class="form-control" placeholder="Mô tả tình trạng sản phẩm hoặc mong muốn đổi hàng...">{{ old('reason_detail') }}</textarea>
+                <textarea name="reason_detail" rows="4" maxlength="1000" class="form-control" data-return-reason-detail placeholder="Mô tả tình trạng sản phẩm hoặc mong muốn đổi hàng...">{{ old('reason_detail') }}</textarea>
             </div>
 
             <div class="form-group">
@@ -122,6 +122,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var itemPurchased = document.querySelector('[data-return-item-purchased]');
     var itemRemaining = document.querySelector('[data-return-item-remaining]');
     var itemPrice = document.querySelector('[data-return-item-price]');
+    var typeSelect = document.querySelector('select[name="type"]');
+    var reasonSelect = document.querySelector('[data-return-reason-select]');
+    var reasonDetail = document.querySelector('[data-return-reason-detail]');
 
     function syncReturnItem() {
         if (!itemSelect || !quantityInput) {
@@ -159,6 +162,39 @@ document.addEventListener('DOMContentLoaded', function () {
         itemSelect.addEventListener('change', syncReturnItem);
         syncReturnItem();
     }
+
+    function syncReasonFields() {
+        if (!reasonSelect || !reasonDetail) {
+            return;
+        }
+
+        var selectedReason = reasonSelect.options[reasonSelect.selectedIndex];
+        var currentType = typeSelect ? typeSelect.value : '';
+
+        Array.from(reasonSelect.options).forEach(function (option) {
+            var reasonType = option.dataset.type || 'BOTH';
+            option.hidden = option.value !== '' && currentType && reasonType !== 'BOTH' && reasonType !== currentType;
+        });
+
+        if (selectedReason && selectedReason.hidden) {
+            reasonSelect.value = '';
+            selectedReason = reasonSelect.options[reasonSelect.selectedIndex];
+        }
+
+        var isOther = selectedReason && selectedReason.dataset.code === 'OTHER';
+        reasonDetail.required = Boolean(isOther);
+        reasonDetail.placeholder = isOther
+            ? 'Vui lòng ghi rõ lý do khác để nhân viên xử lý đúng.'
+            : 'Mô tả tình trạng sản phẩm hoặc mong muốn đổi hàng...';
+    }
+
+    if (reasonSelect) {
+        reasonSelect.addEventListener('change', syncReasonFields);
+    }
+    if (typeSelect) {
+        typeSelect.addEventListener('change', syncReasonFields);
+    }
+    syncReasonFields();
 });
 </script>
 @endpush

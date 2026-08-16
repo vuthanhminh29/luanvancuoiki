@@ -15,51 +15,80 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! Schema::hasTable('warehouses')) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return;
         }
 
         // Nới enum type nếu cột đang là ENUM, để nhận thêm QUARANTINE.
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $this->widenWarehouseTypeEnum();
 
+        // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
         $exists = DB::table('warehouses')
+            // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->where('type', 'QUARANTINE')
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->exists();
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($exists) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return;
         }
 
+        // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
         DB::table('warehouses')->insert([
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'warehouse_code' => 'KHOLOI',
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'name' => 'Kho hàng lỗi / chờ xử lý',
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'type' => 'QUARANTINE',
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'capacity' => 100000,
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'address_detail' => 'Khu vực lưu hàng khách hoàn/đổi về, chưa bán lại được.',
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'min_stock_level' => 0,
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'status' => 'ACTIVE',
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'created_at' => now(),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'updated_at' => now(),
         ]);
     }
 
     public function down(): void
     {
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! Schema::hasTable('warehouses')) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return;
         }
 
         // Chỉ xóa kho lỗi khi nó chưa giữ hàng, tránh làm mất số liệu tồn.
+        // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
         $warehouseIds = DB::table('warehouses')->where('type', 'QUARANTINE')->pluck('id');
 
+        // Luong: Lap qua tung phan tu de xu ly lan luot.
         foreach ($warehouseIds as $warehouseId) {
+            // Luong: Gan ket qua xu ly vao bien $hasStock.
             $hasStock = Schema::hasTable('inventories')
+                // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
                 && DB::table('inventories')
+                    // Luong: Bo sung dieu kien loc du lieu cho truy van.
                     ->where('warehouse_id', $warehouseId)
+                    // Luong: Bo sung dieu kien loc du lieu cho truy van.
                     ->where('quantity', '>', 0)
+                    // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                     ->exists();
 
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if (! $hasStock) {
+                // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
                 DB::table('warehouses')->where('id', $warehouseId)->delete();
             }
         }

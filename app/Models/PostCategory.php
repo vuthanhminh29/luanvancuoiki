@@ -11,6 +11,7 @@ class PostCategory extends Model
 
     public function posts(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(Post::class, 'category_id');
     }
 }

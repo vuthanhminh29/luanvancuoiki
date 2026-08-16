@@ -11,6 +11,7 @@ class ExampleTest extends TestCase
      */
     public function test_that_true_is_true(): void
     {
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $this->assertTrue(true);
     }
 }

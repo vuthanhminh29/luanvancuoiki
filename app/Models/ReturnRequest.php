@@ -33,31 +33,37 @@ class ReturnRequest extends Model
 
     public function order(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Order::class);
     }
 
     public function user(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(User::class);
     }
 
     public function reason(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(ReturnReason::class, 'reason_id');
     }
 
     public function items(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(ReturnRequestItem::class);
     }
 
     public function images(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(ReturnRequestImage::class);
     }
 
     public function damageAssessments(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(ReturnDamageAssessment::class);
     }
 }

@@ -245,9 +245,23 @@
                             <img class="pa-preview" src="{{ $product->image_url }}" alt="{{ $product->name }}">
                         @endif
                     </div>
-                    <div class="pa-field"><label class="pa-label">Ảnh phụ 1</label><input class="pa-file" name="image1" type="file" accept=".jpg,.jpeg,.png,.webp"></div>
-                    <div class="pa-field"><label class="pa-label">Ảnh phụ 2</label><input class="pa-file" name="image2" type="file" accept=".jpg,.jpeg,.png,.webp"></div>
-                    <div class="pa-field"><label class="pa-label">Ảnh phụ 3</label><input class="pa-file" name="image3" type="file" accept=".jpg,.jpeg,.png,.webp"></div>
+<div class="pa-field">
+    <label class="pa-label">Ảnh phụ</label>
+
+    <div id="galleryImageList">
+        <div class="pa-gallery-input-row">
+            <input class="pa-file" name="gallery_images[]" type="file" accept=".jpg,.jpeg,.png,.webp">
+            <button class="pa-btn" type="button" onclick="removeGalleryImageInput(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <button class="pa-btn" type="button" onclick="addGalleryImageInput()">
+        <i class="fas fa-plus"></i> Thêm ảnh phụ
+    </button>
+</div>
+
                     <div class="pa-hint">Ảnh được lưu trong `upload/anh_san_pham`.</div>
                     @if ($product?->images?->isNotEmpty())
                         <div class="pa-inline-actions">
@@ -299,5 +313,31 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+function addGalleryImageInput() {
+    const list = document.getElementById('galleryImageList');
+
+    const row = document.createElement('div');
+    row.className = 'pa-gallery-input-row';
+    row.innerHTML = `
+        <input class="pa-file" name="gallery_images[]" type="file" accept=".jpg,.jpeg,.png,.webp">
+        <button class="pa-btn" type="button" onclick="removeGalleryImageInput(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    list.appendChild(row);
+}
+
+function removeGalleryImageInput(button) {
+    const row = button.closest('.pa-gallery-input-row');
+    const list = document.getElementById('galleryImageList');
+
+    if (list.children.length > 1) {
+        row.remove();
+    } else {
+        row.querySelector('input').value = '';
+    }
+}
 </script>
 @endpush

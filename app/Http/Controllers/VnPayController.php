@@ -29,63 +29,99 @@ class VnPayController extends Controller
      */
     public function return(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail): RedirectResponse
     {
+        // Luong: Gan ket qua xu ly vao bien $result.
         $result = $vnPay->verify($request->query());
+        // Luong: Gan ket qua xu ly vao bien $txnRef.
         $txnRef = (string) $result['txn_ref'];
+        // Luong: Gan ket qua xu ly vao bien $order.
         $order = $this->findOrder($result);
+        // Luong: Gan ket qua xu ly vao bien $draft.
         $draft = $order ? null : $this->pendingDraft($txnRef);
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $result['is_valid']) {
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $this->forgetPendingDraft($txnRef);
 
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()->route('checkout.index')->with('error', 'Chữ ký thanh toán VNPay không hợp lệ.');
         }
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $order && ! $draft) {
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()->route('checkout.index')->with('error', 'Không tìm thấy giao dịch VNPay hoặc giao dịch đã hết hạn.');
         }
 
+        // Luong: Gan ket qua xu ly vao bien $expectedAmount.
         $expectedAmount = (float) ($order?->total_amount ?? $draft['total_amount']);
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (abs($expectedAmount - (float) $result['amount']) > 0.01) {
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($order) {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->cancelOrderPayment($order, $result, 'AMOUNT_MISMATCH', 'Số tiền VNPay trả về không khớp với đơn hàng.');
+            // Luong: Xu ly truong hop con lai cua nhanh dieu kien.
             } else {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->forgetPendingDraft($txnRef);
             }
 
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()->route('checkout.index')->with('error', 'Số tiền VNPay trả về không khớp với đơn hàng.');
         }
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $result['is_success']) {
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($order) {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->cancelOrderPayment($order, $result, (string) $result['response_code'], (string) $result['message']);
+            // Luong: Xu ly truong hop con lai cua nhanh dieu kien.
             } else {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->forgetPendingDraft($txnRef);
             }
 
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()->route('checkout.index')->with('error', 'Thanh toán VNPay chưa thành công: ' . $result['message']);
         }
 
+        // Luong: Gan ket qua xu ly vao bien $shouldSendConfirmation.
         $shouldSendConfirmation = ! $order || $order->payment_status !== 'PAID';
 
+        // Luong: Bat dau khoi xu ly co the phat sinh loi.
         try {
+            // Luong: Gan ket qua xu ly vao bien $order.
             $order = $order
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 ? $this->markPaid($order, $result)
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 : $this->createPaidOrderFromDraft($draft, $result);
+        // Luong: Bat va xu ly loi phat sinh trong khoi try.
         } catch (RuntimeException $exception) {
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()->route('checkout.index')->with('error', $exception->getMessage());
         }
 
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $this->forgetPendingDraft($txnRef);
+        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         session()->forget(['cart', 'cart_lens_options']);
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($shouldSendConfirmation) {
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $orderConfirmationEmail->send($order);
         }
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (Auth::id() === $order->user_id) {
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()->route('account.orders.show', $order)->with('success', 'Thanh toán VNPay thành công.');
         }
 
+        // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
         return redirect()->route('home')->with('success', 'Thanh toán VNPay thành công.');
     }
 
@@ -94,48 +130,77 @@ class VnPayController extends Controller
      */
     public function ipn(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail): JsonResponse
     {
+        // Luong: Gan ket qua xu ly vao bien $result.
         $result = $vnPay->verify($request->all());
+        // Luong: Gan ket qua xu ly vao bien $txnRef.
         $txnRef = (string) $result['txn_ref'];
+        // Luong: Gan ket qua xu ly vao bien $order.
         $order = $this->findOrder($result);
+        // Luong: Gan ket qua xu ly vao bien $draft.
         $draft = $order ? null : $this->pendingDraft($txnRef);
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $result['is_valid']) {
+            // Luong: Tra ve du lieu JSON cho client goi API.
             return response()->json(['RspCode' => '97', 'Message' => 'Invalid signature']);
         }
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $order && ! $draft) {
+            // Luong: Tra ve du lieu JSON cho client goi API.
             return response()->json(['RspCode' => '01', 'Message' => 'Order not found']);
         }
 
+        // Luong: Gan ket qua xu ly vao bien $expectedAmount.
         $expectedAmount = (float) ($order?->total_amount ?? $draft['total_amount']);
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (abs($expectedAmount - (float) $result['amount']) > 0.01) {
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($order) {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->markFailed($order, $result, 'AMOUNT_MISMATCH', 'VNPay returned amount does not match order total.');
+            // Luong: Xu ly truong hop con lai cua nhanh dieu kien.
             } else {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->forgetPendingDraft($txnRef);
             }
 
+            // Luong: Tra ve du lieu JSON cho client goi API.
             return response()->json(['RspCode' => '04', 'Message' => 'Invalid amount']);
         }
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($order && $order->payment_status === 'PAID') {
+            // Luong: Tra ve du lieu JSON cho client goi API.
             return response()->json(['RspCode' => '02', 'Message' => 'Order already confirmed']);
         }
 
+        // Luong: Bat dau khoi xu ly co the phat sinh loi.
         try {
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($result['is_success']) {
+                // Luong: Gan ket qua xu ly vao bien $order.
                 $order = $order ? $this->markPaid($order, $result) : $this->createPaidOrderFromDraft($draft, $result);
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->forgetPendingDraft($txnRef);
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $orderConfirmationEmail->send($order);
+            // Luong: Chuyen sang dieu kien thay the sau khi nhanh truoc khong dat.
             } elseif ($order) {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->markFailed($order, $result, (string) $result['response_code'], (string) $result['message']);
+            // Luong: Xu ly truong hop con lai cua nhanh dieu kien.
             } else {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->forgetPendingDraft($txnRef);
             }
+        // Luong: Bat va xu ly loi phat sinh trong khoi try.
         } catch (RuntimeException) {
+            // Luong: Tra ve du lieu JSON cho client goi API.
             return response()->json(['RspCode' => '99', 'Message' => 'Cannot confirm order']);
         }
 
+        // Luong: Tra ve du lieu JSON cho client goi API.
         return response()->json(['RspCode' => '00', 'Message' => 'Confirm Success']);
     }
 

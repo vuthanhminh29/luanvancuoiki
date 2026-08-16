@@ -847,15 +847,30 @@ textarea.form-control {
 
 .payment-option-card {
     cursor: pointer;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 34px;
+    align-items: center;
+    column-gap: 18px;
+    justify-content: stretch;
     margin-bottom: 10px;
+    text-align: left;
+}
+
+.payment-option-card > div {
+    min-width: 0;
+    text-align: left;
 }
 
 .payment-option-card input {
     width: 18px;
     height: 18px;
-    margin: 2px 0 0;
+    margin: 0;
     accent-color: #0e5c63;
-    flex: 0 0 auto;
+    justify-self: start;
+}
+
+.payment-option-card i {
+    justify-self: end;
 }
 
 .checkout-action-button {
@@ -1154,6 +1169,11 @@ textarea.form-control {
     .checkout-choice-card {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .payment-option-card {
+        grid-template-columns: 28px minmax(0, 1fr) 34px;
+        align-items: center;
     }
 
     .order-item {

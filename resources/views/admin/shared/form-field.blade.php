@@ -38,7 +38,7 @@
             </div>
         @endif
     @else
-        <input id="{{ $id }}" name="{{ $name }}" class="{{ $classes['input'] }} {{ $hasError ? 'is-invalid' : '' }}" type="{{ $type }}" value="{{ $value }}" @if(!empty($field['required'])) required @endif>
+        <input id="{{ $id }}" name="{{ $name }}" class="{{ $classes['input'] }} {{ $hasError ? 'is-invalid' : '' }}" type="{{ $type }}" value="{{ $value }}" @if(!empty($field['required'])) required @endif @if(!empty($field['readonly'])) readonly @endif>
     @endif
     @if ($hasError)
         <span class="{{ $classes['error'] }}">{{ $firstError }}</span>

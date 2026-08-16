@@ -78,39 +78,62 @@ class StyleAdvisorController extends Controller
 
     // Trang tìm dáng kính phù hợp theo khuôn mặt.
     // Route: GET /tim-dang-kinh.
+    /**
+     * Hiển thị tư vấn chọn kính theo khuôn mặt.
+     */
     public function faceShape(): View
     {
+        // Luong: Gan ket qua xu ly vao bien $frameShapes.
         $frameShapes = FrameShape::pluck('id', 'code');
 
+        // Luong: Gan ket qua xu ly vao bien $faceShapes.
         $faceShapes = collect(self::FACE_SHAPES)->map(function (array $shape, string $key) use ($frameShapes) {
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             $shape['key'] = $key;
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             $shape['recommendedShapeIds'] = collect($shape['recommend'])
+                // Luong: Thuc thi truy van va lay ket qua tu CSDL.
                 ->map(fn ($code) => $frameShapes->get($code))
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->filter()
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->values();
 
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return $shape;
         });
 
+        // Luong: Tra ve view de hien thi giao dien cho request.
         return view('style.face-shape', [
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'faceShapes' => $faceShapes,
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'frameShapeNames' => FrameShape::pluck('name', 'code'),
         ]);
     }
 
     // Trang chọn tròng kính phù hợp (bảng giá tư vấn, không phát sinh đơn hàng thật).
     // Route: GET /chon-trong-kinh.
+    /**
+     * Hiển thị tư vấn chọn tròng kính.
+     */
     public function lensSelector(Request $request): View
     {
         // variant_id chỉ có khi vào từ trang chi tiết sản phẩm (nút "Chọn tròng
         // kính"). Cần variant thật để nút "Thêm vào giỏ hàng" ở trang này có gì
         // đó hợp lệ để thêm — kiểm tra còn ACTIVE, tránh id giả từ URL.
+        // Luong: Gan ket qua xu ly vao bien $frameVariantId.
         $frameVariantId = ProductVariant::active()->find((int) $request->query('variant_id'))?->id;
 
+        // Luong: Tra ve view de hien thi giao dien cho request.
         return view('style.lens-selector', [
+            // Luong: Sap xep du lieu truoc khi tra ve ket qua.
             'lensOptions' => LensOption::active()->orderBy('sort_order')->orderBy('name')->get(),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'frameName' => $request->query('frame'),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'framePrice' => (int) $request->query('frame_price', 0),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'frameVariantId' => $frameVariantId,
         ]);
     }

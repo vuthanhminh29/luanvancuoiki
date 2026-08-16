@@ -9,27 +9,45 @@ use Illuminate\View\View;
 
 class AdminRouteAliasController extends Controller
 {
+    /**
+     * Xử lý route admin cũ.
+     */
     public function home(Request $request): RedirectResponse|View
     {
+        // Luong: Gan ket qua xu ly vao bien $route.
         $route = trim((string) $request->query('quanli', ''));
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($route !== '') {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return $this->redirectOldProjectRoute($request, $route);
         }
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return app(DashboardController::class)();
     }
 
+    /**
+     * Xử lý route cũ phía admin.
+     */
     public function index(Request $request): RedirectResponse|View
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->home($request);
     }
 
+    /**
+     * Chuyển đường dẫn admin cũ sang route mới.
+     */
     public function path(Request $request, string $oldRoute): RedirectResponse
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->redirectOldProjectRoute($request, $oldRoute);
     }
 
+    /**
+     * Chuyển route admin cũ sang route mới.
+     */
     private function redirectOldProjectRoute(Request $request, string $route): RedirectResponse
     {
         $route = trim($route);
@@ -94,6 +112,9 @@ class AdminRouteAliasController extends Controller
         return redirect()->route('admin.dashboard');
     }
 
+    /**
+     * Lấy id dự án cũ từ request.
+     */
     private function oldProjectId(Request $request): int
     {
         foreach (['id', 'id_sp', 'id_dm', 'id_dh', 'id_bv', 'id_bl', 'id_banner', 'id_user', 'id_kh', 'return_id'] as $key) {
@@ -107,6 +128,9 @@ class AdminRouteAliasController extends Controller
         return 0;
     }
 
+    /**
+     * Lấy route dự phòng khi không có ánh xạ.
+     */
     private function fallbackRoute(string $route): string
     {
         return match ($route) {

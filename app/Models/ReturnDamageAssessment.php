@@ -26,6 +26,7 @@ class ReturnDamageAssessment extends Model
 
     public function returnRequest(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(ReturnRequest::class);
     }
 }

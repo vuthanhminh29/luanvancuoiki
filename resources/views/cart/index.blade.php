@@ -16,7 +16,6 @@
         $formatMoney = fn ($value) => number_format((float) $value, 0, ',', '.') . 'đ';
         $totalBeforeDiscount = (float) $items->sum('original_line_total');
         $discount = (float) $items->sum('discount_total');
-        $halfPayment = $totalPayment / 2;
     @endphp
 
     <section class="cart-page">
@@ -177,10 +176,6 @@
                         <div class="cart-summary-total">
                             <span>Tổng</span>
                             <strong>{{ $formatMoney($totalPayment) }}</strong>
-                        </div>
-                        <div class="cart-summary-total">
-                            <span>Nửa giá</span>
-                            <strong>{{ $formatMoney($halfPayment) }}</strong>
                         </div>
 
                         <a href="{{ route('checkout.index') }}" class="cart-checkout-btn" id="cart-checkout-link">

@@ -32,6 +32,34 @@
         'EXCHANGED' => ['Đã đổi hàng', 'success', 'fa-right-left'],
         default => [$status ?: 'Chưa xác nhận', 'warning', 'fa-clock'],
     };
+    $returnStatusMeta = function ($request) {
+        $typeLabel = $request?->type === 'EXCHANGE' ? 'đổi hàng' : 'hoàn trả';
+
+        return match ($request?->status) {
+            'APPROVED' => ['Đã duyệt ' . $typeLabel, 'return-progress', 'fa-clipboard-check'],
+            'RECEIVED' => ['Đã nhận hàng hoàn/đổi', 'return-progress', 'fa-box-open'],
+            'COMPLETED' => ['Hoàn tất ' . $typeLabel, 'return-done', 'fa-check-circle'],
+            'REJECTED' => ['Từ chối ' . $typeLabel, 'return-rejected', 'fa-ban'],
+            'CANCELLED' => ['Đã hủy ' . $typeLabel, 'dark', 'fa-times-circle'],
+            default => ['Đang yêu cầu ' . $typeLabel, 'return', 'fa-rotate-left'],
+        };
+    };
+    $displayStatusForOrder = function ($order) {
+        if ($order->returnRequests->whereIn('status', ['PENDING', 'APPROVED', 'RECEIVED'])->isNotEmpty()) {
+            return 'RETURN_PENDING';
+        }
+
+        $completed = $order->returnRequests
+            ->where('status', 'COMPLETED')
+            ->sortByDesc('requested_at')
+            ->first();
+
+        return match ($completed?->type) {
+            'RETURN' => 'RETURNED',
+            'EXCHANGE' => 'EXCHANGED',
+            default => $order->status,
+        };
+    };
 @endphp
 
 <div class="orders-breadcrumb">
@@ -81,7 +109,13 @@
         @if ($orders->count() > 0)
             <div class="orders-list">
                 @foreach ($orders as $order)
-                    @php([$label, $class, $icon] = $statusMeta($order->status))
+                    @php
+                        $latestReturn = $order->returnRequests->first();
+                        [$label, $class, $icon] = $statusMeta($displayStatusForOrder($order));
+                        [$returnLabel, $returnClass, $returnIcon] = $latestReturn
+                            ? $returnStatusMeta($latestReturn)
+                            : [null, null, null];
+                    @endphp
                     <article class="order-card">
                         <div class="order-card-head">
                             <div class="order-id">
@@ -93,6 +127,11 @@
                             </div>
                             <div class="order-badges">
                                 <span class="order-badge {{ $class }}"><i class="fas {{ $icon }}"></i>{{ $label }}</span>
+                                @if ($latestReturn)
+                                    <span class="order-badge {{ $returnClass }}" title="Mã yêu cầu {{ $latestReturn->return_code }}">
+                                        <i class="fas {{ $returnIcon }}"></i>{{ $returnLabel }} · {{ $latestReturn->return_code }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
 

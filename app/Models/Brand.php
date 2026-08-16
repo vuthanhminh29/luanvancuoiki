@@ -11,11 +11,13 @@ class Brand extends Model
 
     public function products(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(Product::class);
     }
 
     public function scopeActive($query)
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $query->where('status', 'ACTIVE');
     }
 }

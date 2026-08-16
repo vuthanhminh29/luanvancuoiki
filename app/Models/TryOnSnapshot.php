@@ -29,18 +29,21 @@ class TryOnSnapshot extends Model
     // Một kết quả thử kính thuộc về một tài khoản khách hàng.
     public function user(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(User::class);
     }
 
     // Một kết quả thử kính gắn với sản phẩm kính đã được chọn.
     public function product(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Product::class);
     }
 
     // Biến thể giúp biết khách thử màu/size nào nếu sản phẩm có nhiều lựa chọn.
     public function variant(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(ProductVariant::class, 'variant_id');
     }
 
@@ -48,11 +51,14 @@ class TryOnSnapshot extends Model
     public function getImageUrlAttribute(): string
     {
         // Ảnh mới lưu trực tiếp trong public/upload/tryons để dễ kiểm tra trong project.
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (str_starts_with($this->image_path, 'upload/')) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return asset($this->image_path);
         }
 
         // Các ảnh cũ trước đó vẫn đọc được từ storage/app/public/tryons.
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return Storage::disk('public')->url($this->image_path);
     }
 }

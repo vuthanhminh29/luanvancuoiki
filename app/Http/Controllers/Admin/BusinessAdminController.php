@@ -16,78 +16,138 @@ use Illuminate\View\View;
 class BusinessAdminController extends Controller
 {
     // Hiển thị màn hình nghiệp vụ: thương hiệu, kho và các dữ liệu cấu hình.
+    /**
+     * Hiển thị danh sách thiết lập kinh doanh.
+     */
     public function index(Request $request): RedirectResponse|View
     {
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($request->query('tab') === 'promotions') {
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()->route('admin.promotions.index');
         }
 
+        // Luong: Gan ket qua xu ly vao bien $tabs.
         $tabs = ['brands', 'warehouses', 'stores', 'stock'];
+        // Luong: Gan ket qua xu ly vao bien $activeTab.
         $activeTab = in_array($request->query('tab'), $tabs, true) ? $request->query('tab') : 'brands';
 
+        // Luong: Gan ket qua xu ly vao bien $brands.
         $brands = Brand::query()
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->withCount('products')
+            // Luong: Sap xep du lieu truoc khi tra ve ket qua.
             ->latest()
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->limit(40)
+            // Luong: Thuc thi truy van va lay ket qua tu CSDL.
             ->get();
 
+        // Luong: Gan ket qua xu ly vao bien $warehouses.
         $warehouses = Warehouse::query()
+            // Luong: Sap xep du lieu truoc khi tra ve ket qua.
             ->latest()
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->limit(40)
+            // Luong: Thuc thi truy van va lay ket qua tu CSDL.
             ->get();
 
+        // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
         $stores = DB::table('stores')
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->leftJoin('warehouses', 'warehouses.id', '=', 'stores.warehouse_id')
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->select('stores.*', 'warehouses.name as warehouse_name')
+            // Luong: Sap xep du lieu truoc khi tra ve ket qua.
             ->latest('stores.id')
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->limit(40)
+            // Luong: Thuc thi truy van va lay ket qua tu CSDL.
             ->get();
 
+        // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
         $promotions = DB::table('promotions')
+            // Luong: Sap xep du lieu truoc khi tra ve ket qua.
             ->latest('created_at')
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->limit(40)
+            // Luong: Thuc thi truy van va lay ket qua tu CSDL.
             ->get();
 
+        // Luong: Gan ket qua xu ly vao bien $stockTransactions.
         $stockTransactions = StockTransaction::query()
+            // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
             ->with(['sourceWarehouse', 'targetWarehouse'])
+            // Luong: Sap xep du lieu truoc khi tra ve ket qua.
             ->latest('created_at')
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->limit(40)
+            // Luong: Thuc thi truy van va lay ket qua tu CSDL.
             ->get();
 
+        // Luong: Gan ket qua xu ly vao bien $summary.
         $summary = [
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'brands' => Brand::count(),
+            // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
             'promotions' => DB::table('promotions')->count(),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'warehouses' => Warehouse::count(),
+            // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
             'stores' => DB::table('stores')->count(),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'stock' => StockTransaction::count(),
         ];
 
+        // Luong: Tra ve view de hien thi giao dien cho request.
         return view('admin.business.index', compact(
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'activeTab',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'brands',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'warehouses',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'stores',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'promotions',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'stockTransactions',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'summary'
         ));
     }
 
+    /**
+     * Lưu thiết lập kinh doanh mới.
+     */
     public function store(Request $request): RedirectResponse
     {
+        // Luong: Gan ket qua xu ly vao bien $action.
         $action = (string) $request->input('_business_action');
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return match ($action) {
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'save_brand' => $this->saveBrand($request),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'save_promotion' => $this->savePromotion($request),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'save_warehouse' => $this->saveWarehouse($request),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'toggle_brand' => $this->toggleTableStatus($request, 'brands', 'brands'),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'toggle_promotion' => $this->toggleTableStatus($request, 'promotions', 'promotions'),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'toggle_warehouse' => $this->toggleTableStatus($request, 'warehouses', 'warehouses'),
+            // Luong: Danh dau mot nhanh xu ly trong cau truc switch.
             default => back()->with('success', 'Chưa chọn nghiệp vụ cần xử lý.'),
         };
     }
 
+    /**
+     * Lưu thông tin thương hiệu.
+     */
     private function saveBrand(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -102,6 +162,9 @@ class BusinessAdminController extends Controller
         return $this->redirectTab('brands', 'Đã lưu thương hiệu.');
     }
 
+    /**
+     * Lưu thông tin khuyến mãi.
+     */
     private function savePromotion(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -137,6 +200,9 @@ class BusinessAdminController extends Controller
         return $this->redirectTab('promotions', 'Đã lưu khuyến mãi.');
     }
 
+    /**
+     * Lưu thông tin kho.
+     */
     private function saveWarehouse(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -157,6 +223,9 @@ class BusinessAdminController extends Controller
     }
 
     // Bật/tắt trạng thái dữ liệu cấu hình trong một bảng cụ thể.
+    /**
+     * Bật hoặc tắt trạng thái bản ghi.
+     */
     private function toggleTableStatus(Request $request, string $table, string $tab): RedirectResponse
     {
         $data = $request->validate([
@@ -174,6 +243,9 @@ class BusinessAdminController extends Controller
     }
 
     // Tự sinh mã mới theo prefix và số lớn nhất hiện tại trong bảng.
+    /**
+     * Tạo mã mới.
+     */
     private function nextCode(string $table, string $column, string $prefix): string
     {
         do {
@@ -184,6 +256,9 @@ class BusinessAdminController extends Controller
     }
 
     // Redirect về đúng tab nghiệp vụ sau khi lưu.
+    /**
+     * Quay lại tab vừa thao tác.
+     */
     private function redirectTab(string $tab, string $message): RedirectResponse
     {
         return redirect()

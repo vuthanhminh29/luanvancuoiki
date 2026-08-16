@@ -24,11 +24,13 @@ class StockTransactionItem extends Model
 
     public function transaction(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(StockTransaction::class, 'stock_transaction_id');
     }
 
     public function variant(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(ProductVariant::class);
     }
 }

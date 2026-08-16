@@ -9,12 +9,14 @@
         'RETURN' => 'Kho hàng hoàn',
         'WARRANTY' => 'Kho bảo hành',
         'STORE' => 'Cửa hàng',
+        'QUARANTINE' => 'Kho hàng lỗi / chờ xử lý',
         default => $type ?: '-',
     };
     $transactionType = fn ($type) => match ($type) {
         'IMPORT' => ['Nhập kho', 'success', 'fa-arrow-down'],
         'EXPORT' => ['Xuất kho', 'danger', 'fa-arrow-up'],
         'RETURN_IN' => ['Nhập hàng hoàn', 'success', 'fa-undo'],
+        'EXCHANGE_OUT' => ['Xuất đổi hàng', 'danger', 'fa-exchange-alt'],
         'SALE_OUT' => ['Xuất bán', 'dark', 'fa-shopping-cart'],
         default => [$type ?: '-', 'muted', 'fa-circle'],
     };
@@ -55,6 +57,7 @@
 .wa-table-wrap{overflow-x:auto}.wa-table{border-collapse:collapse;min-width:900px;width:100%}.wa-table.compact{min-width:840px}.wa-table th{background:#fff;border-bottom:1px solid #e4e7ec;color:#667085;font-size:11px;font-weight:900;letter-spacing:.04em;padding:10px 11px;text-align:left;text-transform:uppercase;white-space:nowrap}.wa-table td{border-bottom:1px solid #f1f5f9;color:#344054;font-size:13px;padding:10px 11px;vertical-align:middle}.wa-table tr:hover td{background:#fafafa}
 .wa-product{align-items:center;display:flex;gap:10px;min-width:220px}.wa-thumb{background:#f8fafc;border:1px solid #e4e7ec;border-radius:7px;flex:0 0 44px;height:44px;object-fit:cover;width:44px}.wa-name{color:#111827;font-size:13px;font-weight:900;line-height:1.35}.wa-sub{color:#667085;font-size:11px;line-height:1.35;margin-top:3px}.wa-variant-line{align-items:center;display:flex;gap:6px;white-space:nowrap}.wa-color{border:1px solid rgba(17,24,39,.2);border-radius:50%;display:inline-block;height:15px;width:15px}
 .wa-number{color:#111827;font-weight:900;white-space:nowrap}.wa-badge{align-items:center;border-radius:999px;display:inline-flex;font-size:12px;font-weight:900;gap:6px;min-height:25px;padding:0 9px;white-space:nowrap}.wa-badge.success{background:#dcfce7;color:#166534}.wa-badge.warning{background:#fef3c7;color:#92400e}.wa-badge.danger{background:#fee2e2;color:#991b1b}.wa-badge.info{background:#dbeafe;color:#1d4ed8}.wa-badge.dark{background:#e5e7eb;color:#111827}.wa-badge.muted{background:#f3f4f6;color:#4b5563}
+.wa-return-reason{background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;color:#9a3412;font-size:12px;font-weight:900;line-height:1.45;margin-top:7px;padding:7px 9px}.wa-return-reason span{color:#7c2d12}.wa-return-reason small{color:#9a3412;display:block;font-size:11px;font-weight:800;margin-top:2px}
 .wa-warehouse-card{align-items:center;border:1px solid #eef2f6;border-radius:8px;display:grid;gap:12px;grid-template-columns:44px minmax(0,1fr) auto;padding:12px}.wa-warehouse-icon{align-items:center;background:#eff6ff;border-radius:8px;color:#1d4ed8;display:inline-flex;height:44px;justify-content:center;width:44px}.wa-address{color:#667085;font-size:12px;line-height:1.45;margin-top:4px}
 .wa-flow{color:#475467;line-height:1.5}.wa-flow strong{color:#111827}.wa-empty{color:#667085;padding:30px 14px;text-align:center}.wa-pagination{padding:12px 15px}.wa-mobile-note{display:none}
 @media(max-width:1180px){.wa-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.wa-filter,.wa-filter.transactions{grid-template-columns:repeat(2,minmax(0,1fr))}.wa-filter .wa-actions{grid-column:1/-1}.wa-table{min-width:980px}}@media(max-width:760px){.wa-page{padding:14px}.wa-toolbar,.wa-card-head{align-items:flex-start;flex-direction:column}.wa-actions,.wa-btn{width:100%}.wa-grid,.wa-filter,.wa-filter.transactions{grid-template-columns:1fr}.wa-mobile-note{display:block;color:#667085;font-size:12px;margin-top:8px}}
@@ -193,7 +196,10 @@
                                         </div>
                                         <div class="wa-sub">{{ $variant?->sku ?? '-' }}</div>
                                     </td>
-                                    <td>{{ $inventory->warehouse->name ?? '-' }}</td>
+                                    <td>
+                                        <div class="wa-name">{{ $inventory->warehouse->name ?? '-' }}</div>
+                                        <div class="wa-sub">{{ $warehouseType($inventory->warehouse->type ?? null) }}</div>
+                                    </td>
                                     <td class="wa-number">{{ $num($inventory->quantity) }}</td>
                                     <td class="wa-number">{{ $num($available) }}</td>
                                     <td><span class="wa-badge {{ $stateClass }}">{{ $stateText }}</span></td>
@@ -223,7 +229,7 @@
                                 <th>Kho</th>
                                 <th>Loại</th>
                                 <th>Sức chứa</th>
-                                <th>Dòng tồn</th>
+                                <th>Tổng tồn</th>
                                 <th>Ngưỡng thấp</th>
                                 <th>Trạng thái</th>
                             </tr>
@@ -242,7 +248,7 @@
                                     </td>
                                     <td>{{ $warehouseType($warehouse->type) }}</td>
                                     <td class="wa-number">{{ $num($warehouse->capacity) }}</td>
-                                    <td class="wa-number">{{ $num($warehouse->inventories_count) }}</td>
+                                    <td class="wa-number">{{ $num($warehouse->stock_quantity ?? 0) }}</td>
                                     <td class="wa-number">{{ $num($warehouse->min_stock_level) }}</td>
                                     <td><span class="wa-badge {{ $warehouse->status === 'ACTIVE' ? 'success' : 'muted' }}">{{ $warehouse->status === 'ACTIVE' ? 'Hoạt động' : 'Tạm ẩn' }}</span></td>
                                 </tr>
@@ -274,7 +280,7 @@
                         <label>Loại phiếu</label>
                         <select class="wa-select" name="stock_type">
                             <option value="">Tất cả</option>
-                            @foreach (['IMPORT' => 'Nhập kho', 'EXPORT' => 'Xuất kho', 'RETURN_IN' => 'Nhập hàng hoàn', 'SALE_OUT' => 'Xuất bán'] as $type => $label)
+                            @foreach (['IMPORT' => 'Nhập kho', 'EXPORT' => 'Xuất kho', 'RETURN_IN' => 'Nhập hàng hoàn', 'EXCHANGE_OUT' => 'Xuất đổi hàng', 'SALE_OUT' => 'Xuất bán'] as $type => $label)
                                 <option value="{{ $type }}" @selected(($stockFilters['stock_type'] ?? '') === $type)>{{ $label }}</option>
                             @endforeach
                         </select>
@@ -329,11 +335,21 @@
                                     [$typeText, $typeClass, $typeIcon] = $transactionType($transaction->type);
                                     [$statusText, $statusClass] = $transactionStatus($transaction->status);
                                     $totals = $transactionItemTotals->get($transaction->id);
+                                    $returnReason = ($returnReasonByTransaction ?? collect())->get($transaction->id);
+                                    $returnReasonText = $returnReason
+                                        ? trim(($returnReason->reason_name ?: 'Không rõ lý do') . ($returnReason->reason_detail ? ' - ' . $returnReason->reason_detail : ''))
+                                        : null;
                                 @endphp
                                 <tr>
                                     <td>
                                         <div class="wa-name">{{ $transaction->transaction_code }}</div>
                                         <div class="wa-sub">{{ $transaction->note ?: 'Không có ghi chú' }}</div>
+                                        @if ($returnReasonText)
+                                            <div class="wa-return-reason">
+                                                <span>Lý do hoàn/đổi: {{ $returnReasonText }}</span>
+                                                <small>{{ $returnReason->type === 'EXCHANGE' ? 'Đổi hàng' : 'Hoàn trả' }} - {{ $returnReason->return_code }}</small>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td><span class="wa-badge {{ $typeClass }}"><i class="fa {{ $typeIcon }}"></i>{{ $typeText }}</span></td>
                                     <td>

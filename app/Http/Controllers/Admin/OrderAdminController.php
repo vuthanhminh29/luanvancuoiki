@@ -24,9 +24,14 @@ class OrderAdminController extends Controller
 
     private InventoryService $inventory;
 
+    /**
+     * Nhận các service xử lý đơn hàng.
+     */
     public function __construct(OrderCancellationService $cancellations, InventoryService $inventory)
     {
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $this->cancellations = $cancellations;
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $this->inventory = $inventory;
     }
 
@@ -68,72 +73,117 @@ class OrderAdminController extends Controller
 
     private const CANCELLABLE_STATUSES = ['PENDING', 'AWAITING_PAYMENT', 'CONFIRMED'];
 
+    /**
+     * Hiển thị danh sách đơn hàng đã xác nhận.
+     */
     public function index(Request $request): View
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->orderList($request, false);
     }
 
+    /**
+     * Hiển thị danh sách đơn hàng chờ xác nhận.
+     */
     public function unconfirmed(Request $request): View
     {
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $request->merge(['status' => $request->input('status', 'PENDING')]);
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->orderList($request, true);
     }
 
+    /**
+     * Hiển thị chi tiết đơn hàng cho admin.
+     */
     public function show(Order $order): View
     {
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $order->load(['user', 'items.product.images', 'items.variant.color', 'items.variant.lensSize']);
 
+        // Luong: Tra ve view de hien thi giao dien cho request.
         return view('admin.orders.show', [
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'order' => $order,
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'statusLabels' => self::STATUS_LABELS,
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'statusOptions' => $this->availableStatusOptions($order),
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'canCancelOrder' => $this->canCancelOrder($order),
         ]);
     }
 
+    /**
+     * Cập nhật trạng thái đơn hàng.
+     */
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
+        // Luong: Kiem tra va lay du lieu hop le tu request.
         $data = $request->validate([
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'status' => ['required', Rule::in(self::VALID_STATUSES)],
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'cancel_reason' => ['nullable', 'string', 'max:500'],
         ], [
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'status.required' => 'Vui lòng chọn trạng thái mới cho đơn hàng.',
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'status.in' => 'Trạng thái đơn hàng không hợp lệ.',
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'cancel_reason.max' => 'Lý do hủy đơn tối đa 500 ký tự.',
         ]);
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($data['status'] === 'CANCELLED') {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return $this->cancel($request, $order);
         }
 
+        // Luong: Gan ket qua xu ly vao bien $result.
         $result = $this->changeStatus($order, $data['status'], $data['cancel_reason'] ?? null);
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($result !== true) {
+            // Luong: Quay lai trang truoc kem du lieu hoac thong bao can hien thi.
             return back()->withErrors(['status' => $result])->withInput();
         }
 
+        // Luong: Quay lai trang truoc kem du lieu hoac thong bao can hien thi.
         return back()->with('success', 'Đã cập nhật trạng thái đơn hàng.');
     }
 
+    /**
+     * Gửi yêu cầu hủy đơn cho khách xác nhận.
+     */
     public function cancel(Request $request, Order $order): RedirectResponse
     {
+        // Luong: Kiem tra va lay du lieu hop le tu request.
         $data = $request->validate([
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'cancel_reason' => ['nullable', 'string', 'max:500'],
         ], [
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'cancel_reason.max' => 'Lý do hủy đơn tối đa 500 ký tự.',
         ]);
 
+        // Luong: Gan ket qua xu ly vao bien $result.
         $result = $this->cancellations->requestCancellation($order, $data['cancel_reason'] ?? null);
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($result !== true) {
+            // Luong: Quay lai trang truoc kem du lieu hoac thong bao can hien thi.
             return back()->withErrors(['status' => $result])->withInput();
         }
 
+        // Luong: Quay lai trang truoc kem du lieu hoac thong bao can hien thi.
         return back()->with('success', 'Đã gửi email xác nhận hủy đơn cho khách hàng. Đơn hàng chỉ được hủy sau khi khách bấm xác nhận.');
     }
 
     /**
+     * Đổi trạng thái đơn hàng và trả lỗi nếu có.
+     *
      * @return true|string
      */
     private function changeStatus(Order $order, string $newStatus, ?string $cancelReason = null)
@@ -147,6 +197,9 @@ class OrderAdminController extends Controller
         }
     }
 
+    /**
+     * Đổi trạng thái đơn hàng trong transaction.
+     */
     private function changeStatusInTransaction(Order $order, string $newStatus, ?string $cancelReason = null)
     {
         return DB::transaction(function () use ($order, $newStatus, $cancelReason) {
@@ -186,6 +239,9 @@ class OrderAdminController extends Controller
         });
     }
 
+    /**
+     * Tạo giao dịch xuất kho cho đơn hàng.
+     */
     private function createSaleOutTransaction(Order $order): void
     {
         $order->loadMissing('items');
@@ -246,6 +302,9 @@ class OrderAdminController extends Controller
         }
     }
 
+    /**
+     * Kiểm tra đơn đã có giao dịch xuất kho chưa.
+     */
     private function saleOutTransactionExists(Order $order): bool
     {
         if ($this->stockTransactionsHaveRelatedOrderId()) {
@@ -265,6 +324,9 @@ class OrderAdminController extends Controller
             ->exists();
     }
 
+    /**
+     * Kiểm tra bảng giao dịch kho có cột đơn hàng không.
+     */
     private function stockTransactionsHaveRelatedOrderId(): bool
     {
         static $hasColumn = null;
@@ -272,6 +334,9 @@ class OrderAdminController extends Controller
         return $hasColumn ??= Schema::hasColumn('stock_transactions', 'related_order_id');
     }
 
+    /**
+     * Tạo mã xuất kho bán hàng mới.
+     */
     private function nextSaleOutTransactionCode(): string
     {
         do {
@@ -281,11 +346,17 @@ class OrderAdminController extends Controller
         return $code;
     }
 
+    /**
+     * Tạo ghi chú xuất kho cho đơn hàng.
+     */
     private function saleOutTransactionNote(Order $order): string
     {
         return 'Xuất bán khi cập nhật đơn #' . $order->id . ' sang DELIVERING';
     }
 
+    /**
+     * Tìm kho đủ hàng để xuất cho đơn.
+     */
     private function saleOutSourceWarehouseId(Order $order): ?int
     {
         $variantIds = $order->items
@@ -321,16 +392,25 @@ class OrderAdminController extends Controller
         return $warehouseId ? (int) $warehouseId : null;
     }
 
+    /**
+     * Kiểm tra đơn hàng có thể hủy không.
+     */
     private function canCancelOrder(Order $order): bool
     {
         return $this->cancellations->canCancel($order);
     }
 
+    /**
+     * Lấy các trạng thái tiếp theo hợp lệ.
+     */
     private function nextStatuses(Order $order): array
     {
         return self::STATUS_TRANSITIONS[$order->status] ?? [];
     }
 
+    /**
+     * Lấy các trạng thái admin có thể chọn.
+     */
     private function availableStatusOptions(Order $order): array
     {
         return collect(self::STATUS_LABELS)
@@ -338,6 +418,9 @@ class OrderAdminController extends Controller
             ->all();
     }
 
+    /**
+     * Thêm lý do hủy vào ghi chú đơn.
+     */
     private function cancelNote(?string $currentNote, ?string $cancelReason): ?string
     {
         $cancelReason = trim((string) $cancelReason);
@@ -352,6 +435,9 @@ class OrderAdminController extends Controller
         return $currentNote === '' ? $line : $currentNote . PHP_EOL . $line;
     }
 
+    /**
+     * Lấy danh sách đơn hàng cho trang admin.
+     */
     private function orderList(Request $request, bool $isUnconfirmed): View
     {
         $filters = $request->only(['status', 'payment_method', 'keyword', 'date_from', 'date_to']);

@@ -14,6 +14,7 @@ class JetstreamServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         Jetstream::ignoreRoutes();
     }
 
@@ -22,10 +23,13 @@ class JetstreamServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $this->configurePermissions();
 
+        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         Jetstream::deleteUsersUsing(DeleteUser::class);
 
+        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         Vite::prefetch(concurrency: 3);
     }
 

@@ -18,6 +18,7 @@ class ValidateRequestInput
     private const MAX_QUERY_STRING_LENGTH = 4096;
     private const MAX_QUERY_VALUE_LENGTH = 255;
     private const MAX_BODY_VALUE_LENGTH = 65535;
+    private const MAX_SNAPSHOT_IMAGE_VALUE_LENGTH = 7000000;
 
     /**
      * @param  Closure(Request): Response  $next
@@ -26,48 +27,61 @@ class ValidateRequestInput
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (strlen($request->server('QUERY_STRING', '')) > self::MAX_QUERY_STRING_LENGTH) {
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $this->reject('Chuỗi truy vấn quá dài.');
         }
 
-        $this->validatePayload($request->query->all(), self::MAX_QUERY_FIELDS, self::MAX_QUERY_VALUE_LENGTH);
-        $this->validatePayload($request->request->all(), self::MAX_BODY_FIELDS, self::MAX_BODY_VALUE_LENGTH);
+        // Luong: Gan ket qua xu ly vao bien $largeBodyFields.
+        $largeBodyFields = $request->is('thu-kinh/luu-ket-qua')
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
+            ? ['image' => self::MAX_SNAPSHOT_IMAGE_VALUE_LENGTH]
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
+            : [];
 
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
+        $this->validatePayload($request->query->all(), self::MAX_QUERY_FIELDS, self::MAX_QUERY_VALUE_LENGTH);
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
+        $this->validatePayload($request->request->all(), self::MAX_BODY_FIELDS, self::MAX_BODY_VALUE_LENGTH, $largeBodyFields);
+
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $next($request);
     }
 
     /**
      * @throws ValidationException
      */
-    private function validatePayload(array $payload, int $maxFields, int $maxValueLength): void
+    private function validatePayload(array $payload, int $maxFields, int $maxValueLength, array $fieldValueLengths = []): void
     {
         if (count(Arr::dot($payload)) > $maxFields) {
             $this->reject('Dữ liệu gửi lên có quá nhiều trường.');
         }
 
-        $this->validateNode($payload, $maxValueLength);
+        $this->validateNode($payload, $maxValueLength, $fieldValueLengths);
     }
 
     /**
      * @throws ValidationException
      */
-    private function validateNode(mixed $value, int $maxValueLength, int $depth = 0): void
+    private function validateNode(mixed $value, int $maxValueLength, array $fieldValueLengths = [], int $depth = 0, ?string $key = null): void
     {
         if ($depth > self::MAX_DEPTH) {
             $this->reject('Dữ liệu gửi lên quá sâu.');
         }
 
         if (is_array($value)) {
-            foreach ($value as $key => $child) {
-                $this->validateKey((string) $key);
-                $this->validateNode($child, $maxValueLength, $depth + 1);
+            foreach ($value as $childKey => $child) {
+                $childKey = (string) $childKey;
+                $this->validateKey($childKey);
+                $this->validateNode($child, $maxValueLength, $fieldValueLengths, $depth + 1, $childKey);
             }
 
             return;
         }
 
         if (is_scalar($value) || $value === null) {
-            $this->validateScalar((string) $value, $maxValueLength);
+            $this->validateScalar((string) $value, $fieldValueLengths[$key] ?? $maxValueLength);
         }
     }
 

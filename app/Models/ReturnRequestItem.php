@@ -19,11 +19,13 @@ class ReturnRequestItem extends Model
 
     public function returnRequest(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(ReturnRequest::class);
     }
 
     public function orderItem(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(OrderItem::class);
     }
 }

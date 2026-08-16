@@ -13,57 +13,86 @@ class OrderConfirmationEmailService
     // Email này chỉ thông báo thông tin đơn hàng, không có link xác nhận hay link thao tác.
     public function send(Order $order): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return DB::transaction(function () use ($order): bool {
             // Khóa order để VNPay return và IPN không gửi trùng email cùng lúc.
+            // Luong: Gan ket qua xu ly vao bien $lockedOrder.
             $lockedOrder = Order::query()
+                // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
                 ->with(['user', 'items'])
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->lockForUpdate()
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->find($order->id);
 
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if (! $lockedOrder) {
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return false;
             }
 
             // Nếu đã gửi rồi thì bỏ qua, coi như thành công.
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($lockedOrder->order_confirmation_email_sent_at !== null) {
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return true;
             }
 
             // Lấy email từ tài khoản user gắn với đơn hàng.
             // Đơn hàng checkout bắt buộc đăng nhập nên user thường luôn có email.
+            // Luong: Gan ket qua xu ly vao bien $email.
             $email = $this->customerEmail($lockedOrder);
 
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($email === null) {
+                // Luong: Ghi log de theo doi va chan doan qua trinh xu ly.
                 Log::warning('Order confirmation email skipped because customer email is missing.', [
+                    // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                     'order_id' => $lockedOrder->id,
                 ]);
 
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return false;
             }
 
+            // Luong: Bat dau khoi xu ly co the phat sinh loi.
             try {
+                // Luong: Gui email dang text theo noi dung da tao.
                 Mail::raw(
+                    // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                     $this->emailBody($lockedOrder),
+                    // Luong: Dinh nghia callback ngan gon cho thao tac hien tai.
                     fn ($message) => $message
+                        // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                         ->to($email)
+                        // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                         ->subject('Xác nhận đơn hàng thành công ' . ($lockedOrder->order_code ?: '#' . $lockedOrder->id))
                 );
+            // Luong: Bat va xu ly loi phat sinh trong khoi try.
             } catch (\Throwable $exception) {
                 // Không rollback đơn hàng nếu mail lỗi; chỉ log để admin kiểm tra SMTP.
+                // Luong: Ghi log de theo doi va chan doan qua trinh xu ly.
                 Log::error('Order confirmation email could not be sent.', [
+                    // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                     'order_id' => $lockedOrder->id,
+                    // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                     'email' => $email,
+                    // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                     'message' => $exception->getMessage(),
                 ]);
 
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return false;
             }
 
             // Đánh dấu đã gửi email để các lần gọi sau không gửi lại.
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $lockedOrder->forceFill([
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'order_confirmation_email_sent_at' => now(),
             ])->save();
 
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return true;
         });
     }

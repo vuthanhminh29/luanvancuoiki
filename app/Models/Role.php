@@ -20,6 +20,7 @@ class Role extends Model
 
     public function users(): BelongsToMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsToMany(User::class, 'user_roles');
     }
 }

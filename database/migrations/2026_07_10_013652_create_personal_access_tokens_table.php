@@ -11,14 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Luong: Tao ban ghi moi tu du lieu da chuan bi.
         Schema::create('personal_access_tokens', function (Blueprint $table) {
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->id();
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->morphs('tokenable');
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->text('name');
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->string('token', 64)->unique();
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->text('abilities')->nullable();
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->timestamp('last_used_at')->nullable();
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->timestamp('expires_at')->nullable()->index();
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->timestamps();
         });
     }
@@ -28,6 +37,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         Schema::dropIfExists('personal_access_tokens');
     }
 };

@@ -11,17 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         Schema::table('users', function (Blueprint $table) {
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->text('two_factor_secret')
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->after('password')
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->nullable();
 
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->text('two_factor_recovery_codes')
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->after('two_factor_secret')
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->nullable();
 
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->timestamp('two_factor_confirmed_at')
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->after('two_factor_recovery_codes')
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->nullable();
         });
     }
@@ -31,10 +41,15 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         Schema::table('users', function (Blueprint $table) {
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $table->dropColumn([
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'two_factor_secret',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'two_factor_recovery_codes',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'two_factor_confirmed_at',
             ]);
         });

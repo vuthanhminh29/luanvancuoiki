@@ -15,35 +15,54 @@ class EnsureAdmin
 
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! Auth::check()) {
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()->route('admin.login');
         }
 
+        // Luong: Gan ket qua xu ly vao bien $userId.
         $userId = (int) Auth::id();
+        // Luong: Gan ket qua xu ly vao bien $allowedRoles.
         $allowedRoles = $roles ?: self::ADMIN_AREA_ROLES;
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (Auth::user()?->status !== 'ACTIVE') {
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $this->logout($request);
 
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->route('admin.login')
+                // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
                 ->withErrors(['email' => 'Tài khoản này không có quyền vào admin.']);
         }
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $this->hasAnyRole($userId, $allowedRoles)) {
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($roles && $this->hasAnyRole($userId, self::ADMIN_AREA_ROLES)) {
+                // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
                 return redirect()
+                    // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                     ->route('admin.dashboard')
+                    // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
                     ->with('error', 'Tài khoản này không có quyền truy cập chức năng này.');
             }
 
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $this->logout($request);
 
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
             return redirect()
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->route('admin.login')
+                // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
                 ->withErrors(['email' => 'Tài khoản này không có quyền vào admin.']);
         }
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $next($request);
     }
 

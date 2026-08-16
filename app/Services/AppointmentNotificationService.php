@@ -15,16 +15,27 @@ class AppointmentNotificationService
 
     public function bookingReceived(Appointment $appointment): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->send(
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             $appointment,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'Tiếp nhận lịch đo mắt ' . $appointment->code,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             array_merge($this->greetingLines($appointment), [
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Hệ thống đã tiếp nhận lịch đo mắt của bạn.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Lịch hẹn đang chờ nhân viên cửa hàng xác nhận.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 ...$this->appointmentLines($appointment),
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Bạn có thể tra cứu lịch hẹn bằng mã lịch và email hoặc số điện thoại đã đặt.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Link tra cứu: ' . route('appointments.lookup', ['code' => $appointment->code]),
             ])
         );
@@ -32,15 +43,25 @@ class AppointmentNotificationService
 
     public function confirmed(Appointment $appointment): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->send(
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             $appointment,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'Xác nhận lịch đo mắt ' . $appointment->code,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             array_merge($this->greetingLines($appointment), [
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Lịch đo mắt của bạn đã được cửa hàng xác nhận.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 ...$this->appointmentLines($appointment),
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Vui lòng có mặt trước giờ hẹn 10 phút.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Cần hỗ trợ, vui lòng liên hệ hotline ' . self::HOTLINE . '.',
             ])
         );
@@ -48,15 +69,25 @@ class AppointmentNotificationService
 
     public function cancelled(Appointment $appointment): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->send(
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             $appointment,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'Thông báo hủy lịch đo mắt ' . $appointment->code,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             array_merge($this->greetingLines($appointment), [
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Lịch đo mắt của bạn đã được hủy.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 ...$this->appointmentLines($appointment),
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Lý do hủy: ' . ($appointment->cancel_reason ?: '-'),
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Bạn có thể đặt lịch mới trên website hoặc liên hệ hotline ' . self::HOTLINE . ' để được hỗ trợ.',
             ])
         );
@@ -64,16 +95,27 @@ class AppointmentNotificationService
 
     public function rescheduled(Appointment $appointment): bool
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->send(
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             $appointment,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'Tiếp nhận đổi lịch đo mắt ' . $appointment->code,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             array_merge($this->greetingLines($appointment), [
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Hệ thống đã tiếp nhận thông tin đổi lịch của bạn.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Lịch hẹn mới đang chờ nhân viên cửa hàng xác nhận lại.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 ...$this->appointmentLines($appointment),
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Lý do đổi lịch: ' . ($appointment->reschedule_reason ?: '-'),
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Link tra cứu: ' . route('appointments.lookup', ['code' => $appointment->code]),
             ])
         );
@@ -81,23 +123,36 @@ class AppointmentNotificationService
 
     public function reminder(Appointment $appointment): bool
     {
+        // Luong: Gan ket qua xu ly vao bien $sent.
         $sent = $this->send(
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             $appointment,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'Nhắc lịch đo mắt ' . $appointment->code,
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             array_merge($this->greetingLines($appointment), [
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Cửa hàng nhắc bạn về lịch đo mắt sắp tới.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 ...$this->appointmentLines($appointment),
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 '',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Vui lòng có mặt trước giờ hẹn 10 phút.',
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Cần đổi lịch, bạn có thể tra cứu bằng mã lịch trên website hoặc liên hệ hotline ' . self::HOTLINE . '.',
             ])
         );
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($sent) {
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $appointment->forceFill(['reminder_email_sent_at' => now()])->save();
         }
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $sent;
     }
 

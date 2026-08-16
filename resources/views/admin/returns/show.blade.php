@@ -76,10 +76,12 @@
 .rr-image-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}.rr-image-grid a{border:1px solid #e4e7ec;border-radius:8px;display:block;overflow:hidden;background:#f8fafc}.rr-image-grid img{aspect-ratio:1/1;display:block;height:auto;object-fit:cover;width:100%;transition:.15s ease}.rr-image-grid a:hover img{transform:scale(1.03)}
 .rr-side{position:sticky;top:92px}.rr-form-row{display:grid;gap:7px;margin-bottom:14px}.rr-form-row label{color:#344054;font-size:13px;font-weight:900}.rr-select,.rr-textarea,.rr-input{background:#fff;border:1px solid #d0d5dd;border-radius:7px;color:#101828;font-size:14px;font-weight:700;padding:9px 11px;width:100%}.rr-select,.rr-input{min-height:42px}.rr-textarea{line-height:1.55;min-height:118px;resize:vertical}
 .rr-quick{display:grid;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr));margin:0 0 14px}.rr-status-btn{background:#fff;border:1px solid #d0d5dd;border-radius:8px;color:#344054;cursor:pointer;font-size:12px;font-weight:900;min-height:38px;padding:8px}.rr-status-btn.active{background:#111827;border-color:#111827;color:#fff}
+.rr-process-card{display:flex;flex-direction:column;max-height:calc(100vh - 112px)}
+.rr-process-card .rr-card-head{flex:0 0 auto}.rr-process-body{display:flex;flex:1 1 auto;min-height:0;padding:0}.rr-form{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;width:100%}.rr-form-scroll{flex:1 1 auto;min-height:0;overflow:auto;padding:18px 18px 8px;scrollbar-width:thin}.rr-form-actions{background:#fff;border-top:1px solid #eef2f6;box-shadow:0 -10px 20px rgba(16,24,40,.06);display:grid;flex:0 0 auto;padding:12px 18px}.rr-form-actions .rr-btn{min-height:46px}
 .rr-damage-grid{display:grid;gap:10px}.rr-damage{border:1px solid #e4e7ec;border-radius:8px;padding:12px;background:#fff}.rr-damage-top{align-items:center;display:flex;gap:10px;justify-content:space-between;margin-bottom:9px}.rr-damage-title{color:#101828;font-size:13px;font-weight:900}.rr-damage-level{border-radius:999px;font-size:11px;font-weight:900;padding:5px 8px}.rr-damage-level.none{background:#f3f4f6;color:#475467}.rr-damage-level.light{background:#ecfdf5;color:#047857}.rr-damage-level.medium{background:#fffbeb;color:#92400e}.rr-damage-level.heavy{background:#fff7ed;color:#c2410c}.rr-damage-level.severe{background:#fef2f2;color:#b91c1c}.rr-damage-fields{display:grid;gap:8px;grid-template-columns:98px minmax(0,1fr)}
 .rr-history{display:grid;gap:10px}.rr-history-item{align-items:flex-start;border:1px solid #eef2f6;border-radius:8px;display:flex;gap:10px;padding:11px}.rr-history-icon{align-items:center;background:#eff6ff;border-radius:999px;color:#1d4ed8;display:inline-flex;flex:0 0 34px;height:34px;justify-content:center;width:34px}.rr-history strong{color:#101828;display:block;font-size:13px}.rr-history span{color:#667085;display:block;font-size:12px;margin-top:3px}
 .rr-empty{align-items:center;color:#667085;display:flex;font-size:14px;justify-content:center;min-height:92px;text-align:center}
-@media(max-width:1180px){.rr-hero{grid-template-columns:repeat(2,minmax(0,1fr))}.rr-layout{grid-template-columns:1fr}.rr-side{position:static}}@media(max-width:680px){.rr-page{padding:14px}.rr-topbar{align-items:flex-start;flex-direction:column}.rr-actions,.rr-btn{width:100%}.rr-hero{grid-template-columns:1fr}.rr-flow{gap:4px}.rr-flow-step{font-size:11px}.rr-product{grid-template-columns:62px minmax(0,1fr)}.rr-product img{height:62px;width:62px}.rr-product .rr-product-money{grid-column:2;text-align:left}.rr-product .rr-product-note{grid-column:1 / 3}.rr-quick{grid-template-columns:1fr}.rr-damage-fields{grid-template-columns:1fr}}
+@media(max-width:1180px){.rr-hero{grid-template-columns:repeat(2,minmax(0,1fr))}.rr-layout{grid-template-columns:1fr}.rr-side{position:static}.rr-process-card{max-height:none}.rr-process-body,.rr-form{display:block}.rr-form-scroll{overflow:visible}.rr-form-actions{bottom:0;position:sticky;z-index:5}}@media(max-width:680px){.rr-page{padding:14px}.rr-topbar{align-items:flex-start;flex-direction:column}.rr-actions,.rr-btn{width:100%}.rr-hero{grid-template-columns:1fr}.rr-flow{gap:4px}.rr-flow-step{font-size:11px}.rr-product{grid-template-columns:62px minmax(0,1fr)}.rr-product img{height:62px;width:62px}.rr-product .rr-product-money{grid-column:2;text-align:left}.rr-product .rr-product-note{grid-column:1 / 3}.rr-quick{grid-template-columns:1fr}.rr-damage-fields{grid-template-columns:1fr}.rr-form-scroll{padding:14px 14px 6px}.rr-form-actions{padding:10px 14px}}
 </style>
 @endpush
 
@@ -196,13 +198,13 @@
                 </div>
             </div>
 
-            <div class="rr-card">
-                <div class="rr-card-head">
-                    <h6>Ảnh minh chứng</h6>
-                    <span>{{ $returnRequest->images->count() }} ảnh</span>
-                </div>
-                <div class="rr-card-body">
-                    @if ($returnRequest->images->isNotEmpty())
+            @if ($returnRequest->images->isNotEmpty())
+                <div class="rr-card">
+                    <div class="rr-card-head">
+                        <h6>Ảnh minh chứng</h6>
+                        <span>{{ $returnRequest->images->count() }} ảnh</span>
+                    </div>
+                    <div class="rr-card-body">
                         <div class="rr-image-grid">
                             @foreach ($returnRequest->images as $image)
                                 @php
@@ -213,11 +215,9 @@
                                 </a>
                             @endforeach
                         </div>
-                    @else
-                        <div class="rr-empty">Khách chưa gửi ảnh minh chứng.</div>
-                    @endif
+                    </div>
                 </div>
-            </div>
+            @endif
 
             <div class="rr-card">
                 <div class="rr-card-head">
@@ -248,68 +248,72 @@
         </div>
 
         <aside class="rr-side">
-            <div class="rr-card">
+            <div class="rr-card rr-process-card">
                 <div class="rr-card-head">
                     <h6>Xử lý yêu cầu</h6>
                     <span>Cập nhật cho khách</span>
                 </div>
-                <div class="rr-card-body">
+                <div class="rr-card-body rr-process-body">
                     <form method="post" action="{{ route('admin.returns.update', $returnRequest) }}" class="rr-form" id="return-process-form">
                         @csrf
                         @method('PUT')
 
-                        <div class="rr-form-row">
-                            <label>Chọn nhanh trạng thái</label>
-                            <div class="rr-quick" data-status-buttons>
-                                @foreach (['APPROVED' => 'Duyệt', 'RECEIVED' => 'Đã nhận hàng', 'COMPLETED' => 'Hoàn tất', 'REJECTED' => 'Từ chối'] as $value => $label)
-                                    <button class="rr-status-btn {{ $returnRequest->status === $value ? 'active' : '' }}" type="button" data-status="{{ $value }}">{{ $label }}</button>
-                                @endforeach
+                        <div class="rr-form-scroll">
+                            <div class="rr-form-row">
+                                <label>Chọn nhanh trạng thái</label>
+                                <div class="rr-quick" data-status-buttons>
+                                    @foreach (['APPROVED' => 'Duyệt', 'RECEIVED' => 'Đã nhận hàng', 'COMPLETED' => 'Hoàn tất', 'REJECTED' => 'Từ chối'] as $value => $label)
+                                        <button class="rr-status-btn {{ $returnRequest->status === $value ? 'active' : '' }}" type="button" data-status="{{ $value }}">{{ $label }}</button>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="rr-form-row">
+                                <label for="return-status">Trạng thái xử lý</label>
+                                <select class="rr-select" name="status" id="return-status">
+                                    @foreach (['PENDING' => 'Chờ xét duyệt', 'APPROVED' => 'Đã duyệt', 'REJECTED' => 'Từ chối', 'RECEIVED' => 'Đã nhận hàng', 'COMPLETED' => 'Đã xử lý', 'CANCELLED' => 'Đã hủy'] as $value => $label)
+                                        <option value="{{ $value }}" @selected($returnRequest->status === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('status')
+                                    <div class="text-danger small fw-bold mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="rr-form-row">
+                                <label for="admin-note">Kết luận / ghi chú phản hồi</label>
+                                <textarea class="rr-textarea" name="admin_note" id="admin-note" maxlength="1000" placeholder="Ghi rõ lý do duyệt, từ chối, hướng xử lý hoặc ghi chú hoàn tiền/đổi hàng.">{{ old('admin_note', $returnRequest->admin_note) }}</textarea>
+                            </div>
+
+                            <div class="rr-form-row">
+                                <label>Đánh giá từng bộ phận kính</label>
+                                <div class="rr-damage-grid">
+                                    @foreach ($damageParts as $partCode => $partName)
+                                        @php
+                                            $currentDamage = $damageMap->get($partCode);
+                                            $currentPercent = old('damage.' . $partCode . '.percent', $currentDamage?->damage_percent);
+                                            [$levelText, $levelClass] = $damageLevel($currentPercent);
+                                        @endphp
+                                        <div class="rr-damage">
+                                            <div class="rr-damage-top">
+                                                <span class="rr-damage-title">{{ $partName }}</span>
+                                                <span class="rr-damage-level {{ $levelClass }}">{{ $levelText }}</span>
+                                            </div>
+                                            <div class="rr-damage-fields">
+                                                <input class="rr-input" type="number" name="damage[{{ $partCode }}][percent]" min="0" max="100" step="1" value="{{ $currentPercent }}" placeholder="% hư">
+                                                <input class="rr-input" type="text" name="damage[{{ $partCode }}][description]" maxlength="1000" value="{{ old('damage.' . $partCode . '.description', $currentDamage?->description) }}" placeholder="Mô tả ngắn">
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
 
-                        <div class="rr-form-row">
-                            <label for="return-status">Trạng thái xử lý</label>
-                            <select class="rr-select" name="status" id="return-status">
-                                @foreach (['PENDING' => 'Chờ xét duyệt', 'APPROVED' => 'Đã duyệt', 'REJECTED' => 'Từ chối', 'RECEIVED' => 'Đã nhận hàng', 'COMPLETED' => 'Đã xử lý', 'CANCELLED' => 'Đã hủy'] as $value => $label)
-                                    <option value="{{ $value }}" @selected($returnRequest->status === $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            @error('status')
-                                <div class="text-danger small fw-bold mt-1">{{ $message }}</div>
-                            @enderror
+                        <div class="rr-form-actions">
+                            <button class="rr-btn success w-100" type="submit" onclick="return confirm('Cập nhật yêu cầu hoàn/đổi này?')">
+                                <i class="fas fa-save"></i> Lưu xử lý
+                            </button>
                         </div>
-
-                        <div class="rr-form-row">
-                            <label for="admin-note">Kết luận / ghi chú phản hồi</label>
-                            <textarea class="rr-textarea" name="admin_note" id="admin-note" maxlength="1000" placeholder="Ghi rõ lý do duyệt, từ chối, hướng xử lý hoặc ghi chú hoàn tiền/đổi hàng.">{{ old('admin_note', $returnRequest->admin_note) }}</textarea>
-                        </div>
-
-                        <div class="rr-form-row">
-                            <label>Đánh giá từng bộ phận kính</label>
-                            <div class="rr-damage-grid">
-                                @foreach ($damageParts as $partCode => $partName)
-                                    @php
-                                        $currentDamage = $damageMap->get($partCode);
-                                        $currentPercent = old('damage.' . $partCode . '.percent', $currentDamage?->damage_percent);
-                                        [$levelText, $levelClass] = $damageLevel($currentPercent);
-                                    @endphp
-                                    <div class="rr-damage">
-                                        <div class="rr-damage-top">
-                                            <span class="rr-damage-title">{{ $partName }}</span>
-                                            <span class="rr-damage-level {{ $levelClass }}">{{ $levelText }}</span>
-                                        </div>
-                                        <div class="rr-damage-fields">
-                                            <input class="rr-input" type="number" name="damage[{{ $partCode }}][percent]" min="0" max="100" step="1" value="{{ $currentPercent }}" placeholder="% hư">
-                                            <input class="rr-input" type="text" name="damage[{{ $partCode }}][description]" maxlength="1000" value="{{ old('damage.' . $partCode . '.description', $currentDamage?->description) }}" placeholder="Mô tả ngắn">
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <button class="rr-btn success w-100" type="submit" onclick="return confirm('Cập nhật yêu cầu hoàn/đổi này?')">
-                            <i class="fas fa-save"></i> Lưu xử lý
-                        </button>
                     </form>
                 </div>
             </div>

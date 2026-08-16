@@ -32,21 +32,33 @@ class InventoryService
      */
     public function issue(int $warehouseId, int $variantId, int $quantity, string $context = ''): void
     {
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($quantity < 1) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return;
         }
 
+        // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
         $affected = DB::table('inventories')
+            // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->where('warehouse_id', $warehouseId)
+            // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->where('variant_id', $variantId)
+            // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->where('quantity', '>=', $quantity)
+            // Luong: Cap nhat cac ban ghi phu hop voi dieu kien da loc.
             ->update([
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'quantity' => DB::raw('quantity - ' . $quantity),
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'updated_at' => now(),
             ]);
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($affected === 0) {
+            // Luong: Nem loi de dung luong khi dieu kien nghiep vu khong dat.
             throw new RuntimeException(
+                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'Không đủ tồn kho để xuất' . ($context !== '' ? ' (' . $context . ')' : '') . '.'
             );
         }
@@ -57,23 +69,37 @@ class InventoryService
      */
     public function receive(int $warehouseId, int $variantId, int $quantity): void
     {
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($quantity < 1) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return;
         }
 
+        // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
         $affected = DB::table('inventories')
+            // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->where('warehouse_id', $warehouseId)
+            // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->where('variant_id', $variantId)
+            // Luong: Cap nhat cac ban ghi phu hop voi dieu kien da loc.
             ->update([
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'quantity' => DB::raw('quantity + ' . $quantity),
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'updated_at' => now(),
             ]);
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($affected === 0) {
+            // Luong: Tao ban ghi moi tu du lieu da chuan bi.
             Inventory::create([
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'warehouse_id' => $warehouseId,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'variant_id' => $variantId,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'quantity' => $quantity,
+                // Luong: Thuc thi truy van va lay ket qua tu CSDL.
                 'min_stock_level' => Warehouse::whereKey($warehouseId)->value('min_stock_level') ?? 10,
             ]);
         }
@@ -84,7 +110,9 @@ class InventoryService
      */
     public function transfer(int $sourceWarehouseId, int $targetWarehouseId, int $variantId, int $quantity): void
     {
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $this->issue($sourceWarehouseId, $variantId, $quantity, 'chuyển kho');
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $this->receive($targetWarehouseId, $variantId, $quantity);
     }
 
@@ -99,16 +127,60 @@ class InventoryService
      */
     public function defaultSellableWarehouseId(): int
     {
-        return 1;
+        $warehouseId = Warehouse::query()
+            ->where('status', 'ACTIVE')
+            ->where('type', '<>', self::QUARANTINE_TYPE)
+            ->orderByRaw("warehouse_code = 'KHOCANH' desc")
+            ->orderBy('id')
+            ->value('id');
+
+        return (int) ($warehouseId ?: 1);
     }
 
     public function sellableWarehouseIdFor(int $variantId): int
     {
-        return 1;
+        $warehouseId = Inventory::query()
+            ->join('warehouses', 'warehouses.id', '=', 'inventories.warehouse_id')
+            ->where('inventories.variant_id', $variantId)
+            ->where('inventories.quantity', '>', 0)
+            ->where('warehouses.status', 'ACTIVE')
+            ->where('warehouses.type', '<>', self::QUARANTINE_TYPE)
+            ->orderByDesc('inventories.quantity')
+            ->orderBy('warehouses.id')
+            ->value('inventories.warehouse_id');
+
+        return (int) ($warehouseId ?: $this->defaultSellableWarehouseId());
     }
 
     public function quarantineWarehouseId(): int
     {
-        return 1;
+        $warehouse = Warehouse::query()
+            ->where(function ($query) {
+                $query->where('type', self::QUARANTINE_TYPE)
+                    ->orWhere('warehouse_code', 'KHOLOI');
+            })
+            ->orderByRaw("warehouse_code = 'KHOLOI' desc")
+            ->orderBy('id')
+            ->first();
+
+        if (! $warehouse) {
+            $warehouse = Warehouse::create([
+                'warehouse_code' => 'KHOLOI',
+                'name' => 'Kho hàng lỗi / chờ xử lý',
+                'type' => self::QUARANTINE_TYPE,
+                'capacity' => 10000,
+                'address_detail' => 'Khu vực lưu hàng khách hoàn/đổi về, chưa bán lại được.',
+                'min_stock_level' => 0,
+                'status' => 'ACTIVE',
+            ]);
+        } elseif ($warehouse->status !== 'ACTIVE' || $warehouse->type !== self::QUARANTINE_TYPE) {
+            $warehouse->update([
+                'name' => 'Kho hàng lỗi / chờ xử lý',
+                'type' => self::QUARANTINE_TYPE,
+                'status' => 'ACTIVE',
+            ]);
+        }
+
+        return (int) $warehouse->id;
     }
 }

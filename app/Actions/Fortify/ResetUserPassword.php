@@ -21,11 +21,15 @@ class ResetUserPassword implements ResetsUserPasswords
      */
     public function reset(User $user, array $input): void
     {
+        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         Validator::make($input, [
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'password' => $this->passwordRules(),
         ])->validate();
 
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $user->forceFill([
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'password' => Hash::make($input['password']),
         ])->save();
     }

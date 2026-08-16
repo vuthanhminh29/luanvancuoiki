@@ -32,21 +32,25 @@ class OrderItem extends Model
 
     public function order(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Order::class);
     }
 
     public function product(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Product::class);
     }
 
     public function variant(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(ProductVariant::class);
     }
 
     public function review(): HasOne
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasOne(ProductReview::class);
     }
 }

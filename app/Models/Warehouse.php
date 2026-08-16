@@ -22,11 +22,13 @@ class Warehouse extends Model
 
     public function inventories(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(Inventory::class);
     }
 
     public function scopeActive($query)
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $query->where('status', 'ACTIVE');
     }
 }

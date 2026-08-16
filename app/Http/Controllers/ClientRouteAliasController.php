@@ -10,27 +10,45 @@ use Illuminate\View\View;
 
 class ClientRouteAliasController extends Controller
 {
+    /**
+     * Xử lý route trang chủ cũ.
+     */
     public function home(Request $request): RedirectResponse|View
     {
+        // Luong: Gan ket qua xu ly vao bien $route.
         $route = trim((string) $request->query('url', ''));
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($route !== '') {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return $this->redirectOldProjectRoute($request, $route);
         }
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return app(HomeController::class)();
     }
 
+    /**
+     * Xử lý route cũ phía khách.
+     */
     public function index(Request $request): RedirectResponse|View
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->home($request);
     }
 
+    /**
+     * Chuyển đường dẫn cũ sang route mới.
+     */
     public function path(Request $request, string $oldRoute): RedirectResponse
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->redirectOldProjectRoute($request, $oldRoute);
     }
 
+    /**
+     * Chuyển route dự án cũ sang route mới.
+     */
     private function redirectOldProjectRoute(Request $request, string $route): RedirectResponse
     {
         $route = trim($route);
@@ -108,6 +126,9 @@ class ClientRouteAliasController extends Controller
         return $this->redirectPath($request, '/');
     }
 
+    /**
+     * Chuyển path cũ sang path mới.
+     */
     private function redirectPath(Request $request, string $path): RedirectResponse
     {
         return redirect()->away($request->getSchemeAndHttpHost() . $path);

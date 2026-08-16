@@ -8,36 +8,61 @@ use Illuminate\View\View;
 
 class PageController extends Controller
 {
+    /**
+     * Hiển thị trang liên hệ.
+     */
     public function contact(): View
     {
+        // Luong: Tra ve view de hien thi giao dien cho request.
         return view('pages.contact');
     }
 
+    /**
+     * Hiển thị trang hỗ trợ và tìm kiếm nội dung hỗ trợ.
+     */
     public function support(Request $request): View
     {
+        // Luong: Gan ket qua xu ly vao bien $query.
         $query = trim((string) $request->query('q', ''));
+        // Luong: Gan ket qua xu ly vao bien $items.
         $items = collect($this->supportItems());
 
+        // Luong: Gan ket qua xu ly vao bien $results.
         $results = $query === ''
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             ? collect()
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             : $items->filter(function (array $item) use ($query) {
+                // Luong: Gan ket qua xu ly vao bien $keyword.
                 $keyword = $this->normalizeSearchText($query);
+                // Luong: Gan ket qua xu ly vao bien $content.
                 $content = $this->normalizeSearchText(implode(' ', [
+                    // Luong: Xu ly dong logic tiep theo trong ham public nay.
                     $item['title'],
+                    // Luong: Xu ly dong logic tiep theo trong ham public nay.
                     $item['category'],
+                    // Luong: Xu ly dong logic tiep theo trong ham public nay.
                     $item['description'],
+                    // Luong: Xu ly dong logic tiep theo trong ham public nay.
                     implode(' ', $item['keywords']),
                 ]));
 
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return str_contains($content, $keyword);
             })->values();
 
+        // Luong: Tra ve view de hien thi giao dien cho request.
         return view('pages.support', [
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'query' => $query,
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'supportResults' => $results,
         ]);
     }
 
+    /**
+     * Chuẩn hóa chữ để tìm kiếm dễ hơn.
+     */
     private function normalizeSearchText(string $text): string
     {
         return Str::of($text)
@@ -49,6 +74,9 @@ class PageController extends Controller
             ->toString();
     }
 
+    /**
+     * Trả về các mục hỗ trợ có sẵn.
+     */
     private function supportItems(): array
     {
         return [

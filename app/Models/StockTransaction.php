@@ -31,16 +31,19 @@ class StockTransaction extends Model
 
     public function sourceWarehouse(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Warehouse::class, 'source_warehouse_id');
     }
 
     public function targetWarehouse(): BelongsTo
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Warehouse::class, 'target_warehouse_id');
     }
 
     public function items(): HasMany
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(StockTransactionItem::class);
     }
 }

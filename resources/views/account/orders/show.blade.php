@@ -21,7 +21,25 @@
         default => [$status ?: 'Chờ xác nhận', 'warning', 'fa-clock'],
     };
 
-    [$statusLabel, $statusClass, $statusIcon] = $statusMeta($order->status);
+    $latestReturn = $order->returnRequests->first();
+    $displayStatusForOrder = function ($order) {
+        if ($order->returnRequests->whereIn('status', ['PENDING', 'APPROVED', 'RECEIVED'])->isNotEmpty()) {
+            return 'RETURN_PENDING';
+        }
+
+        $completed = $order->returnRequests
+            ->where('status', 'COMPLETED')
+            ->sortByDesc('requested_at')
+            ->first();
+
+        return match ($completed?->type) {
+            'RETURN' => 'RETURNED',
+            'EXCHANGE' => 'EXCHANGED',
+            default => $order->status,
+        };
+    };
+    $orderDisplayStatus = $displayStatusForOrder($order);
+    [$statusLabel, $statusClass, $statusIcon] = $statusMeta($orderDisplayStatus);
     $progressSteps = [
         'AWAITING_PAYMENT' => ['Chờ thanh toán', 'fa-credit-card'],
         'PENDING' => ['Chờ xác nhận', 'fa-clock'],
@@ -30,7 +48,7 @@
         'DELIVERED' => ['Giao thành công', 'fa-check-circle'],
     ];
     $progressOrder = array_keys($progressSteps);
-    $progressCurrent = in_array($order->status, ['RETURN_PENDING', 'RETURNED', 'EXCHANGED'], true) ? 'DELIVERED' : $order->status;
+    $progressCurrent = in_array($orderDisplayStatus, ['RETURN_PENDING', 'RETURNED', 'EXCHANGED'], true) ? 'DELIVERED' : $orderDisplayStatus;
     $progressIndex = array_search($progressCurrent, $progressOrder, true);
     $progressClasses = [
         'AWAITING_PAYMENT' => 'payment',
@@ -40,6 +58,21 @@
         'DELIVERED' => 'success',
     ];
     $paymentMap = ['COD' => 'COD - Nhận hàng', 'VNPAY' => 'VNPay'];
+    $returnStatusMeta = function ($request) {
+        $typeLabel = $request?->type === 'EXCHANGE' ? 'đổi hàng' : 'hoàn trả';
+
+        return match ($request?->status) {
+            'APPROVED' => ['Đã duyệt ' . $typeLabel, 'return-progress', 'fa-clipboard-check'],
+            'RECEIVED' => ['Đã nhận hàng hoàn/đổi', 'return-progress', 'fa-box-open'],
+            'COMPLETED' => ['Hoàn tất ' . $typeLabel, 'return-done', 'fa-check-circle'],
+            'REJECTED' => ['Từ chối ' . $typeLabel, 'return-rejected', 'fa-ban'],
+            'CANCELLED' => ['Đã hủy ' . $typeLabel, 'dark', 'fa-times-circle'],
+            default => ['Đang yêu cầu ' . $typeLabel, 'return', 'fa-rotate-left'],
+        };
+    };
+    [$returnLabel, $returnClass, $returnIcon] = $latestReturn
+        ? $returnStatusMeta($latestReturn)
+        : [null, null, null];
     $returnItemLabels = $order->returnRequests->flatMap(function ($request) {
         return $request->items->mapWithKeys(function ($item) use ($request) {
             $typeLabel = $request->type === 'EXCHANGE' ? 'Yêu cầu đổi hàng' : 'Yêu cầu hoàn trả';
@@ -88,6 +121,11 @@
             </div>
             <div class="od-actions">
                 <span class="od-badge {{ $statusClass }}"><i class="fas {{ $statusIcon }}"></i>{{ $statusLabel }}</span>
+                @if ($latestReturn)
+                    <span class="od-badge {{ $returnClass }}" title="Mã yêu cầu {{ $latestReturn->return_code }}">
+                        <i class="fas {{ $returnIcon }}"></i>{{ $returnLabel }} · {{ $latestReturn->return_code }}
+                    </span>
+                @endif
                 <a href="{{ route('account.orders.invoice', $order) }}" class="od-btn primary" target="_blank" rel="noopener">
                     <i class="fas fa-file-invoice"></i> Xuất hóa đơn
                 </a>

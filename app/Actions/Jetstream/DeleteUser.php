@@ -12,8 +12,11 @@ class DeleteUser implements DeletesUsers
      */
     public function delete(User $user): void
     {
+        // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $user->deleteProfilePhoto();
+        // Luong: Xoa ban ghi phu hop voi dieu kien xu ly.
         $user->tokens->each->delete();
+        // Luong: Xoa ban ghi phu hop voi dieu kien xu ly.
         $user->delete();
     }
 }

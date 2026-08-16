@@ -91,8 +91,11 @@ return new class extends Migration
 
     public function up(): void
     {
+        // Luong: Lap qua tung phan tu de xu ly lan luot.
         foreach ($this->indexes as $table => $indexes) {
+            // Luong: Lap qua tung phan tu de xu ly lan luot.
             foreach ($indexes as $index) {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->addIndexIfPossible($table, $index['columns'], $index['name']);
             }
         }
@@ -100,8 +103,11 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Luong: Lap qua tung phan tu de xu ly lan luot.
         foreach (array_reverse($this->indexes) as $table => $indexes) {
+            // Luong: Lap qua tung phan tu de xu ly lan luot.
             foreach (array_reverse($indexes) as $index) {
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->dropIndexIfExists($table, $index['name']);
             }
         }

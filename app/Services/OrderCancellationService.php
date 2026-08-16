@@ -22,89 +22,136 @@ class OrderCancellationService
     {
         // Token thật chỉ gửi qua email. Database chỉ lưu token đã hash.
         // Nếu database bị lộ, người khác cũng không lấy được link xác nhận thật.
+        // Luong: Gan ket qua xu ly vao bien $token.
         $token = Str::random(72);
+        // Luong: Gan ket qua xu ly vao bien $tokenHash.
         $tokenHash = hash('sha256', $token);
+        // Luong: Gan ket qua xu ly vao bien $reason.
         $reason = $this->normalizeReason($reason);
 
+        // Luong: Mo transaction de cac thao tac CSDL cung thanh cong hoac cung rollback.
         $result = DB::transaction(function () use ($order, $reason, $tokenHash): array|string {
             // lockForUpdate khóa dòng order để tránh 2 admin/request cùng xử lý một đơn một lúc.
+            // Luong: Gan ket qua xu ly vao bien $lockedOrder.
             $lockedOrder = Order::query()
+                // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
                 ->with(['user', 'items'])
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->lockForUpdate()
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->find($order->id);
 
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if (! $lockedOrder) {
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return 'Không tìm thấy đơn hàng cần xử lý.';
             }
 
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if (! $this->canCancel($lockedOrder)) {
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return 'Không thể yêu cầu hủy đơn hàng ở trạng thái hiện tại.';
             }
 
             // Email lấy từ user của đơn hàng vì khách cần nhận link xác nhận hủy.
+            // Luong: Gan ket qua xu ly vao bien $email.
             $email = $this->customerEmail($lockedOrder);
 
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($email === null) {
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return 'Đơn hàng này chưa có email khách hàng để gửi xác nhận hủy.';
             }
 
             // Lưu trạng thái "đang chờ khách xác nhận hủy".
             // status vẫn giữ nguyên để báo cáo không tính là đã hủy sớm.
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $lockedOrder->forceFill([
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_confirmation_token_hash' => $tokenHash,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_reason' => $reason,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_requested_at' => now(),
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_confirmed_at' => null,
             ])->save();
 
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return [
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'email' => $email,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'order' => $lockedOrder->fresh(['user', 'items']),
             ];
         });
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (is_string($result)) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return $result;
         }
 
         // Signed URL có expires + signature.
         // Khách không cần đăng nhập vẫn xác nhận được, nhưng không được sửa id/token trong URL.
+        // Luong: Gan ket qua xu ly vao bien $url.
         $url = URL::temporarySignedRoute(
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'orders.cancel-confirm.show',
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             now()->addDays(3),
             [
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'order' => $result['order']->id,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'token' => $token,
             ]
         );
 
+        // Luong: Bat dau khoi xu ly co the phat sinh loi.
         try {
             // Mail::raw dùng email text đơn giản, giống style đang có trong AuthController.
             // Nội dung email được gom trong emailBody() để hàm chính dễ đọc.
+            // Luong: Gui email dang text theo noi dung da tao.
             Mail::raw(
+                // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                 $this->emailBody($result['order'], $url),
+                // Luong: Dinh nghia callback ngan gon cho thao tac hien tai.
                 fn ($message) => $message
+                    // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                     ->to($result['email'])
+                    // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                     ->subject('Xác nhận hủy đơn hàng ' . ($result['order']->order_code ?: '#' . $result['order']->id))
             );
+        // Luong: Bat va xu ly loi phat sinh trong khoi try.
         } catch (\Throwable $exception) {
             // Nếu gửi email lỗi thì xóa token vừa lưu.
             // Như vậy admin có thể sửa SMTP rồi bấm gửi lại, tránh giữ yêu cầu hủy không ai nhận được.
+            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             Order::whereKey($order->id)
+                // Luong: Bo sung dieu kien loc du lieu cho truy van.
                 ->where('cancel_confirmation_token_hash', $tokenHash)
+                // Luong: Cap nhat cac ban ghi phu hop voi dieu kien da loc.
                 ->update([
+                    // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                     'cancel_confirmation_token_hash' => null,
+                    // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                     'cancel_requested_at' => null,
                 ]);
 
+            // Luong: Ghi log de theo doi va chan doan qua trinh xu ly.
             Log::error('Order cancellation confirmation email could not be sent.', [
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'order_id' => $order->id,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'message' => $exception->getMessage(),
             ]);
 
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return 'Chưa gửi được email xác nhận hủy. Vui lòng kiểm tra cấu hình SMTP trong file .env.';
         }
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return true;
     }
 
@@ -112,25 +159,34 @@ class OrderCancellationService
     // Trả null nghĩa là link còn hợp lệ; trả chuỗi nghĩa là có lỗi để view hiển thị cho khách.
     public function pendingCancellationError(Order $order, string $token): ?string
     {
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($order->status === 'CANCELLED') {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return 'Đơn hàng này đã được hủy trước đó.';
         }
 
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $this->canCancel($order)) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return 'Đơn hàng hiện không còn ở trạng thái được phép hủy.';
         }
 
         // So sánh token khách gửi lên với hash đang lưu trong database.
         // hash_equals giúp tránh so sánh chuỗi theo kiểu dễ bị timing attack.
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $order->cancel_confirmation_token_hash || ! hash_equals($order->cancel_confirmation_token_hash, hash('sha256', $token))) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return 'Liên kết xác nhận hủy không hợp lệ.';
         }
 
         // Link tự hết hạn sau 3 ngày kể từ lúc admin gửi yêu cầu hủy.
+        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $order->cancel_requested_at || $order->cancel_requested_at->lt(now()->subDays(3))) {
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return 'Liên kết xác nhận hủy đã hết hạn. Vui lòng liên hệ cửa hàng để được hỗ trợ.';
         }
 
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return null;
     }
 
@@ -138,31 +194,46 @@ class OrderCancellationService
     // Khách bấm xác nhận -> kiểm tra token lần cuối -> đổi status sang CANCELLED.
     public function confirmCancellation(Order $order, string $token): true|string
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return DB::transaction(function () use ($order, $token): true|string {
             // Khóa order trong lúc xác nhận để tránh khách/admin thao tác trùng thời điểm.
+            // Luong: Gan ket qua xu ly vao bien $lockedOrder.
             $lockedOrder = Order::query()
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->lockForUpdate()
+                // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->find($order->id);
 
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if (! $lockedOrder) {
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return 'Không tìm thấy đơn hàng cần hủy.';
             }
 
+            // Luong: Gan ket qua xu ly vao bien $error.
             $error = $this->pendingCancellationError($lockedOrder, $token);
 
+            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($error !== null) {
+                // Luong: Tra ve ket qua cuoi cung cua ham.
                 return $error;
             }
 
             // Chỉ tới đây đơn mới thật sự bị hủy.
             // Xóa token sau khi dùng để link email không thể dùng lại lần hai.
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $lockedOrder->forceFill([
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'status' => 'CANCELLED',
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_confirmed_at' => now(),
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_confirmation_token_hash' => null,
+                // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'note' => $this->cancelNote($lockedOrder->note, $lockedOrder->cancel_reason),
             ])->save();
 
+            // Luong: Tra ve ket qua cuoi cung cua ham.
             return true;
         });
     }
@@ -170,6 +241,7 @@ class OrderCancellationService
     public function canCancel(Order $order): bool
     {
         // Hàm này được AdminController và service dùng chung để thống nhất điều kiện hủy.
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return in_array($order->status, self::CANCELLABLE_STATUSES, true);
     }
 

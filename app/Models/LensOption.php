@@ -25,6 +25,7 @@ class LensOption extends Model
 
     public function scopeActive($query)
     {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
         return $query->where('status', 'ACTIVE');
     }
 }

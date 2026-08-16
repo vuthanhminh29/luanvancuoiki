@@ -82,6 +82,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/bai-viet/chuyen-muc/{category}/an', [PostAdminController::class, 'hiddenCategory'])->name('posts.categories.hidden');
         Route::get('/bai-viet/{post}/sua', [PostAdminController::class, 'edit'])->name('posts.edit');
         Route::put('/bai-viet/{post}', [PostAdminController::class, 'update'])->name('posts.update');
+        Route::patch('/bai-viet/{post}/duyet', [PostAdminController::class, 'approve'])->name('posts.approve');
         Route::patch('/bai-viet/{post}/an', [PostAdminController::class, 'hidden'])->name('posts.hidden');
 
         Route::get('/danh-gia', [ReviewAdminController::class, 'index'])->name('reviews.index');

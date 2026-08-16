@@ -12,6 +12,9 @@ class ReportAdminController extends Controller
 {
     private array $excludedOrderStatuses = ['CANCELLED'];
 
+    /**
+     * Hiển thị báo cáo sản phẩm.
+     */
     public function products(): View
     {
         $summary = DB::selectOne("
@@ -69,6 +72,9 @@ class ReportAdminController extends Controller
         ]);
     }
 
+    /**
+     * Hiển thị báo cáo đơn hàng.
+     */
     public function orders(): View
     {
         $summary = DB::selectOne("
@@ -166,6 +172,9 @@ class ReportAdminController extends Controller
         ]);
     }
 
+    /**
+     * Hiển thị biểu đồ doanh thu.
+     */
     public function salesChart(Request $request): View
     {
         $top = $this->resolveTop($request->integer('top', 10), [5, 10, 30]);
@@ -200,6 +209,9 @@ class ReportAdminController extends Controller
         ]);
     }
 
+    /**
+     * Hiển thị sản phẩm bán chạy.
+     */
     public function topSales(Request $request): View
     {
         $top = $this->resolveTop($request->integer('top', 10), [5, 10, 15, 30, 100]);
@@ -247,6 +259,9 @@ class ReportAdminController extends Controller
         ]);
     }
 
+    /**
+     * Hiển thị doanh thu theo ngày.
+     */
     public function dailySales(Request $request): View
     {
         $limitDay = $this->resolveTop($request->integer('limit_day', 14), [7, 14, 30, 90, 365]);
@@ -286,11 +301,17 @@ class ReportAdminController extends Controller
         ]);
     }
 
+    /**
+     * Chuẩn hóa số lượng dòng top.
+     */
     private function resolveTop(int $value, array $allowed): int
     {
         return in_array($value, $allowed, true) ? $value : $allowed[0];
     }
 
+    /**
+     * Lấy giá trị lớn nhất trong dữ liệu báo cáo.
+     */
     private function maxValue(Collection $rows, string $field): float
     {
         return max(1, (float) $rows->max(fn ($row) => (float) $row->{$field}));
