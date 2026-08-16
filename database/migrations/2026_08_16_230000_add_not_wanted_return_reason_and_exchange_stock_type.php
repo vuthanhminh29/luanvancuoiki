@@ -9,15 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('return_reasons')) {
-            $exists = DB::table('return_reasons')->where('code', 'NOT_WANTED')->exists();
+            $exists = Schema::hasColumn('return_reasons', 'code')
+                ? DB::table('return_reasons')->where('code', 'NOT_WANTED')->exists()
+                : DB::table('return_reasons')->where('name', 'Không mua nữa')->exists();
 
             if (! $exists) {
-                DB::table('return_reasons')->insert([
-                    'code' => 'NOT_WANTED',
-                    'name' => 'Không mua nữa',
-                    'type' => 'RETURN',
-                    'status' => 'ACTIVE',
-                ]);
+                DB::table('return_reasons')->insert($this->returnReasonValues());
             }
         }
 
@@ -26,11 +23,60 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasTable('return_reasons')) {
-            DB::table('return_reasons')
-                ->where('code', 'NOT_WANTED')
-                ->update(['status' => 'INACTIVE']);
+        if (! Schema::hasTable('return_reasons')) {
+            return;
         }
+
+        $values = [];
+
+        if (Schema::hasColumn('return_reasons', 'status')) {
+            $values['status'] = 'INACTIVE';
+        }
+
+        if (Schema::hasColumn('return_reasons', 'updated_at')) {
+            $values['updated_at'] = now();
+        }
+
+        if ($values === []) {
+            return;
+        }
+
+        $query = DB::table('return_reasons');
+
+        if (Schema::hasColumn('return_reasons', 'code')) {
+            $query->where('code', 'NOT_WANTED');
+        } else {
+            $query->where('name', 'Không mua nữa');
+        }
+
+        $query->update($values);
+    }
+
+    private function returnReasonValues(): array
+    {
+        $values = ['name' => 'Không mua nữa'];
+
+        if (Schema::hasColumn('return_reasons', 'code')) {
+            $values['code'] = 'NOT_WANTED';
+        }
+
+        if (Schema::hasColumn('return_reasons', 'type')) {
+            $values['type'] = 'RETURN';
+        }
+
+        if (Schema::hasColumn('return_reasons', 'status')) {
+            $values['status'] = 'ACTIVE';
+        }
+
+        if (Schema::hasColumn('return_reasons', 'created_at')) {
+            $values['created_at'] = now();
+        }
+
+        if (Schema::hasColumn('return_reasons', 'updated_at')) {
+            $values['updated_at'] = now();
+        }
+
+        return $values;
     }
 
     private function widenStockTransactionTypeEnum(): void
