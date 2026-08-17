@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +16,11 @@ class ReportAdminController extends Controller
     /**
      * Hiển thị báo cáo sản phẩm.
      */
-    public function products(): View
+    public function products(Request $request): View
     {
+        $dateRange = $this->resolveDateRange($request);
+        $orderDateCondition = $this->orderDateCondition($dateRange);
+
         $summary = DB::selectOne("
             SELECT
                 (SELECT COUNT(*) FROM categories WHERE status = 'ACTIVE') AS active_categories,
@@ -58,6 +62,7 @@ class ReportAdminController extends Controller
                 JOIN products p ON p.id = oi.product_id
                 JOIN orders o ON o.id = oi.order_id
                 WHERE o.status NOT IN ('CANCELLED')
+                  {$orderDateCondition}
                 GROUP BY p.category_id
             ) sold ON sold.category_id = c.id
             WHERE c.status = 'ACTIVE'
@@ -69,25 +74,31 @@ class ReportAdminController extends Controller
             'summary' => $summary,
             'categoryReports' => $categoryReports,
             'maxRevenue' => $this->maxValue($categoryReports, 'revenue'),
+            'dateRange' => $dateRange,
         ]);
     }
 
     /**
      * Hiển thị báo cáo đơn hàng.
      */
-    public function orders(): View
+    public function orders(Request $request): View
     {
+        $dateRange = $this->resolveDateRange($request);
+        $orderDateCondition = $this->orderDateCondition($dateRange);
+        $plainOrderDateCondition = $this->orderDateCondition($dateRange, 'orders');
+
         $summary = DB::selectOne("
             SELECT
-                (SELECT COUNT(*) FROM orders) AS total_orders,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE status = 'DELIVERED') AS delivered_revenue,
+                (SELECT COUNT(*) FROM orders WHERE 1 = 1 {$plainOrderDateCondition}) AS total_orders,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE status = 'DELIVERED' {$plainOrderDateCondition}) AS delivered_revenue,
                 (
                     SELECT COALESCE(SUM(oi.quantity), 0)
                     FROM order_items oi
                     JOIN orders o ON o.id = oi.order_id
                     WHERE o.status NOT IN ('CANCELLED')
+                      {$orderDateCondition}
                 ) AS sold_quantity,
-                (SELECT COUNT(*) FROM orders WHERE status IN ('PENDING', 'AWAITING_PAYMENT')) AS pending_orders
+                (SELECT COUNT(*) FROM orders WHERE status IN ('PENDING', 'AWAITING_PAYMENT') {$plainOrderDateCondition}) AS pending_orders
         ");
 
         $statusReports = collect(DB::select("
@@ -96,6 +107,7 @@ class ReportAdminController extends Controller
                 COUNT(*) AS order_count,
                 COALESCE(SUM(total_amount), 0) AS total_amount
             FROM orders
+            WHERE 1 = 1 {$plainOrderDateCondition}
             GROUP BY status
             ORDER BY order_count DESC
         "));
@@ -147,6 +159,7 @@ class ReportAdminController extends Controller
                 FROM order_items oi
                 JOIN orders o ON o.id = oi.order_id
                 WHERE o.status NOT IN ('CANCELLED')
+                  {$orderDateCondition}
                 GROUP BY oi.product_id
             ) sold ON sold.product_id = p.id
             LEFT JOIN (
@@ -157,6 +170,7 @@ class ReportAdminController extends Controller
                 JOIN order_items oi ON oi.id = rri.order_item_id
                 JOIN return_requests rr ON rr.id = rri.return_request_id
                 WHERE rr.status IN ('PENDING', 'APPROVED', 'RECEIVED', 'COMPLETED')
+                  {$this->orderDateCondition($dateRange, 'rr')}
                 GROUP BY oi.product_id
             ) ret ON ret.product_id = p.id
             WHERE p.status <> 'DISCONTINUED'
@@ -169,6 +183,7 @@ class ReportAdminController extends Controller
             'productReports' => $productReports,
             'maxStatus' => $this->maxValue($statusReports, 'order_count'),
             'tradedProducts' => $productReports->filter(fn ($row) => (int) $row->sold_quantity > 0)->count(),
+            'dateRange' => $dateRange,
         ]);
     }
 
@@ -178,6 +193,8 @@ class ReportAdminController extends Controller
     public function salesChart(Request $request): View
     {
         $top = $this->resolveTop($request->integer('top', 10), [5, 10, 30]);
+        $dateRange = $this->resolveDateRange($request);
+        $orderDateCondition = $this->orderDateCondition($dateRange);
 
         $categorySales = collect(DB::select("
             SELECT
@@ -190,6 +207,7 @@ class ReportAdminController extends Controller
             JOIN products p ON p.id = oi.product_id
             LEFT JOIN categories c ON c.id = p.category_id
             WHERE o.status NOT IN ('CANCELLED')
+              {$orderDateCondition}
             GROUP BY c.id, c.name
             ORDER BY revenue DESC, sold_quantity DESC
             LIMIT {$top}
@@ -206,6 +224,7 @@ class ReportAdminController extends Controller
             'revenue' => $categorySales->pluck('revenue')->map(fn ($value) => (float) $value)->all(),
             'totalSold' => $totalSold,
             'totalRevenue' => $totalRevenue,
+            'dateRange' => $dateRange,
         ]);
     }
 
@@ -215,6 +234,8 @@ class ReportAdminController extends Controller
     public function topSales(Request $request): View
     {
         $top = $this->resolveTop($request->integer('top', 10), [5, 10, 15, 30, 100]);
+        $dateRange = $this->resolveDateRange($request);
+        $orderDateCondition = $this->orderDateCondition($dateRange);
 
         $topProducts = collect(DB::select("
             SELECT
@@ -240,6 +261,7 @@ class ReportAdminController extends Controller
                 GROUP BY pv.product_id
             ) stock ON stock.product_id = p.id
             WHERE o.status NOT IN ('CANCELLED')
+              {$orderDateCondition}
             GROUP BY p.id, p.name, c.name, b.name, stock.available_stock
             ORDER BY sold_quantity DESC, revenue DESC
             LIMIT {$top}
@@ -256,6 +278,7 @@ class ReportAdminController extends Controller
             'revenue' => $topProducts->pluck('revenue')->map(fn ($value) => (float) $value)->all(),
             'totalSold' => $totalSold,
             'totalRevenue' => $totalRevenue,
+            'dateRange' => $dateRange,
         ]);
     }
 
@@ -266,6 +289,8 @@ class ReportAdminController extends Controller
     {
         $limitDay = $this->resolveTop($request->integer('limit_day', 14), [7, 14, 30, 90, 365]);
         $chartType = in_array($request->query('type_chart'), ['bar', 'line'], true) ? $request->query('type_chart') : 'bar';
+        $dateRange = $this->resolveDateRange($request, $limitDay);
+        $orderDateCondition = $this->orderDateCondition($dateRange);
 
         $dailySales = collect(DB::select("
             SELECT
@@ -275,8 +300,8 @@ class ReportAdminController extends Controller
                 COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS revenue
             FROM orders o
             LEFT JOIN order_items oi ON oi.order_id = o.id
-            WHERE o.created_at >= DATE_SUB(CURDATE(), INTERVAL " . ($limitDay - 1) . " DAY)
-              AND o.status NOT IN ('CANCELLED')
+            WHERE o.status NOT IN ('CANCELLED')
+              {$orderDateCondition}
             GROUP BY DATE(o.created_at)
             ORDER BY order_date ASC
         "));
@@ -298,6 +323,7 @@ class ReportAdminController extends Controller
             'totalSold' => array_sum($sold),
             'totalRevenue' => $totalRevenue,
             'avgRevenue' => $dailySales->count() > 0 ? $totalRevenue / $dailySales->count() : 0,
+            'dateRange' => $dateRange,
         ]);
     }
 
@@ -315,5 +341,49 @@ class ReportAdminController extends Controller
     private function maxValue(Collection $rows, string $field): float
     {
         return max(1, (float) $rows->max(fn ($row) => (float) $row->{$field}));
+    }
+
+    private function resolveDateRange(Request $request, int $defaultDays = 30): array
+    {
+        $today = CarbonImmutable::today();
+        $fallbackFrom = $today->subDays(max(1, $defaultDays) - 1);
+
+        $from = $this->parseDate($request->query('date_from')) ?? $fallbackFrom;
+        $to = $this->parseDate($request->query('date_to')) ?? $today;
+
+        if ($from->greaterThan($to)) {
+            [$from, $to] = [$to, $from];
+        }
+
+        return [
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+            'from_datetime' => $from->startOfDay()->toDateTimeString(),
+            'to_datetime' => $to->endOfDay()->toDateTimeString(),
+            'label' => $from->format('d/m/Y') . ' - ' . $to->format('d/m/Y'),
+        ];
+    }
+
+    private function parseDate(mixed $value): ?CarbonImmutable
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            return CarbonImmutable::createFromFormat('Y-m-d', $value)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function orderDateCondition(array $dateRange, string $alias = 'o'): string
+    {
+        return sprintf(
+            "AND %s.created_at BETWEEN '%s' AND '%s'",
+            $alias,
+            $dateRange['from_datetime'],
+            $dateRange['to_datetime']
+        );
     }
 }

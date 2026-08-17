@@ -12,6 +12,7 @@
 
 @section('content')
 <div class="report-page">
+<div class="report-inner">
     <div class="report-head">
         <div>
             <div class="report-kicker">Biểu đồ danh mục</div>
@@ -19,31 +20,45 @@
             <p class="report-subtitle">So sánh số lượng bán và doanh thu giữa các nhóm kính, gọng kính và tròng kính.</p>
         </div>
         <div class="report-actions">
-            <a class="report-btn" href="{{ route('admin.reports.sales-chart', ['top' => 5]) }}">Top 5</a>
-            <a class="report-btn" href="{{ route('admin.reports.sales-chart', ['top' => 10]) }}">Top 10</a>
-            <a class="report-btn" href="{{ route('admin.reports.sales-chart', ['top' => 30]) }}">Top 30</a>
-            <a class="report-btn primary" href="{{ route('admin.reports.top-sales', ['top' => 10]) }}"><i class="fas fa-trophy"></i> Top sản phẩm</a>
+            <a class="report-btn {{ $top === 5 ? 'active' : '' }}" href="{{ route('admin.reports.sales-chart', ['top' => 5, 'date_from' => $dateRange['from'], 'date_to' => $dateRange['to']]) }}">Top 5</a>
+            <a class="report-btn {{ $top === 10 ? 'active' : '' }}" href="{{ route('admin.reports.sales-chart', ['top' => 10, 'date_from' => $dateRange['from'], 'date_to' => $dateRange['to']]) }}">Top 10</a>
+            <a class="report-btn {{ $top === 30 ? 'active' : '' }}" href="{{ route('admin.reports.sales-chart', ['top' => 30, 'date_from' => $dateRange['from'], 'date_to' => $dateRange['to']]) }}">Top 30</a>
+            <a class="report-btn primary" href="{{ route('admin.reports.top-sales', ['top' => 10, 'date_from' => $dateRange['from'], 'date_to' => $dateRange['to']]) }}"><i class="fas fa-trophy"></i> Top sản phẩm</a>
         </div>
     </div>
 
+    @include('admin.reports._date-filter')
+
     <div class="report-grid">
         <div class="report-card">
-            <div class="report-metric-label">Danh mục hiển thị</div>
+            <div class="report-metric-top">
+                <div class="report-metric-label">Danh mục hiển thị</div>
+                <span class="report-metric-icon"><i class="fas fa-layer-group"></i></span>
+            </div>
             <div class="report-metric-value">{{ $int($categorySales->count()) }}</div>
             <p class="report-metric-note">Theo top đã chọn</p>
         </div>
         <div class="report-card">
-            <div class="report-metric-label">Số lượng đã bán</div>
+            <div class="report-metric-top">
+                <div class="report-metric-label">Số lượng đã bán</div>
+                <span class="report-metric-icon"><i class="fas fa-glasses"></i></span>
+            </div>
             <div class="report-metric-value">{{ $int($totalSold) }}</div>
             <p class="report-metric-note">Không tính đơn hủy</p>
         </div>
         <div class="report-card">
-            <div class="report-metric-label">Doanh thu ghi nhận</div>
+            <div class="report-metric-top">
+                <div class="report-metric-label">Doanh thu ghi nhận</div>
+                <span class="report-metric-icon"><i class="fas fa-wallet"></i></span>
+            </div>
             <div class="report-metric-value">{{ $money($totalRevenue) }}</div>
             <p class="report-metric-note">Theo dòng sản phẩm đã bán</p>
         </div>
         <div class="report-card">
-            <div class="report-metric-label">Giá trị TB / sản phẩm</div>
+            <div class="report-metric-top">
+                <div class="report-metric-label">Giá trị TB / sản phẩm</div>
+                <span class="report-metric-icon"><i class="fas fa-calculator"></i></span>
+            </div>
             <div class="report-metric-value">{{ $money($totalSold > 0 ? $totalRevenue / $totalSold : 0) }}</div>
             <p class="report-metric-note">Doanh thu chia số lượng</p>
         </div>
@@ -52,6 +67,7 @@
     <div class="report-card report-section">
         <div class="report-section-head">
             <h2 class="report-section-title">Biểu đồ danh mục</h2>
+            <p class="report-section-note">So sánh lượng bán và doanh thu</p>
         </div>
         @if ($categorySales->isNotEmpty())
             <div class="report-chart">
@@ -65,13 +81,14 @@
     <div class="report-card report-section">
         <div class="report-section-head">
             <h2 class="report-section-title">Bảng dữ liệu</h2>
+            <p class="report-section-note">Tỷ trọng tính theo doanh thu</p>
         </div>
         @if ($categorySales->isNotEmpty())
-            <div class="table-responsive">
+            <div class="table-responsive report-table-shell">
                 <table class="table report-table align-middle">
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th style="width: 54px;">#</th>
                             <th>Danh mục</th>
                             <th class="text-end">Sản phẩm</th>
                             <th class="text-end">Đã bán</th>
@@ -82,8 +99,8 @@
                     <tbody>
                         @foreach ($categorySales as $row)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td><strong>{{ $row->category_name }}</strong></td>
+                                <td class="report-rank">{{ $loop->iteration }}</td>
+                                <td class="report-main-cell"><strong>{{ $row->category_name }}</strong></td>
                                 <td class="text-end">{{ $int($row->product_count) }}</td>
                                 <td class="text-end">{{ $int($row->sold_quantity) }}</td>
                                 <td class="text-end"><strong>{{ $money($row->revenue) }}</strong></td>
@@ -95,6 +112,7 @@
             </div>
         @endif
     </div>
+</div>
 </div>
 @endsection
 
