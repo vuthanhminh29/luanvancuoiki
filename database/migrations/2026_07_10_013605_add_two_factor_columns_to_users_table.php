@@ -14,9 +14,13 @@ return new class extends Migration
         // Luong: Xu ly dong logic tiep theo trong ham public nay.
         Schema::table('users', function (Blueprint $table) {
             // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
+            // Bang users cua du an dung cot password_hash, KHONG co cot password.
+            // Migration goc cua Fortify neo vao after('password') nen khi chay
+            // `migrate` tren MySQL sach se loi "Unknown column 'password'" va
+            // dung toan bo migration. (SQLite bo qua after() nen khong lo ra.)
             $table->text('two_factor_secret')
                 // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
-                ->after('password')
+                ->after('password_hash')
                 // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->nullable();
 

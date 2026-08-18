@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Promotion;
 use App\Models\ProductVariant;
+use App\Services\InventoryService;
 use App\Services\OrderConfirmationEmailService;
 use App\Services\VnPayService;
 use Illuminate\Http\RedirectResponse;
@@ -174,7 +175,7 @@ class CheckoutController extends Controller
     /**
      * Tạo đơn hàng hoặc chuyển sang thanh toán VNPay.
      */
-    public function store(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail): RedirectResponse
+    public function store(Request $request, VnPayService $vnPay, OrderConfirmationEmailService $orderConfirmationEmail, InventoryService $inventory): RedirectResponse
     {
         // Luong: Kiem tra va lay du lieu hop le tu request.
         $data = $request->validate([
@@ -239,14 +240,11 @@ class CheckoutController extends Controller
         foreach ($variants as $variant) {
             // Luong: Gan ket qua xu ly vao bien $requestedQty.
             $requestedQty = (int) ($cart[$variant->id] ?? 0);
-            // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
-            $stock = (int) DB::table('inventories')
-                // Luong: Bo sung dieu kien loc du lieu cho truy van.
-                ->where('warehouse_id', 1)
-                // Luong: Bo sung dieu kien loc du lieu cho truy van.
-                ->where('variant_id', $variant->id)
-                // Luong: Thuc thi truy van va lay ket qua tu CSDL.
-                ->value('quantity');
+            // Tính tồn theo mọi kho bán được, giống giỏ hàng và trang sản phẩm.
+            // Trước đây chỗ này đọc cứng warehouse_id = 1 nên báo sai khi hàng
+            // nằm ở kho khác.
+            // Luong: Gan ket qua xu ly vao bien $stock.
+            $stock = $inventory->sellableQuantityFor((int) $variant->id);
 
             // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($requestedQty > $stock) {
@@ -316,8 +314,17 @@ class CheckoutController extends Controller
             }
         }
 
-        // Luong: Gan ket qua xu ly vao bien $order.
-        $order = $this->createOrder($data, $cart, $variants, $cartLensOptions, $shippingAddress, $promotion, $discountAmount);
+        // createOrder() chạy trong transaction; nếu mã giảm giá vừa bị người khác
+        // dùng hết lượt thì nó ném RuntimeException và toàn bộ đơn được rollback.
+        // Luong: Bat dau khoi xu ly co the phat sinh loi.
+        try {
+            // Luong: Gan ket qua xu ly vao bien $order.
+            $order = $this->createOrder($data, $cart, $variants, $cartLensOptions, $shippingAddress, $promotion, $discountAmount, $inventory);
+        } catch (RuntimeException $exception) {
+            // Luong: Quay lai trang truoc kem du lieu hoac thong bao can hien thi.
+            return back()->withInput()->with('error', $exception->getMessage());
+        }
+
         // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $orderConfirmationEmail->send($order);
 
@@ -331,9 +338,27 @@ class CheckoutController extends Controller
     /**
      * Tạo đơn hàng và các dòng sản phẩm.
      */
-    private function createOrder(array $data, array $cart, $variants, array $cartLensOptions, string $shippingAddress, ?Promotion $promotion, float $discountAmount): Order
+    private function createOrder(array $data, array $cart, $variants, array $cartLensOptions, string $shippingAddress, ?Promotion $promotion, float $discountAmount, InventoryService $inventory): Order
     {
-        return DB::transaction(function () use ($data, $cart, $variants, $cartLensOptions, $shippingAddress, $promotion, $discountAmount) {
+        return DB::transaction(function () use ($data, $cart, $variants, $cartLensOptions, $shippingAddress, $promotion, $discountAmount, $inventory) {
+            // Kiểm tra tồn kho LẦN NỮA bên trong transaction và có khóa dòng.
+            // Lần kiểm tra ở store() nằm ngoài transaction nên chỉ là kiểm tra sớm
+            // để báo lỗi cho khách; hai khách bấm đặt cùng lúc vẫn có thể cùng vượt
+            // qua nó. lockForUpdate() ở đây buộc request thứ hai phải chờ và đọc lại
+            // số tồn thật sau khi request thứ nhất xong.
+            foreach ($variants as $variant) {
+                $requestedQty = (int) ($cart[$variant->id] ?? 0);
+                $stock = $inventory->sellableQuantityFor((int) $variant->id, true);
+
+                if ($requestedQty > $stock) {
+                    $name = $variant->product?->name ?? 'Sản phẩm';
+
+                    throw new RuntimeException($stock <= 0
+                        ? 'Sản phẩm "' . $name . '" vừa hết hàng. Vui lòng cập nhật lại giỏ hàng.'
+                        : 'Sản phẩm "' . $name . '" chỉ còn ' . $stock . ' sản phẩm trong kho. Vui lòng giảm số lượng trong giỏ.');
+                }
+            }
+
             $subtotal = $this->cartSubtotal($variants, $cart, $cartLensOptions);
             $shippingFee = 0;
             $discountAmount = min($discountAmount, (float) $subtotal);
@@ -356,7 +381,7 @@ class CheckoutController extends Controller
             ]);
 
             if ($promotion) {
-                Promotion::whereKey($promotion->id)->increment('used_count');
+                $this->claimPromotionSlot($promotion->id);
             }
 
             foreach ($variants as $variant) {
@@ -379,6 +404,10 @@ class CheckoutController extends Controller
                     'total_price' => $unitPrice * $quantity,
                 ]);
             }
+
+            // Giữ hàng ngay khi tạo đơn. Nếu không đủ tồn, issue() ném lỗi và
+            // toàn bộ transaction (đơn + dòng hàng + lượt mã giảm giá) bị rollback.
+            $inventory->reserveForOrder($order);
 
             return $order;
         });
@@ -423,6 +452,32 @@ class CheckoutController extends Controller
     }
 
     /**
+     * Chiếm một lượt dùng của mã giảm giá, đảm bảo không vượt usage_limit.
+     *
+     * Trước đây chỗ này chỉ gọi increment('used_count') sau khi promotionFromCode()
+     * đã đọc và kiểm tra used_count ở một truy vấn khác. Giữa lúc đọc và lúc tăng,
+     * request khác có thể xen vào, nên mã giới hạn 10 lượt vẫn bị dùng quá.
+     *
+     * Cách sửa: gộp điều kiện vào chính câu UPDATE (giống InventoryService::issue).
+     * Database sẽ tự khóa dòng khi update, nên chỉ đúng một request thắng.
+     *
+     * @throws RuntimeException khi mã đã hết lượt.
+     */
+    private function claimPromotionSlot(int $promotionId): void
+    {
+        $claimed = Promotion::whereKey($promotionId)
+            ->where(function ($query): void {
+                $query->whereNull('usage_limit')
+                    ->orWhereColumn('used_count', '<', 'usage_limit');
+            })
+            ->increment('used_count');
+
+        if ($claimed === 0) {
+            throw new RuntimeException('Mã giảm giá đã hết lượt sử dụng. Vui lòng bỏ mã và đặt lại đơn.');
+        }
+    }
+
+    /**
      * Chuẩn hóa giỏ hàng trong session.
      */
     private function normalizedCart(): array
@@ -460,33 +515,14 @@ class CheckoutController extends Controller
      */
     private function normalizedCartLensOptions(array $cartLensOptions, array $cart): array
     {
+        // Luồng chọn tròng kính đang được tắt (xem commit "hide lens selector flow"),
+        // nên hàm luôn trả về mảng rỗng và mọi đơn được tính giá không kèm tròng.
+        //
+        // Trước đây phần thân hàm cũ vẫn nằm nguyên bên dưới câu `return []`, tức là
+        // ~30 dòng chết mà đọc lướt rất dễ tưởng là còn chạy. Đã xóa hẳn để không ai
+        // sửa nhầm vào code không bao giờ được gọi. Khi mở lại tính năng tròng kính
+        // thì viết lại phần chuẩn hóa ở đây (lọc code/name rỗng, ép price >= 0).
         return [];
-
-        $normalized = [];
-
-        foreach (array_keys($cart) as $variantId) {
-            $option = $cartLensOptions[$variantId] ?? $cartLensOptions[(string) $variantId] ?? null;
-
-            if (! is_array($option)) {
-                continue;
-            }
-
-            $code = trim((string) ($option['code'] ?? ''));
-            $name = trim((string) ($option['name'] ?? ''));
-            $price = max(0, (float) ($option['price'] ?? 0));
-
-            if ($code === '' || $name === '') {
-                continue;
-            }
-
-            $normalized[(int) $variantId] = [
-                'code' => $code,
-                'name' => $name,
-                'price' => $price,
-            ];
-        }
-
-        return $normalized;
     }
 
     private function totalQuantity(array $cart): int

@@ -44,7 +44,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $user->forceFill([
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
-                'name' => $input['name'],
+                'full_name' => $input['name'],
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'email' => $input['email'],
             ])->save();
@@ -59,7 +59,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
     protected function updateVerifiedUser(User $user, array $input): void
     {
         $user->forceFill([
-            'name' => $input['name'],
+            'full_name' => $input['name'],
             'email' => $input['email'],
             'email_verified_at' => null,
         ])->save();

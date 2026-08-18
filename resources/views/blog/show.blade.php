@@ -54,7 +54,10 @@
                     </div>
 
                     <div class="p-8 prose prose-gray max-w-none">
-                        {!! $post->content ? strip_tags($post->content, '<p><br><strong><b><em><i><ul><ol><li><h1><h2><h3><h4><h5><h6><a><img><blockquote><table><thead><tbody><tr><th><td><span><div><figure><figcaption>') : '<p>' . e($post->summary) . '</p>' !!}
+                        {{-- strip_tags() chỉ bỏ thẻ nhưng giữ nguyên thuộc tính, nên
+                             <img src=x onerror="..."> vẫn lọt qua và thành stored XSS.
+                             HtmlSanitizer lọc cả thẻ lẫn thuộc tính và kiểm tra scheme của href/src. --}}
+                        {!! $post->content ? \App\Support\HtmlSanitizer::clean($post->content) : '<p>' . e($post->summary) . '</p>' !!}
                     </div>
 
                     <div class="mx-8 mb-8 p-6 bg-gray-50 border-l-4 border-gray-900 rounded">

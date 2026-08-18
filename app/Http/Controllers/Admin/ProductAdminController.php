@@ -37,31 +37,20 @@ class ProductAdminController extends Controller
             ->select('products.*')
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->selectRaw("(SELECT COALESCE(SUM(inventories.quantity), 0)
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 FROM product_variants
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 LEFT JOIN inventories ON inventories.variant_id = product_variants.id
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 LEFT JOIN warehouses ON warehouses.id = inventories.warehouse_id
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 WHERE product_variants.product_id = products.id
-                  // Luong: Xu ly dong logic tiep theo trong ham public nay.
                   AND (warehouses.type IS NULL OR warehouses.type != 'QUARANTINE')) as quantity")
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->selectRaw("(SELECT COALESCE(SUM(order_items.quantity), 0)
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 FROM order_items
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 JOIN orders ON orders.id = order_items.order_id
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 WHERE order_items.product_id = products.id
-                  // Luong: Xu ly dong logic tiep theo trong ham public nay.
                   AND orders.status NOT IN ('CANCELLED')) as sold_quantity")
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->selectRaw("(SELECT COALESCE(MAX(COALESCE(product_variants.variant_price, products.base_price)), COALESCE(products.sale_price, products.base_price, 0))
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 FROM product_variants
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 WHERE product_variants.product_id = products.id) as max_price")
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->where('products.status', 'ACTIVE')
@@ -155,11 +144,8 @@ class ProductAdminController extends Controller
             ->select('products.*')
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->selectRaw("(SELECT COALESCE(SUM(inventories.quantity), 0)
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 FROM product_variants
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 LEFT JOIN inventories ON inventories.variant_id = product_variants.id
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 WHERE product_variants.product_id = products.id) as quantity")
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->whereIn('products.status', ['INACTIVE', 'DISCONTINUED', 'DRAFT'])
@@ -239,17 +225,11 @@ class ProductAdminController extends Controller
             ->selectRaw('(SELECT COALESCE(SUM(i.quantity), 0) FROM inventories i WHERE i.variant_id = pv.id) as stock_quantity')
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->selectRaw("(SELECT COALESCE(SUM(oi.quantity), 0)
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 FROM order_items oi
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 JOIN orders o ON o.id = oi.order_id
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 WHERE oi.product_id = p.id
-                  // Luong: Xu ly dong logic tiep theo trong ham public nay.
                   AND o.status <> 'CANCELLED'
-                  // Luong: Xu ly dong logic tiep theo trong ham public nay.
                   AND ((pv.id IS NULL AND oi.variant_id IS NULL) OR oi.variant_id = pv.id)
-            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             ) as sold_quantity")
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->when($request->filled('q'), function ($query) use ($request) {
@@ -546,7 +526,9 @@ class ProductAdminController extends Controller
     $path = public_path('upload/' . $folder);
 
     if (! is_dir($path)) {
-        mkdir($path, 0777, true);
+        // 0755: chủ sở hữu ghi được, còn lại chỉ đọc/duyệt.
+        // 0777 cho phép mọi user trên máy chủ ghi vào thư mục upload.
+        mkdir($path, 0755, true);
     }
 
     $file->move($path, $name);

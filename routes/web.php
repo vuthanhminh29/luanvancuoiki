@@ -45,8 +45,10 @@ Route::get('/tra-cuu-lich-hen', [AppointmentController::class, 'lookup'])->middl
 Route::patch('/tra-cuu-lich-hen/{appointment}/doi-lich', [AppointmentController::class, 'reschedule'])->middleware('throttle:user-actions')->name('appointments.reschedule');
 
 // Route nhận kết quả thanh toán VNPAY sau khi khách quay lại hoặc VNPAY gọi IPN.
-Route::get('/vnpay/return', [VnPayController::class, 'return'])->name('vnpay.return');
-Route::match(['get', 'post'], '/vnpay/ipn', [VnPayController::class, 'ipn'])->name('vnpay.ipn');
+// Hai route này công khai và có thay đổi trạng thái đơn hàng, nên phải có throttle:
+// nếu không, kẻ tấn công có thể dò mã đơn (ORD + thời gian + 3 ký tự) không giới hạn.
+Route::get('/vnpay/return', [VnPayController::class, 'return'])->middleware('throttle:payment-callback')->name('vnpay.return');
+Route::match(['get', 'post'], '/vnpay/ipn', [VnPayController::class, 'ipn'])->middleware('throttle:payment-callback')->name('vnpay.ipn');
 
 // Route xác thực email dùng URL signed để tránh sửa user/hash trong link.
 Route::get('/xac-thuc-email/{user}/{hash}', [AuthController::class, 'verifyEmail'])

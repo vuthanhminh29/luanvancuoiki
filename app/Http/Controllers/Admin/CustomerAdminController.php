@@ -257,7 +257,7 @@ class CustomerAdminController extends Controller
             'full_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', 'regex:/@gmail\\.com$/', Rule::unique('users', 'email')->ignore($user ? $user->id : null)],
             'phone' => ['nullable', 'string', 'max:20', 'regex:/^0[0-9]{9}$/'],
-            'password' => [$user ? 'nullable' : 'required', 'string', 'min:6', 'max:100'],
+            'password' => [$user ? 'nullable' : 'required', 'string', 'min:8', 'max:100'],
             'gender' => ['nullable', 'in:MALE,FEMALE,OTHER'],
             'date_of_birth' => ['nullable', 'date'],
             'status' => ['required', 'in:ACTIVE,LOCKED'],

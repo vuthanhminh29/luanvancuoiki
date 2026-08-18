@@ -30,7 +30,7 @@ class ResetUserPassword implements ResetsUserPasswords
         // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $user->forceFill([
             // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
-            'password' => Hash::make($input['password']),
+            'password_hash' => Hash::make($input['password']),
         ])->save();
     }
 }

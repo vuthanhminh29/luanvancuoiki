@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Promotion;
 use App\Models\ProductVariant;
+use App\Services\InventoryService;
 use App\Services\OrderConfirmationEmailService;
 use App\Services\VnPayService;
 use Illuminate\Http\JsonResponse;
@@ -33,19 +34,22 @@ class VnPayController extends Controller
         $result = $vnPay->verify($request->query());
         // Luong: Gan ket qua xu ly vao bien $txnRef.
         $txnRef = (string) $result['txn_ref'];
+        // Chữ ký sai nghĩa là request không đến từ VNPay, nên KHÔNG được đụng vào
+        // dữ liệu nào cả, kể cả việc xóa draft. Trước đây chỗ này gọi
+        // forgetPendingDraft() ngay khi chữ ký sai, trong khi vnp_TxnRef do người
+        // gửi tự đặt còn cache thì dùng chung cho toàn hệ thống. Hệ quả: ai cũng có
+        // thể đoán mã đơn rồi gửi request chữ ký rác để xóa draft của khách khác,
+        // khách trả tiền xong quay về thì không còn draft để tạo đơn.
+        if (! $result['is_valid']) {
+            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
+            return redirect()->route('checkout.index')->with('error', 'Chữ ký thanh toán VNPay không hợp lệ.');
+        }
+
+        // Chỉ đọc đơn/draft sau khi đã xác thực chữ ký.
         // Luong: Gan ket qua xu ly vao bien $order.
         $order = $this->findOrder($result);
         // Luong: Gan ket qua xu ly vao bien $draft.
         $draft = $order ? null : $this->pendingDraft($txnRef);
-
-        // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
-        if (! $result['is_valid']) {
-            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
-            $this->forgetPendingDraft($txnRef);
-
-            // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
-            return redirect()->route('checkout.index')->with('error', 'Chữ ký thanh toán VNPay không hợp lệ.');
-        }
 
         // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $order && ! $draft) {
@@ -134,16 +138,17 @@ class VnPayController extends Controller
         $result = $vnPay->verify($request->all());
         // Luong: Gan ket qua xu ly vao bien $txnRef.
         $txnRef = (string) $result['txn_ref'];
-        // Luong: Gan ket qua xu ly vao bien $order.
-        $order = $this->findOrder($result);
-        // Luong: Gan ket qua xu ly vao bien $draft.
-        $draft = $order ? null : $this->pendingDraft($txnRef);
-
+        // Xác thực chữ ký trước, rồi mới đọc dữ liệu đơn hàng ra xử lý.
         // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $result['is_valid']) {
             // Luong: Tra ve du lieu JSON cho client goi API.
             return response()->json(['RspCode' => '97', 'Message' => 'Invalid signature']);
         }
+
+        // Luong: Gan ket qua xu ly vao bien $order.
+        $order = $this->findOrder($result);
+        // Luong: Gan ket qua xu ly vao bien $draft.
+        $draft = $order ? null : $this->pendingDraft($txnRef);
 
         // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if (! $order && ! $draft) {
@@ -294,7 +299,16 @@ class VnPayController extends Controller
             ]);
 
             if (! empty($draft['promotion_id'])) {
-                Promotion::whereKey($draft['promotion_id'])->increment('used_count');
+                // Gộp điều kiện vào câu UPDATE để hai request song song không thể
+                // cùng dùng lượt cuối của mã giảm giá. Khách đã trả tiền rồi nên ở
+                // đây KHÔNG hủy đơn nếu hết lượt: vẫn tạo đơn, chỉ là không ghi
+                // thêm lượt dùng, phần chênh lệch để nhân viên đối soát.
+                Promotion::whereKey($draft['promotion_id'])
+                    ->where(function ($query): void {
+                        $query->whereNull('usage_limit')
+                            ->orWhereColumn('used_count', '<', 'usage_limit');
+                    })
+                    ->increment('used_count');
             }
 
             foreach ($variants as $variant) {
@@ -319,6 +333,12 @@ class VnPayController extends Controller
             }
 
             $this->saveSuccessfulPayment($order, $result);
+
+            // Khách đã trả tiền nên đơn vẫn phải được tạo; nhưng tồn kho thì trừ
+            // ở đây để không bán vượt. Nếu kho không đủ, reserveForOrder() ném lỗi
+            // -> rollback -> IPN trả RspCode 99 và VNPay sẽ gọi lại, tránh việc
+            // ghi nhận một đơn mà kho không đáp ứng được.
+            app(InventoryService::class)->reserveForOrder($order);
 
             return $order;
         });
@@ -365,33 +385,14 @@ class VnPayController extends Controller
 
     private function normalizedCartLensOptions(array $cartLensOptions, array $cart): array
     {
+        // Luồng chọn tròng kính đang được tắt (xem commit "hide lens selector flow"),
+        // nên hàm luôn trả về mảng rỗng và mọi đơn được tính giá không kèm tròng.
+        //
+        // Trước đây phần thân hàm cũ vẫn nằm nguyên bên dưới câu `return []`, tức là
+        // ~30 dòng chết mà đọc lướt rất dễ tưởng là còn chạy. Đã xóa hẳn để không ai
+        // sửa nhầm vào code không bao giờ được gọi. Khi mở lại tính năng tròng kính
+        // thì viết lại phần chuẩn hóa ở đây (lọc code/name rỗng, ép price >= 0).
         return [];
-
-        $normalized = [];
-
-        foreach (array_keys($cart) as $variantId) {
-            $option = $cartLensOptions[$variantId] ?? $cartLensOptions[(string) $variantId] ?? null;
-
-            if (! is_array($option)) {
-                continue;
-            }
-
-            $code = trim((string) ($option['code'] ?? ''));
-            $name = trim((string) ($option['name'] ?? ''));
-            $price = max(0, (float) ($option['price'] ?? 0));
-
-            if ($code === '' || $name === '') {
-                continue;
-            }
-
-            $normalized[(int) $variantId] = [
-                'code' => $code,
-                'name' => $name,
-                'price' => $price,
-            ];
-        }
-
-        return $normalized;
     }
 
     private function saveSuccessfulPayment(Order $order, array $result): void

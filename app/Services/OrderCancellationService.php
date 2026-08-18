@@ -15,6 +15,10 @@ class OrderCancellationService
     // Đơn đang giao/đã giao/hoàn đổi thì không gửi email hủy nữa để tránh sai quy trình.
     private const CANCELLABLE_STATUSES = ['PENDING', 'AWAITING_PAYMENT', 'CONFIRMED'];
 
+    public function __construct(private readonly InventoryService $inventory)
+    {
+    }
+
     // Bước 1 của nghiệp vụ:
     // Admin bấm hủy -> hệ thống tạo token, lưu lý do hủy, gửi email cho khách.
     // Hàm này chưa đổi status sang CANCELLED, vì khách phải xác nhận trước.
@@ -232,6 +236,11 @@ class OrderCancellationService
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'note' => $this->cancelNote($lockedOrder->note, $lockedOrder->cancel_reason),
             ])->save();
+
+            // Đơn bị hủy thì trả hàng đã giữ về kho. releaseForOrder() tự bỏ qua
+            // đơn cũ chưa từng giữ hàng (stock_reserved_at = NULL) nên không làm
+            // phồng tồn kho của dữ liệu có sẵn.
+            $this->inventory->releaseForOrder($lockedOrder);
 
             // Luong: Tra ve ket qua cuoi cung cua ham.
             return true;

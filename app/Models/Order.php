@@ -29,10 +29,12 @@ class Order extends Model
         'cancel_reason',
         'cancel_requested_at',
         'cancel_confirmed_at',
+        'stock_reserved_at',
     ];
 
     // Ép các cột tiền về decimal và thời gian giao hàng về datetime.
     protected $casts = [
+        'stock_reserved_at' => 'datetime',
         'subtotal_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'shipping_fee' => 'decimal:2',

@@ -16,21 +16,13 @@ return new class extends Migration
 
         // Luong: Xu ly dong logic tiep theo trong ham public nay.
         DB::statement('
-            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             ALTER TABLE user_addresses
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY phone varchar(20) NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY province_code varchar(20) NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY district_code varchar(20) NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY district_name varchar(100) NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY ward_code varchar(20) NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY ward_name varchar(100) NULL
-        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         ');
     }
 
@@ -44,42 +36,25 @@ return new class extends Migration
 
         // Luong: Xu ly dong logic tiep theo trong ham public nay.
         DB::statement("
-            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             UPDATE user_addresses
-            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             SET
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 phone = COALESCE(phone, ''),
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 province_code = COALESCE(province_code, ''),
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 district_code = COALESCE(district_code, ''),
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 district_name = COALESCE(district_name, ''),
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 ward_code = COALESCE(ward_code, ''),
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 ward_name = COALESCE(ward_name, '')
-        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         ");
 
         // Luong: Xu ly dong logic tiep theo trong ham public nay.
         DB::statement('
-            // Luong: Xu ly dong logic tiep theo trong ham public nay.
             ALTER TABLE user_addresses
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY phone varchar(20) NOT NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY province_code varchar(20) NOT NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY district_code varchar(20) NOT NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY district_name varchar(100) NOT NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY ward_code varchar(20) NOT NULL,
-                // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 MODIFY ward_name varchar(100) NOT NULL
-        // Luong: Xu ly dong logic tiep theo trong ham public nay.
         ');
     }
 };

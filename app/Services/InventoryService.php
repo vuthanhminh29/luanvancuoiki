@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Inventory;
+use App\Models\Order;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -135,6 +136,103 @@ class InventoryService
             ->value('id');
 
         return (int) ($warehouseId ?: 1);
+    }
+
+    /**
+     * Giữ hàng cho đơn: trừ tồn kho ngay khi đơn được tạo.
+     *
+     * Trước đây tồn chỉ bị trừ lúc admin chuyển sang DELIVERING, nên từ lúc khách
+     * đặt tới lúc giao, hàng vẫn được tính là còn bán -> bán vượt tồn. Với đơn
+     * VNPay thì tệ hơn: khách trả tiền xong mới lộ ra là hết hàng.
+     *
+     * Phải gọi BÊN TRONG transaction tạo đơn: issue() dùng update có điều kiện
+     * (where quantity >= ?) nên nếu không đủ hàng nó ném lỗi và cả đơn bị rollback.
+     *
+     * @throws RuntimeException khi không đủ tồn cho một dòng hàng bất kỳ.
+     */
+    public function reserveForOrder(Order $order): void
+    {
+        // Đã giữ hàng rồi thì thôi, tránh trừ hai lần khi IPN và return của VNPay
+        // cùng chạy, hoặc khi admin thao tác lại trên cùng một đơn.
+        if ($order->stock_reserved_at !== null) {
+            return;
+        }
+
+        $order->loadMissing('items');
+
+        foreach ($order->items as $item) {
+            $variantId = (int) $item->variant_id;
+            $quantity = (int) $item->quantity;
+
+            if ($variantId <= 0 || $quantity <= 0) {
+                continue;
+            }
+
+            $this->issue(
+                $this->sellableWarehouseIdFor($variantId),
+                $variantId,
+                $quantity,
+                trim((string) $item->product_name) ?: 'đơn ' . $order->order_code
+            );
+        }
+
+        $order->forceFill(['stock_reserved_at' => now()])->save();
+    }
+
+    /**
+     * Trả hàng về kho khi đơn bị hủy.
+     *
+     * Chỉ trả lại nếu đơn THỰC SỰ đã từng bị trừ tồn. Các đơn tạo trước khi có
+     * cơ chế giữ hàng có stock_reserved_at = NULL, cộng trả cho chúng sẽ thổi
+     * phồng tồn kho bằng số hàng chưa bao giờ bị trừ.
+     */
+    public function releaseForOrder(Order $order): void
+    {
+        if ($order->stock_reserved_at === null) {
+            return;
+        }
+
+        $order->loadMissing('items');
+
+        foreach ($order->items as $item) {
+            $variantId = (int) $item->variant_id;
+            $quantity = (int) $item->quantity;
+
+            if ($variantId <= 0 || $quantity <= 0) {
+                continue;
+            }
+
+            $this->receive($this->sellableWarehouseIdFor($variantId), $variantId, $quantity);
+        }
+
+        $order->forceFill(['stock_reserved_at' => null])->save();
+    }
+
+    /**
+     * Tồn kho BÁN ĐƯỢC của một biến thể, cộng trên mọi kho đang hoạt động.
+     *
+     * Dùng chung một định nghĩa "còn hàng" với giỏ hàng và trang sản phẩm
+     * (kho ACTIVE và không phải kho lỗi). Trước đây CheckoutController tự đọc
+     * `where('warehouse_id', 1)`, nên nếu hàng nằm ở kho khác thì hệ thống báo
+     * hết hàng dù thực tế vẫn còn.
+     *
+     * @param  bool  $lockForUpdate  Khóa các dòng tồn kho đọc được, dùng khi gọi
+     *                               bên trong transaction đặt hàng để hai request
+     *                               song song không cùng đọc ra một số tồn.
+     */
+    public function sellableQuantityFor(int $variantId, bool $lockForUpdate = false): int
+    {
+        $query = Inventory::query()
+            ->join('warehouses', 'warehouses.id', '=', 'inventories.warehouse_id')
+            ->where('inventories.variant_id', $variantId)
+            ->where('warehouses.status', 'ACTIVE')
+            ->where('warehouses.type', '<>', self::QUARANTINE_TYPE);
+
+        if ($lockForUpdate) {
+            $query->lockForUpdate();
+        }
+
+        return max(0, (int) $query->sum('inventories.quantity'));
     }
 
     public function sellableWarehouseIdFor(int $variantId): int

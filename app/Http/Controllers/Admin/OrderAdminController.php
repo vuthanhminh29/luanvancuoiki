@@ -231,6 +231,11 @@ class OrderAdminController extends Controller
                     : $lockedOrder->note,
             ])->save();
 
+            // Admin hủy đơn trực tiếp thì cũng phải trả hàng đã giữ về kho.
+            if ($newStatus === 'CANCELLED') {
+                $this->inventory->releaseForOrder($lockedOrder);
+            }
+
             if ($newStatus === 'DELIVERING') {
                 $this->createSaleOutTransaction($lockedOrder);
             }
@@ -295,10 +300,10 @@ class OrderAdminController extends Controller
                 'note' => trim((string) $item->product_name) ?: null,
             ]);
 
-            // issue() ném lỗi nếu không đủ tồn -> transaction rollback, đơn giữ nguyên
-            // trạng thái cũ. Trước đây decrement() có thể đẩy tồn xuống âm hoặc
-            // âm thầm không trừ gì khi chưa có dòng tồn kho.
-            $this->inventory->issue($warehouseId, $variantId, $quantity, trim((string) $item->product_name));
+            // KHÔNG trừ tồn kho ở đây nữa. Tồn đã bị trừ ngay lúc tạo đơn
+            // (InventoryService::reserveForOrder), nếu trừ thêm lần nữa ở bước
+            // DELIVERING thì mỗi đơn sẽ bị trừ hai lần. Phiếu xuất kho bên dưới
+            // vẫn được lập để giữ nguyên chứng từ cho nghiệp vụ kho.
         }
     }
 

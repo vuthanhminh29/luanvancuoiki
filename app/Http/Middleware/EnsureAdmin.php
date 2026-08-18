@@ -68,7 +68,14 @@ class EnsureAdmin
 
     private function hasAnyRole(int $userId, array $roles): bool
     {
-        $userRoles = Cache::remember("users.{$userId}.role_codes", now()->addMinutes(5), fn () => DB::table('user_roles')
+        // TTL để 60 giây thay vì 5 phút: đây là dữ liệu PHÂN QUYỀN, nên khoảng thời
+        // gian cache chính là khoảng thời gian một tài khoản đã bị gỡ quyền vẫn vào
+        // được khu vực admin. CustomerAdminController::syncRole/updateStatus có gọi
+        // Cache::forget, nhưng mọi đường gỡ quyền khác (sửa thẳng DB, seeder, code
+        // sau này) thì không, nên vẫn cần giới hạn cửa sổ này cho nhỏ.
+        // Muốn hết hẳn rủi ro thì bỏ cache — mỗi request admin chỉ tốn một truy vấn
+        // join có index, mà lưu lượng khu vực admin vốn thấp.
+        $userRoles = Cache::remember("users.{$userId}.role_codes", now()->addSeconds(60), fn () => DB::table('user_roles')
             ->join('roles', 'roles.id', '=', 'user_roles.role_id')
             ->where('user_roles.user_id', $userId)
             ->pluck('roles.code')

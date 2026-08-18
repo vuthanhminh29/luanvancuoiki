@@ -82,6 +82,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('admin', fn (Request $request) => Limit::perMinute(120)->by($this->rateLimitKey($request, 'admin')));
         // Luong: Xu ly dong logic tiep theo trong ham public nay.
         RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(20)->by($this->rateLimitKey($request, 'upload')));
+
+        // Callback thanh toán VNPay: khách thật chỉ quay về vài lần cho mỗi đơn,
+        // nên giới hạn theo IP đủ để chặn việc dò mã đơn hàng hàng loạt.
+        // Để rộng tay một chút vì VNPay có thể gọi lại IPN nhiều lần khi chưa nhận
+        // được phản hồi thành công.
+        RateLimiter::for('payment-callback', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
     }
 
     private function headerProductLinks(): array
