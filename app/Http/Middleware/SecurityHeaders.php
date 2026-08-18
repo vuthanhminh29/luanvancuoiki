@@ -40,11 +40,29 @@ class SecurityHeaders
         //  - object-src 'none': chặn nhúng plugin/Flash.
         //  - base-uri 'self': chặn cướp <base> để đổi đích mọi URL tương đối.
         //  - frame-ancestors 'self': chống clickjacking, mạnh hơn X-Frame-Options.
-        //  - form-action 'self': chặn form bị chèn gửi dữ liệu ra ngoài.
+        //  - form-action: chặn form bị chèn gửi dữ liệu ra ngoài (danh sách nguồn
+        //    được dựng ngay bên dưới vì còn phải mở cho cổng VNPay).
         //
         // Muốn siết script-src thật (bỏ 'unsafe-inline', dùng nonce) thì phải bóc
         // hết script inline và handler onclick ra file .js trước — xem ghi chú
         // trong docs. Chốt chặn XSS hiện tại là App\Support\HtmlSanitizer.
+        // form-action phải liệt kê cả cổng thanh toán VNPay. Luồng thanh toán là
+        // POST /thanh-toan -> 302 sang sandbox.vnpayment.vn (hoặc pay.vnpay.vn),
+        // mà Chrome/Firefox áp form-action lên CẢ đích redirect sinh ra từ việc
+        // submit form. Nếu chỉ để 'self' thì trình duyệt chặn thẳng bước chuyển
+        // sang VNPay ("Refused to send form data to ...") -> khách bấm xác nhận
+        // thanh toán xong vẫn đứng yên tại chỗ, tưởng trang VNPay không load được.
+        $formActionSources = ["'self'"];
+
+        foreach ((array) config('vnpay.urls', []) as $gatewayUrl) {
+            $scheme = parse_url((string) $gatewayUrl, PHP_URL_SCHEME);
+            $host = parse_url((string) $gatewayUrl, PHP_URL_HOST);
+
+            if ($scheme && $host) {
+                $formActionSources[] = $scheme . '://' . $host;
+            }
+        }
+
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self' data: https:",
             "script-src 'self' 'unsafe-inline' data: https:",
@@ -54,7 +72,7 @@ class SecurityHeaders
             "object-src 'none'",
             "base-uri 'self'",
             "frame-ancestors 'self'",
-            "form-action 'self'",
+            'form-action ' . implode(' ', array_unique($formActionSources)),
         ]));
 
         // HSTS chỉ có ý nghĩa khi request đã đi qua HTTPS; đặt trên HTTP có thể
