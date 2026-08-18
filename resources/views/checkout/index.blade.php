@@ -147,7 +147,7 @@
                                             <label>Số điện thoại <span class="required">*</span></label>
                                             <input type="text"
                                                 class="form-control @error('recipient_phone') is-invalid @enderror"
-                                                name="recipient_phone" value="{{ $phone }}"
+                                                name="recipient_phone" id="recipient-phone" value="{{ $phone }}"
                                                 placeholder="Nhập số điện thoại">
                                             @error('recipient_phone')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -711,6 +711,28 @@
                     }
                 });
             });
+
+            document.querySelectorAll('[data-target="#thanh-toan-1"]').forEach(function(button) {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    showCheckoutModal();
+                });
+            });
+
+            if (confirmSubmit && form) {
+                confirmSubmit.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    syncShippingAddress();
+
+                    if (!validateCheckoutForm()) {
+                        return;
+                    }
+
+                    confirmSubmit.disabled = true;
+                    form.requestSubmit ? form.requestSubmit() : form.submit();
+                });
+            }
 
             syncPaymentUi();
         });

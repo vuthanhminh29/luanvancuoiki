@@ -49,23 +49,18 @@ class WarehouseAdminController extends Controller
             'stock_date_from',
             // Luong: Xu ly dong logic tiep theo trong ham public nay.
             'stock_date_to',
-            // Luong: Xu ly dong logic tiep theo trong ham public nay.
-            'stock_limit',
         ]);
 
         // Luong: Gan ket qua xu ly vao bien $inventoryLimit.
         $inventoryLimit = min(500, max(25, (int) ($request->input('inventory_limit', 200))));
-        // Luong: Gan ket qua xu ly vao bien $stockLimit.
-        $stockLimit = min(300, max(25, (int) ($request->input('stock_limit', 100))));
-
         // Luong: Gan ket qua xu ly vao bien $inventories.
         $inventories = Inventory::query()
             // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
-            ->with(['warehouse', 'variant.product.category', 'variant.color', 'variant.lensSize'])
+            ->with(['warehouse', 'variant.product.category', 'variant.product.categories', 'variant.color', 'variant.lensSize'])
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->when($request->filled('inventory_warehouse_id'), fn ($query) => $query->where('warehouse_id', $request->inventory_warehouse_id))
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
-            ->when($request->filled('inventory_category_id'), fn ($query) => $query->whereHas('variant.product', fn ($product) => $product->where('category_id', $request->inventory_category_id)))
+            ->when($request->filled('inventory_category_id'), fn ($query) => $query->whereHas('variant.product', fn ($product) => $product->inCategories([(int) $request->inventory_category_id])))
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->when($request->filled('inventory_keyword'), function ($query) use ($request) {
                 // Luong: Gan ket qua xu ly vao bien $keyword.
@@ -143,10 +138,10 @@ class WarehouseAdminController extends Controller
             })
             // Luong: Sap xep du lieu truoc khi tra ve ket qua.
             ->latest()
-            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
-            ->limit($stockLimit)
             // Luong: Thuc thi truy van va lay ket qua tu CSDL.
-            ->get();
+            ->paginate(15, ['*'], 'stock_page')
+            // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
+            ->withQueryString();
 
         $returnCodesByTransactionId = $transactions
             ->mapWithKeys(function ($transaction) {
@@ -230,8 +225,8 @@ class WarehouseAdminController extends Controller
             // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'inventoryLimit' => $inventoryLimit,
             // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
-            'stockLimit' => $stockLimit,
             'returnReasonByTransaction' => $returnReasonByTransaction,
+            'isAdminUser' => $this->currentUserHasRole('ADMIN'),
             // Luong: Tao truy van truc tiep den bang du lieu can thao tac.
             'transactionItemTotals' => DB::table('stock_transaction_items')
                 // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
@@ -283,6 +278,48 @@ class WarehouseAdminController extends Controller
                     // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                     $transaction->status,
                 ]),
+        ]);
+    }
+
+    /**
+     * Hiển thị chi tiết phiếu kho ở chế độ chỉ xem.
+     */
+    public function showTransaction(StockTransaction $transaction): View
+    {
+        $transaction->load([
+            'sourceWarehouse',
+            'targetWarehouse',
+            'creator',
+            'confirmer',
+            'items.variant.product',
+            'items.variant.color',
+            'items.variant.lensSize',
+        ]);
+
+        $variantIds = $transaction->items
+            ->pluck('variant_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $warehouseId = $transaction->type === 'EXPORT'
+            ? $transaction->source_warehouse_id
+            : $transaction->target_warehouse_id;
+
+        $availableStockByVariantId = $variantIds->isEmpty()
+            ? collect()
+            : Inventory::query()
+                ->whereIn('variant_id', $variantIds)
+                ->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))
+                ->select('variant_id')
+                ->selectRaw('COALESCE(SUM(quantity), 0) as quantity')
+                ->groupBy('variant_id')
+                ->pluck('quantity', 'variant_id');
+
+        return view('admin.warehouses.transaction-show', [
+            'transaction' => $transaction,
+            'availableStockByVariantId' => $availableStockByVariantId,
+            'isAdminUser' => $this->currentUserHasRole('ADMIN'),
         ]);
     }
 
@@ -391,11 +428,13 @@ class WarehouseAdminController extends Controller
             'warehouses' => Warehouse::active()->orderBy('type')->orderBy('name')->get(),
             // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'variants' => $variants,
+            // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
+            'isAdminUser' => $this->currentUserHasRole('ADMIN'),
         ]);
     }
 
     /**
-     * Lưu giao dịch kho và cập nhật tồn kho.
+     * Lưu phiếu nhập/xuất kho.
      */
     public function storeTransaction(Request $request): RedirectResponse
     {
@@ -440,6 +479,7 @@ class WarehouseAdminController extends Controller
             $sourceWarehouseId = null;
             // Luong: Gan ket qua xu ly vao bien $targetWarehouseId.
             $targetWarehouseId = $targetWarehouseId ?: 1;
+            $this->assertActiveWarehouse($targetWarehouseId, 'Bạn cần chọn kho đích đang hoạt động.', 'target_warehouse_id');
         }
 
         // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
@@ -448,6 +488,7 @@ class WarehouseAdminController extends Controller
             $targetWarehouseId = null;
             // Luong: Gan ket qua xu ly vao bien $sourceWarehouseId.
             $sourceWarehouseId = $sourceWarehouseId ?: 1;
+            $this->assertActiveWarehouse($sourceWarehouseId, 'Bạn cần chọn kho nguồn đang hoạt động.', 'source_warehouse_id');
         }
 
         // Luong: Gan ket qua xu ly vao bien $items.
@@ -496,28 +537,10 @@ class WarehouseAdminController extends Controller
             ]);
         }
 
+        $isAdminUser = $this->currentUserHasRole('ADMIN');
+
         // Luong: Mo transaction de cac thao tac CSDL cung thanh cong hoac cung rollback.
-        $transaction = DB::transaction(function () use ($data, $items, $sourceWarehouseId, $targetWarehouseId, $type) {
-            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
-            if ($type === 'EXPORT') {
-                // Luong: Lap qua tung phan tu de xu ly lan luot.
-                foreach ($items as $item) {
-                    // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
-                    $this->subtractVariantInventory($sourceWarehouseId, $item['variant_id'], $item['quantity']);
-                }
-            }
-
-            // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
-            if ($type === 'IMPORT') {
-                // Luong: Lap qua tung phan tu de xu ly lan luot.
-                foreach ($items as $item) {
-                    // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
-                    $this->addVariantInventory($targetWarehouseId, $item['variant_id'], $item['quantity']);
-                    // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
-                    $this->activateVariantProduct($item['variant_id']);
-                }
-            }
-
+        $transaction = DB::transaction(function () use ($data, $items, $sourceWarehouseId, $targetWarehouseId, $type, $isAdminUser) {
             // Luong: Tao ban ghi moi tu du lieu da chuan bi.
             $transaction = StockTransaction::create([
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
@@ -533,7 +556,7 @@ class WarehouseAdminController extends Controller
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'target_warehouse_id' => $targetWarehouseId,
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
-                'status' => 'COMPLETED',
+                'status' => $isAdminUser ? 'COMPLETED' : 'PENDING',
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'expected_date' => $data['expected_date'] ?? null,
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
@@ -541,9 +564,9 @@ class WarehouseAdminController extends Controller
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'created_by' => Auth::id(),
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
-                'confirmed_by' => Auth::id(),
+                'confirmed_by' => $isAdminUser ? Auth::id() : null,
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
-                'confirmed_at' => now(),
+                'confirmed_at' => $isAdminUser ? now() : null,
             ]);
 
             // Luong: Lap qua tung phan tu de xu ly lan luot.
@@ -555,7 +578,7 @@ class WarehouseAdminController extends Controller
                     // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                     'ordered_quantity' => $item['quantity'],
                     // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
-                    'actual_quantity' => $item['quantity'],
+                    'actual_quantity' => $isAdminUser ? $item['quantity'] : 0,
                     // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                     'unit_cost' => $item['unit_cost'],
                     // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
@@ -563,16 +586,140 @@ class WarehouseAdminController extends Controller
                 ]);
             }
 
+            if ($isAdminUser) {
+                $transaction->load('items');
+                $this->applyTransactionInventory($transaction);
+            }
+
             // Luong: Tra ve ket qua cuoi cung cua ham.
             return $transaction;
         });
 
+        $message = $isAdminUser
+            ? 'Đã tạo phiếu kho ' . $transaction->transaction_code . ' và cập nhật tồn kho.'
+            : 'Đã tạo đề xuất kho ' . $transaction->transaction_code . '. Admin cần duyệt trước khi tồn kho thay đổi.';
+
         // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
         return redirect()
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
-            ->route('admin.warehouses.index', ['warehouse_tab' => 'transactions'])
+            ->route('admin.warehouses.show-transaction', $transaction)
             // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
-            ->with('success', 'Đã tạo phiếu kho ' . $transaction->transaction_code . ' và ghi nhận tồn kho.');
+            ->with('success', $message);
+    }
+
+    public function approveTransaction(StockTransaction $transaction): RedirectResponse
+    {
+        if (! $this->currentUserHasRole('ADMIN')) {
+            abort(403);
+        }
+
+        DB::transaction(function () use ($transaction) {
+            $lockedTransaction = StockTransaction::query()
+                ->whereKey($transaction->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedTransaction->status !== 'PENDING') {
+                throw ValidationException::withMessages([
+                    'status' => 'Chỉ duyệt được phiếu đang chờ duyệt.',
+                ]);
+            }
+
+            if (! in_array($lockedTransaction->type, ['IMPORT', 'EXPORT'], true)) {
+                throw ValidationException::withMessages([
+                    'type' => 'Chỉ duyệt thủ công phiếu nhập kho hoặc xuất kho.',
+                ]);
+            }
+
+            $lockedTransaction->load('items');
+            $this->applyTransactionInventory($lockedTransaction);
+
+            foreach ($lockedTransaction->items as $item) {
+                $item->update(['actual_quantity' => (int) $item->ordered_quantity]);
+            }
+
+            $lockedTransaction->update([
+                'status' => 'COMPLETED',
+                'confirmed_by' => Auth::id(),
+                'confirmed_at' => now(),
+            ]);
+        });
+
+        return redirect()
+            ->route('admin.warehouses.show-transaction', $transaction)
+            ->with('success', 'Đã duyệt phiếu kho và cập nhật tồn kho.');
+    }
+
+    public function rejectTransaction(Request $request, StockTransaction $transaction): RedirectResponse
+    {
+        if (! $this->currentUserHasRole('ADMIN')) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'reject_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        if ($transaction->status !== 'PENDING') {
+            throw ValidationException::withMessages([
+                'status' => 'Chỉ từ chối được phiếu đang chờ duyệt.',
+            ]);
+        }
+
+        $reason = trim((string) ($data['reject_reason'] ?? ''));
+        $note = trim((string) $transaction->note);
+        $rejectNote = 'Từ chối' . ($reason !== '' ? ': ' . $reason : '.');
+
+        $transaction->update([
+            'status' => 'CANCELLED',
+            'note' => $note !== '' ? $note . "\n" . $rejectNote : $rejectNote,
+            'confirmed_by' => Auth::id(),
+            'confirmed_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('admin.warehouses.show-transaction', $transaction)
+            ->with('success', 'Đã từ chối đề xuất kho.');
+    }
+
+    private function applyTransactionInventory(StockTransaction $transaction): void
+    {
+        if ($transaction->type === 'IMPORT') {
+            $targetWarehouseId = (int) $transaction->target_warehouse_id;
+            $this->assertActiveWarehouse($targetWarehouseId, 'Kho đích của phiếu không còn hoạt động.', 'target_warehouse_id');
+
+            foreach ($transaction->items as $item) {
+                $quantity = (int) $item->ordered_quantity;
+                $this->addVariantInventory($targetWarehouseId, (int) $item->variant_id, $quantity);
+                $this->activateVariantProduct((int) $item->variant_id);
+            }
+
+            return;
+        }
+
+        if ($transaction->type === 'EXPORT') {
+            $sourceWarehouseId = (int) $transaction->source_warehouse_id;
+            $this->assertActiveWarehouse($sourceWarehouseId, 'Kho nguồn của phiếu không còn hoạt động.', 'source_warehouse_id');
+
+            foreach ($transaction->items as $item) {
+                $this->subtractVariantInventory($sourceWarehouseId, (int) $item->variant_id, (int) $item->ordered_quantity);
+            }
+        }
+    }
+
+    private function currentUserHasRole(string $role): bool
+    {
+        $userId = (int) Auth::id();
+
+        if ($userId <= 0) {
+            return false;
+        }
+
+        return DB::table('user_roles')
+            ->join('roles', 'roles.id', '=', 'user_roles.role_id')
+            ->where('user_roles.user_id', $userId)
+            ->where('roles.code', $role)
+            ->exists();
     }
 
     /**

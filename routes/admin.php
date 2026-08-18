@@ -41,6 +41,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/san-pham/{product}', [ProductAdminController::class, 'update'])->name('products.update');
         Route::patch('/san-pham/{product}/an', [ProductAdminController::class, 'hidden'])->name('products.hidden');
         Route::patch('/san-pham/{product}/khoi-phuc', [ProductAdminController::class, 'restore'])->name('products.restore');
+        Route::delete('/san-pham/{product}/xoa-vinh-vien', [ProductAdminController::class, 'destroy'])->name('products.force-delete');
 
         Route::get('/danh-muc', [CategoryAdminController::class, 'index'])->name('categories.index');
         Route::get('/danh-muc/them', [CategoryAdminController::class, 'create'])->name('categories.create');
@@ -69,6 +70,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/kho-hang/phieu', [WarehouseAdminController::class, 'transactions'])->name('warehouses.transactions');
         Route::get('/kho-hang/them-hoa-don', [WarehouseAdminController::class, 'createTransaction'])->name('warehouses.create-transaction');
         Route::post('/kho-hang/phieu', [WarehouseAdminController::class, 'storeTransaction'])->name('warehouses.store-transaction');
+        Route::get('/kho-hang/phieu/{transaction}', [WarehouseAdminController::class, 'showTransaction'])->name('warehouses.show-transaction');
+        Route::middleware('admin:ADMIN')->group(function () {
+            Route::patch('/kho-hang/phieu/{transaction}/duyet', [WarehouseAdminController::class, 'approveTransaction'])->name('warehouses.approve-transaction');
+            Route::patch('/kho-hang/phieu/{transaction}/tu-choi', [WarehouseAdminController::class, 'rejectTransaction'])->name('warehouses.reject-transaction');
+        });
 
         Route::get('/bai-viet', [PostAdminController::class, 'index'])->name('posts.index');
         Route::post('/bai-viet/upload-editor', [PostAdminController::class, 'uploadEditorImage'])->middleware('throttle:uploads')->name('posts.upload-editor');

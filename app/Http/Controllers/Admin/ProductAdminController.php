@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -30,7 +31,7 @@ class ProductAdminController extends Controller
     public function index(Request $request): View
     {
         // Luong: Gan ket qua xu ly vao bien $products.
-        $products = Product::with(['category', 'brand', 'frameShape'])
+        $products = Product::with(['category', 'categories', 'brand', 'frameShape'])
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->withCount('variants')
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
@@ -64,7 +65,7 @@ class ProductAdminController extends Controller
                     ->orWhere('products.product_code', 'like', $keyword);
             }))
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
-            ->when($request->filled('search_cate'), fn ($query) => $query->where('products.category_id', $request->search_cate))
+            ->when($request->filled('search_cate'), fn ($query) => $query->inCategories([(int) $request->search_cate]))
             // Luong: Sap xep du lieu truoc khi tra ve ket qua.
             ->latest('products.id')
             // Luong: Thuc thi truy van va lay ket qua tu CSDL.
@@ -122,10 +123,14 @@ class ProductAdminController extends Controller
             // Luong: Cap nhat cac ban ghi phu hop voi dieu kien da loc.
             $product->update(['slug' => Str::slug($data['name']) . '-' . $product->id]);
             // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
+            $this->syncCategories($product, $data['category_ids']);
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $this->syncVariants($request, $product);
             // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $this->storeGalleryImages($request, $product);
         });
+
+        $this->clearProductCaches();
 
         // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
         return redirect()->route('admin.products.index')->with('success', 'Đã thêm sản phẩm.');
@@ -137,7 +142,7 @@ class ProductAdminController extends Controller
     public function recycle(): View
     {
         // Luong: Gan ket qua xu ly vao bien $products.
-        $products = Product::with(['category', 'brand'])
+        $products = Product::with(['category', 'categories', 'brand'])
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->withCount('variants')
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
@@ -189,7 +194,11 @@ class ProductAdminController extends Controller
                 // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'p.product_code',
                 // Luong: Xu ly dong logic tiep theo trong ham public nay.
-                'c.name as category_name',
+                DB::raw("(SELECT COALESCE(GROUP_CONCAT(c_multi.name ORDER BY c_multi.name SEPARATOR ', '), c.name)
+                    FROM category_product cp
+                    JOIN categories c_multi ON c_multi.id = cp.category_id
+                    WHERE cp.product_id = p.id
+                ) as category_name"),
                 // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 'b.name as brand_name',
                 // Luong: Xu ly dong logic tiep theo trong ham public nay.
@@ -244,7 +253,19 @@ class ProductAdminController extends Controller
                 });
             })
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
-            ->when($request->filled('search_cate'), fn ($query) => $query->where('p.category_id', $request->search_cate))
+            ->when($request->filled('search_cate'), function ($query) use ($request): void {
+                $categoryId = (int) $request->search_cate;
+
+                $query->where(function ($query) use ($categoryId): void {
+                    $query->where('p.category_id', $categoryId)
+                        ->orWhereExists(function ($subQuery) use ($categoryId): void {
+                            $subQuery->selectRaw('1')
+                                ->from('category_product as cp_filter')
+                                ->whereColumn('cp_filter.product_id', 'p.id')
+                                ->where('cp_filter.category_id', $categoryId);
+                        });
+                });
+            })
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->where('p.status', 'ACTIVE')
             // Luong: Sap xep du lieu truoc khi tra ve ket qua.
@@ -283,7 +304,7 @@ class ProductAdminController extends Controller
     public function edit(Product $product): View
     {
         // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
-        $product->load(['variants.color', 'variants.lensSize', 'images']);
+        $product->load(['categories', 'variants.color', 'variants.lensSize', 'images']);
 
         // Luong: Tra ve view de hien thi giao dien cho request.
         return view('admin.products.form', [
@@ -321,10 +342,14 @@ class ProductAdminController extends Controller
             // Luong: Cap nhat cac ban ghi phu hop voi dieu kien da loc.
             $product->update($this->prepareProductData($request, $data, $product));
             // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
+            $this->syncCategories($product, $data['category_ids']);
+            // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $this->syncVariants($request, $product);
             // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
             $this->storeGalleryImages($request, $product);
         });
+
+        $this->clearProductCaches();
 
         // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
         return redirect()->route('admin.products.index')->with('success', 'Đã cập nhật sản phẩm.');
@@ -338,6 +363,8 @@ class ProductAdminController extends Controller
         // Luong: Cap nhat cac ban ghi phu hop voi dieu kien da loc.
         $product->update(['status' => 'INACTIVE']);
 
+        $this->clearProductCaches();
+
         // Luong: Quay lai trang truoc kem du lieu hoac thong bao can hien thi.
         return back()->with('success', 'Đã ẩn sản phẩm.');
     }
@@ -350,8 +377,56 @@ class ProductAdminController extends Controller
         // Luong: Cap nhat cac ban ghi phu hop voi dieu kien da loc.
         $product->update(['status' => 'ACTIVE']);
 
+        $this->clearProductCaches();
+
         // Luong: Dieu huong nguoi dung sang route hoac trang phu hop.
         return redirect()->route('admin.products.index')->with('success', 'Đã khôi phục sản phẩm.');
+    }
+
+    /**
+     * Xóa vĩnh viễn sản phẩm trong thùng lưu trữ.
+     */
+    public function destroy(Product $product): RedirectResponse
+    {
+        if (! in_array($product->status, ['INACTIVE', 'DISCONTINUED', 'DRAFT'], true)) {
+            return back()->with('error', 'Chỉ có thể xóa cứng sản phẩm đang nằm trong thùng lưu trữ.');
+        }
+
+        $variantIds = ProductVariant::where('product_id', $product->id)->pluck('id');
+
+        if (DB::table('order_items')->where('product_id', $product->id)->exists()) {
+            return back()->with('error', 'Không thể xóa cứng sản phẩm đã phát sinh đơn hàng. Hãy giữ sản phẩm trong thùng lưu trữ để bảo toàn lịch sử bán hàng.');
+        }
+
+        if (DB::table('product_reviews')->where('product_id', $product->id)->exists()) {
+            return back()->with('error', 'Không thể xóa cứng sản phẩm đã có đánh giá của khách hàng.');
+        }
+
+        if ($variantIds->isNotEmpty() && DB::table('stock_transaction_items')->whereIn('variant_id', $variantIds)->exists()) {
+            return back()->with('error', 'Không thể xóa cứng sản phẩm đã có giao dịch kho. Hãy giữ sản phẩm trong thùng lưu trữ để không mất lịch sử tồn kho.');
+        }
+
+        if ($variantIds->isNotEmpty() && DB::table('return_request_items')->whereIn('exchange_variant_id', $variantIds)->exists()) {
+            return back()->with('error', 'Không thể xóa cứng sản phẩm đang liên quan đến yêu cầu đổi/trả.');
+        }
+
+        DB::transaction(function () use ($product, $variantIds): void {
+            DB::table('category_product')->where('product_id', $product->id)->delete();
+            ProductImage::where('product_id', $product->id)->delete();
+            DB::table('try_on_snapshots')->where('product_id', $product->id)->update(['product_id' => null]);
+
+            if ($variantIds->isNotEmpty()) {
+                DB::table('try_on_snapshots')->whereIn('variant_id', $variantIds)->update(['variant_id' => null]);
+                DB::table('inventories')->whereIn('variant_id', $variantIds)->delete();
+                ProductVariant::whereIn('id', $variantIds)->delete();
+            }
+
+            $product->delete();
+        });
+
+        $this->clearProductCaches();
+
+        return redirect()->route('admin.products.recycle')->with('success', 'Đã xóa vĩnh viễn sản phẩm.');
     }
 
     /**
@@ -376,7 +451,8 @@ class ProductAdminController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:200'],
-            'category_id' => ['required', 'exists:categories,id'],
+            'category_ids' => ['required', 'array', 'min:1'],
+            'category_ids.*' => ['integer', 'distinct', 'exists:categories,id'],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'frame_shape_id' => ['required', 'exists:frame_shapes,id'],
             'frame_material_id' => ['nullable', 'exists:frame_materials,id'],
@@ -403,6 +479,8 @@ class ProductAdminController extends Controller
         ], [
             'base_price.gte' => 'Giá bán niêm yết không được thấp hơn giá nhập.',
             'sale_price.lte' => 'Giá khuyến mãi không được lớn hơn giá niêm yết.',
+            'category_ids.required' => 'Vui lòng chọn ít nhất một danh mục.',
+            'category_ids.min' => 'Vui lòng chọn ít nhất một danh mục.',
         ]);
     }
 
@@ -411,6 +489,13 @@ class ProductAdminController extends Controller
      */
     private function prepareProductData(Request $request, array $data, ?Product $product = null): array
     {
+        $categoryIds = $this->normalizedCategoryIds($data['category_ids'] ?? []);
+        $currentCategoryId = (int) ($product?->category_id ?? 0);
+        $data['category_id'] = in_array($currentCategoryId, $categoryIds, true)
+            ? $currentCategoryId
+            : ($categoryIds[0] ?? null);
+        unset($data['category_ids']);
+
         if ($request->hasFile('thumbnail_url')) {
             $data['thumbnail_url'] = $this->storeUpload($request, 'thumbnail_url', 'anh_san_pham');
         } else {
@@ -462,6 +547,21 @@ class ProductAdminController extends Controller
         Cache::forget('products.index.filter_lookups');
         Cache::forget('layout.header_categories.v2');
         Cache::forget('home.payload');
+    }
+
+    private function syncCategories(Product $product, array $categoryIds): void
+    {
+        $product->categories()->sync($this->normalizedCategoryIds($categoryIds));
+    }
+
+    private function normalizedCategoryIds(array $categoryIds): array
+    {
+        return collect($categoryIds)
+            ->filter(fn ($id) => (int) $id > 0)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**

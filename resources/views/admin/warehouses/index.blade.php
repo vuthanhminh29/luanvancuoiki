@@ -22,9 +22,9 @@
     };
     $transactionStatus = fn ($status) => match ($status) {
         'DRAFT' => ['Nháp', 'muted'],
-        'PENDING' => ['Đang chờ', 'warning'],
+        'PENDING' => ['Chờ duyệt', 'warning'],
         'COMPLETED' => ['Hoàn tất', 'success'],
-        'CANCELLED' => ['Đã hủy', 'danger'],
+        'CANCELLED' => ['Từ chối / hủy', 'danger'],
         default => [$status ?: '-', 'muted'],
     };
     $stockState = function ($available, $minStock) {
@@ -42,6 +42,7 @@
         return ['Ổn định', 'success'];
     };
     $activeTab = $activeTab ?? 'stock';
+    $transactionCount = method_exists($transactions, 'total') ? $transactions->total() : $transactions->count();
 @endphp
 
 @push('styles')
@@ -58,8 +59,9 @@
 .wa-product{align-items:center;display:flex;gap:10px;min-width:220px}.wa-thumb{background:#f8fafc;border:1px solid #e4e7ec;border-radius:7px;flex:0 0 44px;height:44px;object-fit:cover;width:44px}.wa-name{color:#111827;font-size:13px;font-weight:900;line-height:1.35}.wa-sub{color:#667085;font-size:11px;line-height:1.35;margin-top:3px}.wa-variant-line{align-items:center;display:flex;gap:6px;white-space:nowrap}.wa-color{border:1px solid rgba(17,24,39,.2);border-radius:50%;display:inline-block;height:15px;width:15px}
 .wa-number{color:#111827;font-weight:900;white-space:nowrap}.wa-badge{align-items:center;border-radius:999px;display:inline-flex;font-size:12px;font-weight:900;gap:6px;min-height:25px;padding:0 9px;white-space:nowrap}.wa-badge.success{background:#dcfce7;color:#166534}.wa-badge.warning{background:#fef3c7;color:#92400e}.wa-badge.danger{background:#fee2e2;color:#991b1b}.wa-badge.info{background:#dbeafe;color:#1d4ed8}.wa-badge.dark{background:#e5e7eb;color:#111827}.wa-badge.muted{background:#f3f4f6;color:#4b5563}
 .wa-return-reason{background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;color:#9a3412;font-size:12px;font-weight:900;line-height:1.45;margin-top:7px;padding:7px 9px}.wa-return-reason span{color:#7c2d12}.wa-return-reason small{color:#9a3412;display:block;font-size:11px;font-weight:800;margin-top:2px}
+.wa-row-actions{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end}.wa-row-actions form{margin:0}.wa-icon-btn{align-items:center;background:#fff;border:1px solid #d0d5dd;border-radius:7px;color:#111827;display:inline-flex;height:34px;justify-content:center;text-decoration:none;width:36px}.wa-icon-btn.success{background:#dcfce7;border-color:#bbf7d0;color:#166534}.wa-icon-btn.danger{background:#fee2e2;border-color:#fecaca;color:#991b1b}.wa-icon-btn:hover{filter:brightness(.98);color:inherit}
 .wa-warehouse-card{align-items:center;border:1px solid #eef2f6;border-radius:8px;display:grid;gap:12px;grid-template-columns:44px minmax(0,1fr) auto;padding:12px}.wa-warehouse-icon{align-items:center;background:#eff6ff;border-radius:8px;color:#1d4ed8;display:inline-flex;height:44px;justify-content:center;width:44px}.wa-address{color:#667085;font-size:12px;line-height:1.45;margin-top:4px}
-.wa-flow{color:#475467;line-height:1.5}.wa-flow strong{color:#111827}.wa-empty{color:#667085;padding:30px 14px;text-align:center}.wa-pagination{padding:12px 15px}.wa-mobile-note{display:none}
+.wa-flow{color:#475467;line-height:1.5}.wa-flow strong{color:#111827}.wa-empty{color:#667085;padding:30px 14px;text-align:center}.wa-pagination{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;list-style:none;margin:18px 0 0;padding:12px 15px 15px}.wa-pagination a,.wa-pagination span{background:#fff;border:1px solid #d0d5dd;border-radius:8px;color:#344054;display:inline-flex;font-weight:800;min-width:38px;padding:8px 12px;text-decoration:none}.wa-pagination .active span{background:#2563eb;border-color:#2563eb;color:#fff}.wa-mobile-note{display:none}
 @media(max-width:1180px){.wa-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.wa-filter,.wa-filter.transactions{grid-template-columns:repeat(2,minmax(0,1fr))}.wa-filter .wa-actions{grid-column:1/-1}.wa-table{min-width:980px}}@media(max-width:760px){.wa-page{padding:14px}.wa-toolbar,.wa-card-head{align-items:flex-start;flex-direction:column}.wa-actions,.wa-btn{width:100%}.wa-grid,.wa-filter,.wa-filter.transactions{grid-template-columns:1fr}.wa-mobile-note{display:block;color:#667085;font-size:12px;margin-top:8px}}
 </style>
 @endpush
@@ -74,7 +76,7 @@
             </div>
             <div class="wa-actions">
                 <a href="{{ route('admin.business.index') }}?tab=warehouses" class="wa-btn dark"><i class="fa fa-warehouse"></i> Quản lý kho</a>
-                <a href="{{ route('admin.warehouses.create-transaction') }}" class="wa-btn primary"><i class="fa fa-plus"></i> Tạo phiếu</a>
+                <a href="{{ route('admin.warehouses.create-transaction') }}" class="wa-btn primary"><i class="fa fa-plus"></i> {{ ($isAdminUser ?? false) ? 'Tạo phiếu kho' : 'Tạo đề xuất' }}</a>
             </div>
         </div>
 
@@ -95,7 +97,7 @@
                     Kho <strong>{{ $num($warehouses->count()) }}</strong>
                 </button>
                 <button type="button" class="wa-tab-btn {{ $activeTab === 'transactions' ? 'is-active' : '' }}" data-wa-tab="transactions">
-                    Phiếu kho <strong>{{ $num($transactions->count()) }}</strong>
+                    Phiếu kho <strong>{{ $num($transactionCount) }}</strong>
                 </button>
             </div>
         </div>
@@ -107,7 +109,7 @@
                         <h6>Tồn kho theo biến thể</h6>
                         <small>Ưu tiên hiển thị các dòng sắp hết hoặc tồn thấp.</small>
                     </div>
-                    <a href="{{ route('admin.warehouses.create-transaction') }}" class="wa-btn primary"><i class="fa fa-plus"></i> Nhập / xuất</a>
+                    <a href="{{ route('admin.warehouses.create-transaction') }}" class="wa-btn primary"><i class="fa fa-plus"></i> {{ ($isAdminUser ?? false) ? 'Nhập / xuất kho' : 'Đề xuất nhập / xuất' }}</a>
                 </div>
                 <form method="get" class="wa-filter">
                     <input type="hidden" name="warehouse_tab" value="stock">
@@ -268,7 +270,7 @@
                         <h6>Phiếu kho</h6>
                         <small>Danh sách phiếu nhập kho, xuất kho và xuất bán.</small>
                     </div>
-                    <a href="{{ route('admin.warehouses.create-transaction') }}" class="wa-btn primary"><i class="fa fa-plus"></i> Tạo phiếu</a>
+                    <a href="{{ route('admin.warehouses.create-transaction') }}" class="wa-btn primary"><i class="fa fa-plus"></i> {{ ($isAdminUser ?? false) ? 'Tạo phiếu kho' : 'Tạo đề xuất' }}</a>
                 </div>
                 <form method="get" class="wa-filter transactions">
                     <input type="hidden" name="warehouse_tab" value="transactions">
@@ -298,7 +300,7 @@
                         <label>Trạng thái</label>
                         <select class="wa-select" name="stock_status">
                             <option value="">Tất cả</option>
-                            @foreach (['DRAFT' => 'Nháp', 'PENDING' => 'Đang chờ', 'COMPLETED' => 'Hoàn tất', 'CANCELLED' => 'Đã hủy'] as $status => $label)
+                            @foreach (['DRAFT' => 'Nháp', 'PENDING' => 'Chờ duyệt', 'COMPLETED' => 'Hoàn tất', 'CANCELLED' => 'Từ chối / hủy'] as $status => $label)
                                 <option value="{{ $status }}" @selected(($stockFilters['stock_status'] ?? '') === $status)>{{ $label }}</option>
                             @endforeach
                         </select>
@@ -327,6 +329,7 @@
                                 <th>Số lượng</th>
                                 <th>Ngày tạo</th>
                                 <th>Trạng thái</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -335,6 +338,7 @@
                                     [$typeText, $typeClass, $typeIcon] = $transactionType($transaction->type);
                                     [$statusText, $statusClass] = $transactionStatus($transaction->status);
                                     $totals = $transactionItemTotals->get($transaction->id);
+                                    $totalQuantity = $totals ? ($totals->actual_quantity ?: $totals->ordered_quantity ?: 0) : 0;
                                     $returnReason = ($returnReasonByTransaction ?? collect())->get($transaction->id);
                                     $returnReasonText = $returnReason
                                         ? trim(($returnReason->reason_name ?: 'Không rõ lý do') . ($returnReason->reason_detail ? ' - ' . $returnReason->reason_detail : ''))
@@ -360,34 +364,38 @@
                                         </div>
                                     </td>
                                     <td class="wa-number">{{ $num($transaction->items_count) }}</td>
-                                    <td class="wa-number">{{ $num($totals->actual_quantity ?: $totals->ordered_quantity ?: 0) }}</td>
+                                    <td class="wa-number">{{ $num($totalQuantity) }}</td>
                                     <td>{{ $transaction->created_at?->format('d/m/Y H:i') }}</td>
                                     <td><span class="wa-badge {{ $statusClass }}">{{ $statusText }}</span></td>
+                                    <td>
+                                        <div class="wa-row-actions">
+                                            <a class="wa-icon-btn" href="{{ route('admin.warehouses.show-transaction', $transaction) }}" title="Xem chi tiết"><i class="fa fa-eye"></i></a>
+                                            @if (($isAdminUser ?? false) && $transaction->status === 'PENDING')
+                                                <form method="post" action="{{ route('admin.warehouses.approve-transaction', $transaction) }}" onsubmit="return confirm('Duyệt phiếu này và cập nhật tồn kho?')">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button class="wa-icon-btn success" type="submit" title="Duyệt"><i class="fa fa-check"></i></button>
+                                                </form>
+                                                <form method="post" action="{{ route('admin.warehouses.reject-transaction', $transaction) }}" onsubmit="return confirm('Từ chối đề xuất kho này?')">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button class="wa-icon-btn danger" type="submit" title="Từ chối"><i class="fa fa-times"></i></button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="wa-empty">Không có phiếu kho phù hợp.</td></tr>
+                                <tr><td colspan="8" class="wa-empty">Không có phiếu kho phù hợp.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+                @if (method_exists($transactions, 'links'))
+                    <div class="wa-pagination">{{ $transactions->links() }}</div>
+                @endif
             </div>
         </section>
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-document.querySelectorAll('[data-wa-tab]').forEach(function (button) {
-    button.addEventListener('click', function () {
-        var tab = button.dataset.waTab;
-        document.querySelectorAll('[data-wa-tab]').forEach(function (item) {
-            item.classList.toggle('is-active', item.dataset.waTab === tab);
-        });
-        document.querySelectorAll('[data-wa-panel]').forEach(function (panel) {
-            panel.classList.toggle('is-active', panel.dataset.waPanel === tab);
-        });
-    });
-});
-</script>
-@endpush

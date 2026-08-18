@@ -26,6 +26,10 @@
             ->merge($product->images->map(fn ($image) => trim((string) $image->image_url) === '' ? null : $image->url))
             ->filter()
             ->values();
+        $displayCategories = $product->categories->isNotEmpty()
+            ? $product->categories
+            : collect([$product->category])->filter();
+        $primaryCategory = $displayCategories->first();
 
 
         $rawDescription = trim((string) $product->description);
@@ -55,8 +59,8 @@
                 <span class="watch-breadcrumb-separator">/</span>
                 <a href="{{ route('products.index') }}" class="watch-breadcrumb-item">Sản phẩm</a>
                 <span class="watch-breadcrumb-separator">/</span>
-                <a href="{{ route('products.index', ['category' => $product->category_id]) }}" class="watch-breadcrumb-item">
-                    {{ $product->category->name ?? 'Danh mục' }}
+                <a href="{{ route('products.index', ['category' => $primaryCategory?->id ?? $product->category_id]) }}" class="watch-breadcrumb-item">
+                    {{ $primaryCategory?->name ?? 'Danh mục' }}
                 </a>
                 <span class="watch-breadcrumb-separator">/</span>
                 <span class="watch-breadcrumb-current">{{ $product->name }}</span>
@@ -101,9 +105,13 @@
 
                     <div class="watch-category-line">
                         Danh mục:
-                        <a href="{{ route('products.index', ['category' => $product->category_id]) }}" class="watch-category-link">
-                            {{ $product->category->name ?? 'Sản phẩm' }}
-                        </a>
+                        @forelse ($displayCategories as $category)
+                            <a href="{{ route('products.index', ['category' => $category->id]) }}" class="watch-category-link">
+                                {{ $category->name }}
+                            </a>@if (! $loop->last), @endif
+                        @empty
+                            <span>Sản phẩm</span>
+                        @endforelse
                     </div>
 
                     <div class="watch-rating-line">

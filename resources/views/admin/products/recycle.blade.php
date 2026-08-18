@@ -51,6 +51,8 @@
                     @forelse ($products as $product)
                         @php
                             [$statusText, $statusClass] = $statusMeta($product->status);
+                            $categoryNames = $product->categories->pluck('name')->filter()->implode(', ')
+                                ?: ($product->category->name ?? 'Chưa phân loại');
                         @endphp
                         <tr>
                             <td>{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}</td>
@@ -64,7 +66,7 @@
                                 </div>
                             </td>
                             <td>
-                                <strong>{{ $product->category->name ?? 'Chưa phân loại' }}</strong><br>
+                                <strong>{{ $categoryNames }}</strong><br>
                                 <small class="text-muted">{{ $product->brand->name ?? 'Chưa có thương hiệu' }}</small>
                             </td>
                             <td class="text-end">{{ $int($product->variants_count) }}</td>
@@ -78,6 +80,11 @@
                                         @csrf
                                         @method('PATCH')
                                         <button class="btn btn-sm btn-outline-success" type="submit" title="Khôi phục"><i class="fas fa-undo"></i></button>
+                                    </form>
+                                    <form method="post" action="{{ route('admin.products.force-delete', $product) }}" onsubmit="return confirm('Xóa vĩnh viễn sản phẩm này? Thao tác này không thể hoàn tác.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa vĩnh viễn"><i class="fas fa-trash-alt"></i></button>
                                     </form>
                                 </div>
                             </td>

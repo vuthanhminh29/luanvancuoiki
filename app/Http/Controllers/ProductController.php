@@ -42,7 +42,7 @@ class ProductController extends Controller
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->active()
             // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
-            ->with(['brand', 'category', 'frameShape', 'frameMaterial', 'variants.color', 'variants.lensSize'])
+            ->with(['brand', 'category', 'categories', 'frameShape', 'frameMaterial', 'variants.color', 'variants.lensSize'])
             // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
             ->when($request->filled('q'), function ($query) use ($request) {
                 // Luong: Gan ket qua xu ly vao bien $keyword.
@@ -57,7 +57,7 @@ class ProductController extends Controller
                 });
             })
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
-            ->when($request->filled('category'), fn ($query) => $query->whereIn('category_id', $this->filterIds($request, 'category')))
+            ->when($request->filled('category'), fn ($query) => $query->inCategories($this->filterIds($request, 'category')))
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
             ->when($request->filled('brand'), fn ($query) => $query->whereIn('brand_id', $this->filterIds($request, 'brand')))
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
@@ -159,7 +159,16 @@ class ProductController extends Controller
         // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
         $product->increment('view_count');
         // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
-        $product->load(['brand', 'category', 'frameShape', 'frameMaterial', 'images', 'variants.color', 'variants.lensSize']);
+        $product->load(['brand', 'category', 'categories', 'frameShape', 'frameMaterial', 'images', 'variants.color', 'variants.lensSize']);
+        // Luong: Gom danh muc chinh va danh muc phu de goi y san pham lien quan.
+        $relatedCategoryIds = $product->categories
+            ->pluck('id')
+            ->push($product->category_id)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
         // Luong: Gan ket qua xu ly vao bien $variantStock.
         $variantStock = Inventory::query()
             // Luong: Bo sung dieu kien loc du lieu cho truy van.
@@ -205,11 +214,11 @@ class ProductController extends Controller
             // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
             'relatedProducts' => Product::active()
                 // Luong: Bo sung dieu kien loc du lieu cho truy van.
-                ->where('category_id', $product->category_id)
+                ->inCategories($relatedCategoryIds)
                 // Luong: Bo sung dieu kien loc du lieu cho truy van.
                 ->whereKeyNot($product->getKey())
                 // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
-                ->with(['brand', 'category', 'frameMaterial', 'variants'])
+                ->with(['brand', 'category', 'categories', 'frameMaterial', 'variants'])
                 // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
                 ->limit(4)
                 // Luong: Thuc thi truy van va lay ket qua tu CSDL.
@@ -219,15 +228,15 @@ class ProductController extends Controller
                 // Luong: Xu ly dong logic tiep theo trong ham public nay.
                 Product::active()
                     // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
-                    ->with(['brand', 'category', 'frameMaterial', 'variants'])
+                    ->with(['brand', 'category', 'categories', 'frameMaterial', 'variants'])
                     // Luong: Bo sung dieu kien loc du lieu cho truy van.
                     ->whereKey($product->getKey())
                     // Luong: Noi tiep chuoi goi ham de hoan thien thao tac hien tai.
-                    ->orWhere(function ($query) use ($product) {
+                    ->orWhere(function ($query) use ($product, $relatedCategoryIds) {
                         // Luong: Goi thao tac tren doi tuong dang duoc xu ly.
                         $query->active()
                             // Luong: Bo sung dieu kien loc du lieu cho truy van.
-                            ->where('category_id', $product->category_id)
+                            ->inCategories($relatedCategoryIds)
                             // Luong: Bo sung dieu kien loc du lieu cho truy van.
                             ->whereKeyNot($product->getKey());
                     })

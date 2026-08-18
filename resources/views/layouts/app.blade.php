@@ -268,7 +268,6 @@
                         <li><a href="{{ route('products.index', ['category' => 'nam']) }}" style="color: inherit; text-decoration: none;">Gọng kính nam</a></li>
                         <li><a href="{{ route('products.index', ['category' => 'nu']) }}" style="color: inherit; text-decoration: none;">Gọng kính nữ</a></li>
                         <li><a href="{{ route('products.index', ['category' => 'kinh-ram']) }}" style="color: inherit; text-decoration: none;">Kính râm</a></li>
-                        <li><a href="{{ route('products.index', ['category' => 'trong-kinh']) }}" style="color: inherit; text-decoration: none;">Tròng kính</a></li>
                         <li><a href="{{ route('products.index') }}" style="color: inherit; text-decoration: none;">Phụ kiện</a></li>
                     </ul>
                 </div>

@@ -11,9 +11,13 @@ use Illuminate\Support\Str;
 
 class OrderCancellationService
 {
+    public const AUTO_CANCELLED = 'AUTO_CANCELLED';
+
     // Chỉ các trạng thái này được phép bắt đầu luồng hủy.
     // Đơn đang giao/đã giao/hoàn đổi thì không gửi email hủy nữa để tránh sai quy trình.
     private const CANCELLABLE_STATUSES = ['PENDING', 'AWAITING_PAYMENT', 'CONFIRMED'];
+
+    private const MAX_CANCELLATION_REQUESTS = 3;
 
     public function __construct(private readonly InventoryService $inventory)
     {
@@ -61,6 +65,27 @@ class OrderCancellationService
             // Luong: Gan ket qua xu ly vao bien $email.
             $email = $this->customerEmail($lockedOrder);
 
+            $requestCount = min((int) $lockedOrder->cancel_request_count + 1, self::MAX_CANCELLATION_REQUESTS);
+
+            if ($requestCount >= self::MAX_CANCELLATION_REQUESTS) {
+                $lockedOrder->forceFill([
+                    'status' => 'CANCELLED',
+                    'cancel_request_count' => $requestCount,
+                    'cancel_reason' => $reason,
+                    'cancel_requested_at' => now(),
+                    'cancel_confirmed_at' => null,
+                    'cancel_confirmation_token_hash' => null,
+                    'note' => $this->autoCancelNote($lockedOrder->note, $reason),
+                ])->save();
+
+                $this->inventory->releaseForOrder($lockedOrder);
+
+                return [
+                    'auto_cancelled' => true,
+                    'request_count' => $requestCount,
+                ];
+            }
+
             // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
             if ($email === null) {
                 // Luong: Tra ve ket qua cuoi cung cua ham.
@@ -75,6 +100,7 @@ class OrderCancellationService
                 'cancel_confirmation_token_hash' => $tokenHash,
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_reason' => $reason,
+                'cancel_request_count' => $requestCount,
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_requested_at' => now(),
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
@@ -87,6 +113,7 @@ class OrderCancellationService
                 'email' => $email,
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'order' => $lockedOrder->fresh(['user', 'items']),
+                'request_count' => $requestCount,
             ];
         });
 
@@ -94,6 +121,10 @@ class OrderCancellationService
         if (is_string($result)) {
             // Luong: Tra ve ket qua cuoi cung cua ham.
             return $result;
+        }
+
+        if (($result['auto_cancelled'] ?? false) === true) {
+            return self::AUTO_CANCELLED;
         }
 
         // Signed URL có expires + signature.
@@ -141,6 +172,7 @@ class OrderCancellationService
                     'cancel_confirmation_token_hash' => null,
                     // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                     'cancel_requested_at' => null,
+                    'cancel_request_count' => max(((int) ($result['request_count'] ?? 1)) - 1, 0),
                 ]);
 
             // Luong: Ghi log de theo doi va chan doan qua trinh xu ly.
@@ -279,6 +311,21 @@ class OrderCancellationService
         }
 
         $line = '[Hủy đơn ' . now()->format('d/m/Y H:i') . '] ' . $cancelReason;
+        $currentNote = trim((string) $currentNote);
+
+        return $currentNote === '' ? $line : $currentNote . PHP_EOL . $line;
+    }
+
+    private function autoCancelNote(?string $currentNote, ?string $cancelReason): string
+    {
+        $cancelReason = $this->normalizeReason($cancelReason);
+        $line = '[Tự hủy đơn ' . now()->format('d/m/Y H:i') . '] Khách chưa xác nhận sau '
+            . self::MAX_CANCELLATION_REQUESTS . ' lần gửi yêu cầu hủy.';
+
+        if ($cancelReason !== null) {
+            $line .= ' Lý do: ' . $cancelReason;
+        }
+
         $currentNote = trim((string) $currentNote);
 
         return $currentNote === '' ? $line : $currentNote . PHP_EOL . $line;

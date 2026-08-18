@@ -171,6 +171,10 @@ class OrderAdminController extends Controller
         // Luong: Gan ket qua xu ly vao bien $result.
         $result = $this->cancellations->requestCancellation($order, $data['cancel_reason'] ?? null);
 
+        if ($result === OrderCancellationService::AUTO_CANCELLED) {
+            return back()->with('success', 'Đã tự hủy đơn sau 3 lần gửi yêu cầu hủy mà khách chưa xác nhận.');
+        }
+
         // Luong: Kiem tra dieu kien de re nhanh luong xu ly.
         if ($result !== true) {
             // Luong: Quay lai trang truoc kem du lieu hoac thong bao can hien thi.

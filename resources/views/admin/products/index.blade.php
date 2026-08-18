@@ -75,6 +75,8 @@
                     @forelse ($products as $product)
                         @php
                             [$statusText, $statusClass] = $statusMeta($product->status);
+                            $categoryNames = $product->categories->pluck('name')->filter()->implode(', ')
+                                ?: ($product->category->name ?? 'Chưa phân loại');
                         @endphp
                         <tr>
                             <td>{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}</td>
@@ -88,7 +90,7 @@
                                 </div>
                             </td>
                             <td>
-                                <strong>{{ $product->category->name ?? 'Chưa phân loại' }}</strong><br>
+                                <strong>{{ $categoryNames }}</strong><br>
                                 <small class="text-muted">{{ $product->brand->name ?? 'Chưa có thương hiệu' }} · {{ $product->frameShape->name ?? 'Chưa có dáng gọng' }}</small>
                             </td>
                             <td class="text-end">{{ $int($product->variants_count) }}</td>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
@@ -16,7 +17,13 @@ class Category extends Model
         'status',
     ];
 
-    public function products(): HasMany
+    public function products(): BelongsToMany
+    {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
+        return $this->belongsToMany(Product::class)->withTimestamps();
+    }
+
+    public function primaryProducts(): HasMany
     {
         // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(Product::class);

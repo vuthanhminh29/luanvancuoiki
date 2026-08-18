@@ -23,6 +23,16 @@
     if ($variants->isEmpty()) {
         $variants = collect([['id' => '', 'color_id' => '', 'lens_size_id' => '', 'variant_price' => '', 'status' => 'ACTIVE']]);
     }
+
+    $selectedCategoryIds = collect(old('category_ids', $product?->categories?->pluck('id')->all() ?? []))
+        ->filter()
+        ->map(fn ($id) => (string) $id)
+        ->values()
+        ->all();
+
+    if ($selectedCategoryIds === [] && $product?->category_id) {
+        $selectedCategoryIds = [(string) $product->category_id];
+    }
 @endphp
 
 @section('content')
@@ -61,13 +71,27 @@
                     <div class="pa-form-grid">
                         <div class="pa-field">
                             <label class="pa-label">Danh mục</label>
-                            <select class="pa-select" name="category_id">
-                                <option value="">Chọn danh mục</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}" @selected((string) $value('category_id') === (string) $category->id)>{{ $category->name }}</option>
+                            <div id="categoryList">
+                                @foreach ($selectedCategoryIds ?: [''] as $selectedCategoryId)
+                                    <div class="pa-category-input-row">
+                                        <select class="pa-select" name="category_ids[]" required>
+                                            <option value="">Chọn danh mục</option>
+                                            @foreach ($categories as $category)
+                                                <option value="{{ $category->id }}" @selected((string) $category->id === (string) $selectedCategoryId)>{{ $category->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button class="pa-btn danger" type="button" onclick="removeCategoryInput(this)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
                                 @endforeach
-                            </select>
-                            @error('category_id')<span class="pa-error">{{ $message }}</span>@enderror
+                            </div>
+                            <button class="pa-btn" type="button" onclick="addCategoryInput()">
+                                <i class="fas fa-plus"></i> Thêm danh mục
+                            </button>
+                            <div class="pa-hint">Dòng đầu tiên là danh mục chính của sản phẩm.</div>
+                            @error('category_ids')<span class="pa-error">{{ $message }}</span>@enderror
+                            @error('category_ids.*')<span class="pa-error">{{ $message }}</span>@enderror
                         </div>
                         <div class="pa-field">
                             <label class="pa-label">Thương hiệu</label>
@@ -337,6 +361,25 @@ function removeGalleryImageInput(button) {
         row.remove();
     } else {
         row.querySelector('input').value = '';
+    }
+}
+
+function addCategoryInput() {
+    const list = document.getElementById('categoryList');
+    const row = list.querySelector('.pa-category-input-row').cloneNode(true);
+
+    row.querySelector('select').value = '';
+    list.appendChild(row);
+}
+
+function removeCategoryInput(button) {
+    const row = button.closest('.pa-category-input-row');
+    const list = document.getElementById('categoryList');
+
+    if (list.children.length > 1) {
+        row.remove();
+    } else {
+        row.querySelector('select').value = '';
     }
 }
 </script>

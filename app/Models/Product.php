@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
@@ -35,6 +36,12 @@ class Product extends Model
     {
         // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->belongsTo(Category::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        // Luong: Tra ve ket qua cuoi cung cua ham.
+        return $this->belongsToMany(Category::class)->withTimestamps();
     }
 
     public function brand(): BelongsTo
@@ -83,6 +90,25 @@ class Product extends Model
     {
         // Luong: Tra ve ket qua cuoi cung cua ham.
         return $query->where('status', 'ACTIVE');
+    }
+
+    public function scopeInCategories($query, array $categoryIds)
+    {
+        $categoryIds = collect($categoryIds)
+            ->filter(fn ($id) => (int) $id > 0)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($categoryIds === []) {
+            return $query;
+        }
+
+        return $query->where(function ($query) use ($categoryIds): void {
+            $query->whereIn('category_id', $categoryIds)
+                ->orWhereHas('categories', fn ($category) => $category->whereIn('categories.id', $categoryIds));
+        });
     }
 
     public function getDisplayPriceAttribute(): float

@@ -41,8 +41,10 @@
 .pa-pagination .active span { background: #0f766e; border-color: #0f766e; color: #fff; }
 .pa-variant-table { min-width: 920px; }
 .pa-inline-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.pa-category-input-row, .pa-gallery-input-row { align-items: center; display: flex; gap: 10px; margin-bottom: 10px; }
+.pa-category-input-row .pa-select, .pa-gallery-input-row .pa-file { flex: 1; }
 @media (max-width: 1100px) { .pa-grid { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .pa-page { padding: 16px; } .pa-head { display: block; } .pa-actions { justify-content: flex-start; margin-top: 14px; } .pa-form-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .pa-page { padding: 16px; } .pa-head { display: block; } .pa-actions { justify-content: flex-start; margin-top: 14px; } .pa-form-grid { grid-template-columns: 1fr; } .pa-category-input-row, .pa-gallery-input-row { align-items: stretch; flex-direction: column; } }
 </style>
 @endpush
 @endonce

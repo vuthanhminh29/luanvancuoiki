@@ -23,6 +23,7 @@
     ];
     $currentStatus = $statusLabels[$order->status] ?? [$order->status, 'dark', 'fa-question-circle'];
     $nextStatusOptions = $statusOptions ?? [];
+    $statusUpdateOptions = collect($nextStatusOptions)->except('CANCELLED')->all();
     $viewErrors = $errors ?? new \Illuminate\Support\ViewErrorBag();
     $progressSteps = [
         'AWAITING_PAYMENT' => ['Chờ thanh toán', 'fa-credit-card', 'payment'],
@@ -41,7 +42,8 @@
 .aod-page{background:#f4f7fb;color:#111827;margin:-24px -24px 0;min-height:100vh;padding:22px 24px 70px}.aod-inner{max-width:1500px;margin:0 auto}.aod-head{align-items:flex-start;display:flex;gap:16px;justify-content:space-between;margin-bottom:16px}.aod-title small{color:#2563eb;font-size:13px;font-weight:900;text-transform:uppercase}.aod-title h4{font-size:28px;font-weight:900;line-height:1.18;margin:6px 0}.aod-title p{color:#667085;font-size:14px;margin:0}.aod-actions{display:flex;flex-wrap:wrap;gap:9px;justify-content:flex-end}.aod-btn{align-items:center;background:#fff;border:1px solid #d0d5dd;border-radius:7px;color:#111827;display:inline-flex;font-size:13px;font-weight:900;gap:8px;justify-content:center;min-height:38px;padding:0 13px;text-decoration:none;white-space:nowrap}.aod-btn.primary{background:#2563eb;border-color:#2563eb;color:#fff}.aod-btn:hover{filter:brightness(.98);color:#111827}.aod-btn.primary:hover{color:#fff}.aod-btn:disabled{background:#f3f4f6;color:#98a2b3;cursor:not-allowed}
 .aod-grid{align-items:start;display:grid;gap:16px;grid-template-columns:minmax(0,1.45fr) minmax(340px,.85fr)}.aod-card{background:#fff;border:1px solid #e4e7ec;border-radius:8px;box-shadow:0 8px 24px rgba(16,24,40,.04);overflow:hidden}.aod-card+.aod-card{margin-top:16px}.aod-card-head{align-items:center;background:#fbfcfd;border-bottom:1px solid #eef2f6;display:flex;gap:12px;justify-content:space-between;padding:15px 18px}.aod-card-head h6{color:#111827;font-size:16px;font-weight:900;margin:0}.aod-card-body{padding:18px}.aod-badge{align-items:center;border:1px solid transparent;border-radius:999px;display:inline-flex;font-size:12px;font-weight:900;gap:6px;min-height:30px;padding:0 11px;white-space:nowrap}.aod-badge.warning,.aod-badge.pending{background:#fffbeb;border-color:#fde68a;color:#92400e}.aod-badge.payment{background:#fff7ed;border-color:#fed7aa;color:#c2410c}.aod-badge.info,.aod-badge.confirmed{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}.aod-badge.moving,.aod-badge.shipping{background:#f5f3ff;border-color:#ddd6fe;color:#6d28d9}.aod-badge.success{background:#ecfdf5;border-color:#a7f3d0;color:#047857}.aod-badge.danger{background:#fef2f2;border-color:#fecaca;color:#b91c1c}.aod-badge.return{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}.aod-badge.dark{background:#f3f4f6;border-color:#d1d5db;color:#374151}
 .aod-meta{display:grid;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:16px}.aod-meta-item{background:#fff;border:1px solid #eef0f3;border-radius:8px;padding:12px}.aod-meta-item span{color:#667085;display:block;font-size:12px;font-weight:900;margin-bottom:5px}.aod-meta-item strong{color:#111827;display:block;font-size:14px;line-height:1.35}.aod-progress{display:grid;gap:8px;grid-template-columns:repeat(5,minmax(0,1fr));margin:4px 0 20px;position:relative}.aod-progress:before{background:#e5e7eb;content:"";height:2px;left:7%;position:absolute;right:7%;top:18px}.aod-step{color:#98a2b3;font-size:12px;font-weight:900;position:relative;text-align:center;z-index:1}.aod-step-icon{align-items:center;background:#fff;border:2px solid #d0d5dd;border-radius:50%;color:#98a2b3;display:flex;height:36px;justify-content:center;margin:0 auto 7px;width:36px}.aod-step.active{color:var(--step-color)}.aod-step.active .aod-step-icon{background:var(--step-color);border-color:var(--step-color);color:#fff}.aod-step.payment{--step-color:#c2410c}.aod-step.pending{--step-color:#92400e}.aod-step.confirmed{--step-color:#1d4ed8}.aod-step.shipping{--step-color:#6d28d9}.aod-step.success{--step-color:#047857}
-.aod-product{align-items:center;border-bottom:1px solid #eef2f6;display:grid;gap:13px;grid-template-columns:78px minmax(0,1fr) auto;padding:14px 0}.aod-product:last-child{border-bottom:0}.aod-product img{aspect-ratio:1;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;object-fit:cover;width:78px}.aod-product-name{font-size:14px;font-weight:900;line-height:1.35;margin:0 0 7px}.aod-product-meta{color:#667085;font-size:13px;font-weight:700}.aod-product-price{min-width:130px;text-align:right}.aod-product-price strong{color:#111827;display:block;font-size:16px}.aod-product-price small{color:#667085;font-size:12px;font-weight:700}.aod-form label{color:#667085;display:block;font-size:12px;font-weight:900;margin:0 0 6px}.aod-select,.aod-textarea{background:#fff;border:1px solid #d0d5dd;border-radius:7px;color:#111827;font-size:13px;font-weight:700;width:100%}.aod-select{min-height:40px;padding:0 11px}.aod-textarea{min-height:84px;padding:9px 11px;resize:vertical}.aod-help{color:#667085;font-size:12px;font-weight:700;line-height:1.45;margin:8px 0 0}.aod-error{color:#b91c1c;font-size:12px;font-weight:800;margin:8px 0 0}.aod-form .aod-btn{margin-top:11px;width:100%}.aod-row{border-bottom:1px solid #eef2f6;display:flex;font-size:14px;gap:16px;justify-content:space-between;padding:11px 0}.aod-row span:first-child{color:#667085}.aod-row strong{color:#111827;line-height:1.45;text-align:right}.aod-total{border-bottom:0;padding-top:14px}.aod-total strong{font-size:22px}.aod-note{background:#f8fafc;border:1px solid #e4e7ec;border-radius:8px;color:#344054;font-size:13px;font-weight:700;line-height:1.5;margin-top:12px;padding:12px;white-space:pre-line}
+.aod-product{align-items:center;border-bottom:1px solid #eef2f6;display:grid;gap:13px;grid-template-columns:78px minmax(0,1fr) auto;padding:14px 0}.aod-product:last-child{border-bottom:0}.aod-product img{aspect-ratio:1;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;object-fit:cover;width:78px}.aod-product-name{font-size:14px;font-weight:900;line-height:1.35;margin:0 0 7px}.aod-product-meta{color:#667085;font-size:13px;font-weight:700}.aod-product-price{min-width:130px;text-align:right}.aod-product-price strong{color:#111827;display:block;font-size:16px}.aod-product-price small{color:#667085;font-size:12px;font-weight:700}.aod-form label{color:#667085;display:block;font-size:12px;font-weight:900;margin:0 0 6px}.aod-select,.aod-textarea,.aod-input{background:#fff;border:1px solid #d0d5dd;border-radius:7px;color:#111827;font-size:13px;font-weight:700;width:100%}.aod-select,.aod-input{min-height:40px;padding:0 11px}.aod-textarea{min-height:84px;padding:9px 11px;resize:vertical}.aod-help{color:#667085;font-size:12px;font-weight:700;line-height:1.45;margin:8px 0 0}.aod-error{color:#b91c1c;font-size:12px;font-weight:800;margin:8px 0 0}.aod-form .aod-btn{margin-top:11px;width:100%}.aod-row{border-bottom:1px solid #eef2f6;display:flex;font-size:14px;gap:16px;justify-content:space-between;padding:11px 0}.aod-row span:first-child{color:#667085}.aod-row strong{color:#111827;line-height:1.45;text-align:right}.aod-total{border-bottom:0;padding-top:14px}.aod-total strong{font-size:22px}.aod-note{background:#f8fafc;border:1px solid #e4e7ec;border-radius:8px;color:#344054;font-size:13px;font-weight:700;line-height:1.5;margin-top:12px;padding:12px;white-space:pre-line}
+.aod-btn.success{background:#059669;border-color:#059669;color:#fff}.aod-btn.danger{background:#e11d48;border-color:#e11d48;color:#fff}.aod-btn.success:hover,.aod-btn.danger:hover{color:#fff}.aod-cancel-box{border-top:1px solid #eef2f6;margin-top:14px;padding-top:14px}.aod-cancel-panel{margin-top:0}.aod-cancel-panel[hidden],#cancel-order-open[hidden]{display:none}.aod-cancel-actions{display:grid;gap:8px;grid-template-columns:1fr 1fr;margin-top:10px}.aod-cancel-actions .aod-btn{margin-top:0;width:100%}
 @media(max-width:1100px){.aod-page{margin:-24px -12px 0;padding:16px 12px}.aod-head{flex-direction:column}.aod-actions,.aod-btn{width:100%}.aod-grid{grid-template-columns:1fr}}@media(max-width:680px){.aod-meta{grid-template-columns:1fr}.aod-progress{gap:4px}.aod-step{font-size:11px}.aod-product{align-items:start;grid-template-columns:64px minmax(0,1fr)}.aod-product img{width:64px}.aod-product-price{grid-column:2;min-width:0;text-align:left}}
 </style>
 @endpush
@@ -149,26 +151,45 @@
                             @method('PUT')
                             <label for="status-select">Trạng thái tiếp theo</label>
                             <select name="status" class="aod-select" id="status-select">
-                                <option value="">{{ empty($nextStatusOptions) ? 'Không còn trạng thái tiếp theo' : 'Chọn trạng thái tiếp theo' }}</option>
-                                @foreach ($nextStatusOptions as $value => $meta)
+                                <option value="">{{ empty($statusUpdateOptions) ? 'Không còn trạng thái tiếp theo' : 'Chọn trạng thái tiếp theo' }}</option>
+                                @foreach ($statusUpdateOptions as $value => $meta)
                                     <option value="{{ $value }}" @selected(old('status') === $value)>{{ $meta[0] }}</option>
                                 @endforeach
                             </select>
                             @if ($viewErrors->has('status'))
                                 <div class="aod-error">{{ $viewErrors->first('status') }}</div>
                             @endif
-                            @if (array_key_exists('CANCELLED', $nextStatusOptions))
-                                <label for="cancel-reason" style="margin-top:12px;">Lý do hủy đơn</label>
-                                <textarea name="cancel_reason" class="aod-textarea" id="cancel-reason" placeholder="Nhập nếu chọn hủy đơn">{{ old('cancel_reason') }}</textarea>
-                                @if ($viewErrors->has('cancel_reason'))
-                                    <div class="aod-error">{{ $viewErrors->first('cancel_reason') }}</div>
-                                @endif
-                            @endif
                             <p class="aod-help">Khi chuyển sang “Đang giao”, hệ thống tự tạo phiếu xuất bán trong kho.</p>
-                            <button type="submit" class="aod-btn primary" @disabled(empty($nextStatusOptions))>
+                            <button type="submit" class="aod-btn primary" id="status-submit-button" @disabled(empty($statusUpdateOptions))>
                                 <i class="fas fa-save"></i> Cập nhật trạng thái
                             </button>
                         </form>
+
+                        @if ($canCancelOrder)
+                            <div class="aod-cancel-box">
+                                <button type="button" class="aod-btn danger" id="cancel-order-open" @if ($viewErrors->has('cancel_reason')) hidden @endif>
+                                    <i class="fas fa-times-circle"></i> Hủy đơn
+                                </button>
+                                <form method="post" action="{{ route('admin.orders.cancel', $order) }}" class="aod-form aod-cancel-panel" id="cancel-order-form" @if (! $viewErrors->has('cancel_reason')) hidden @endif>
+                                    @csrf
+                                    @method('PATCH')
+                                    <label for="cancel-reason">Lý do hủy đơn</label>
+                                    <input type="text" name="cancel_reason" class="aod-input" id="cancel-reason" placeholder="Lý do hủy" value="{{ old('cancel_reason') }}" maxlength="500">
+                                    <p class="aod-help">Đã gửi yêu cầu hủy {{ (int) $order->cancel_request_count }}/3 lần. Lần thứ 3 hệ thống sẽ tự hủy đơn nếu khách chưa xác nhận.</p>
+                                    @if ($viewErrors->has('cancel_reason'))
+                                        <div class="aod-error">{{ $viewErrors->first('cancel_reason') }}</div>
+                                    @endif
+                                    <div class="aod-cancel-actions">
+                                        <button type="submit" class="aod-btn success">
+                                            <i class="fas fa-check"></i> Xác nhận
+                                        </button>
+                                        <button type="button" class="aod-btn danger" id="cancel-status-reset">
+                                            <i class="fas fa-times"></i> Hủy
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -205,3 +226,33 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cancelOpen = document.getElementById('cancel-order-open');
+    const cancelForm = document.getElementById('cancel-order-form');
+    const cancelReason = document.getElementById('cancel-reason');
+    const cancelReset = document.getElementById('cancel-status-reset');
+
+    if (cancelOpen && cancelForm) {
+        cancelOpen.addEventListener('click', function () {
+            cancelOpen.hidden = true;
+            cancelForm.hidden = false;
+            cancelReason?.focus();
+        });
+    }
+
+    if (cancelReset && cancelOpen && cancelForm) {
+        cancelReset.addEventListener('click', function () {
+            if (cancelReason) {
+                cancelReason.value = '';
+            }
+            cancelForm.hidden = true;
+            cancelOpen.hidden = false;
+            cancelOpen.focus();
+        });
+    }
+});
+</script>
+@endpush

@@ -46,4 +46,14 @@ class StockTransaction extends Model
         // Luong: Tra ve ket qua cuoi cung cua ham.
         return $this->hasMany(StockTransactionItem::class);
     }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function confirmer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
+    }
 }

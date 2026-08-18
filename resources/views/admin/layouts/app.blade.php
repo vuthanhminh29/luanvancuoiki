@@ -318,6 +318,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.addEventListener('click', function (e) {
+        var tabButton = e.target.closest('[data-wa-tab]');
+        if (!tabButton) return;
+
+        var tab = tabButton.dataset.waTab;
+        document.querySelectorAll('[data-wa-tab]').forEach(function (item) {
+            item.classList.toggle('is-active', item.dataset.waTab === tab);
+        });
+        document.querySelectorAll('[data-wa-panel]').forEach(function (panel) {
+            panel.classList.toggle('is-active', panel.dataset.waPanel === tab);
+        });
+    });
+
+    document.addEventListener('click', function (e) {
         var link = e.target.closest('.sidebar a');
         if (!link) return;
 

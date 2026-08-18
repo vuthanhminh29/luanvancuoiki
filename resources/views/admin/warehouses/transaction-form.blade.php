@@ -1,14 +1,15 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Tạo phiếu kho')
-
 @php
+    $isAdminUser = $isAdminUser ?? false;
     $viewErrors = $errors ?? new \Illuminate\Support\ViewErrorBag;
     $oldVariantIds = old('variant_id', [null]);
     $oldQuantities = old('quantity', [1]);
     $oldUnitCosts = old('unit_cost', [null]);
     $rowCount = max(count($oldVariantIds), 1);
 @endphp
+
+@section('title', $isAdminUser ? 'Tạo phiếu kho' : 'Tạo đề xuất kho')
 
 @push('styles')
 <style>
@@ -27,8 +28,8 @@
     <div class="wt-inner">
         <div class="wt-toolbar">
             <div class="wt-title">
-                <h4>Tạo phiếu kho</h4>
-                <p>Nhập thêm hàng để bán hoặc xuất hàng khỏi kho.</p>
+                <h4>{{ $isAdminUser ? 'Tạo phiếu kho' : 'Tạo đề xuất kho' }}</h4>
+                <p>{{ $isAdminUser ? 'Quản trị viên lập phiếu nhập hoặc xuất kho và tồn kho sẽ cập nhật ngay sau khi lưu.' : 'Nhân viên lập đề xuất nhập hoặc xuất kho, admin duyệt thì tồn kho mới thay đổi.' }}</p>
             </div>
             <div class="wt-actions">
                 <a href="{{ route('admin.warehouses.index') }}" class="wt-btn"><i class="fa fa-arrow-left"></i> Quay lại kho</a>
@@ -40,9 +41,9 @@
             <div class="wt-card-head">
                 <div>
                     <h6>Thông tin phiếu</h6>
-                    <small>Phiếu hoàn tất sẽ ghi nhận tồn kho ngay khi lưu.</small>
+                    <small>{{ $isAdminUser ? 'Phiếu sau khi lưu sẽ hoàn tất và cập nhật tồn kho ngay.' : 'Phiếu sau khi lưu sẽ ở trạng thái chờ admin duyệt.' }}</small>
                 </div>
-                <button type="submit" class="wt-btn primary"><i class="fa fa-save"></i> Lưu phiếu kho</button>
+                <button type="submit" class="wt-btn primary"><i class="fa fa-save"></i> {{ $isAdminUser ? 'Lưu phiếu kho' : 'Gửi đề xuất kho' }}</button>
             </div>
 
             <div class="wt-form">
@@ -59,7 +60,7 @@
                             <option value="IMPORT" @selected(old('type', 'IMPORT') === 'IMPORT')>Nhập kho</option>
                             <option value="EXPORT" @selected(old('type') === 'EXPORT')>Xuất kho</option>
                         </select>
-                        <div class="wt-help">Nhập kho sẽ cộng tồn, xuất kho sẽ trừ tồn theo kho đã chọn.</div>
+                        <div class="wt-help">{{ $isAdminUser ? 'Tồn kho sẽ thay đổi ngay sau khi lưu phiếu.' : 'Tồn kho chỉ thay đổi sau khi admin duyệt đề xuất.' }}</div>
                     </div>
                     <div class="wt-field" id="sourceWarehouseGroup">
                         <label>Kho nguồn</label>
