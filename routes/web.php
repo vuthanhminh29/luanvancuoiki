@@ -7,6 +7,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ClientRouteAliasController;
 use App\Http\Controllers\HomeController;
@@ -36,6 +37,10 @@ Route::get('/ho-tro', [PageController::class, 'support'])->middleware('throttle:
 
 // Công cụ tư vấn: tìm dáng kính theo khuôn mặt.
 Route::get('/tim-dang-kinh', [StyleAdvisorController::class, 'faceShape'])->middleware('throttle:web-read')->name('style.face-shape');
+
+// Trợ lý tư vấn AI. Mở cho cả khách chưa đăng nhập vì widget nằm ở mọi trang,
+// nhưng phải có throttle riêng: mỗi lượt nhắn là một lần gọi API AI tính phí.
+Route::post('/tro-ly-tu-van/chat', [ChatbotController::class, 'chat'])->middleware('throttle:chatbot')->name('chatbot.chat');
 
 // Đặt lịch đo thị lực tại cửa hàng. Mở cho cả khách chưa đăng nhập.
 Route::get('/dat-lich-do-mat', [AppointmentController::class, 'create'])->middleware('throttle:web-read')->name('appointments.create');
