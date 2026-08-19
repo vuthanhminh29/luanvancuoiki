@@ -317,6 +317,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function runPageScripts(doc) {
+        var scriptHost = doc.getElementById('adminPageScripts');
+        if (!scriptHost) return;
+
+        scriptHost.querySelectorAll('script').forEach(function (oldScript) {
+            var script = document.createElement('script');
+
+            Array.prototype.slice.call(oldScript.attributes).forEach(function (attribute) {
+                script.setAttribute(attribute.name, attribute.value);
+            });
+
+            script.text = oldScript.textContent;
+            document.body.appendChild(script);
+            script.remove();
+        });
+    }
+
     document.addEventListener('click', function (e) {
         var tabButton = e.target.closest('[data-wa-tab]');
         if (!tabButton) return;
@@ -367,6 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.title = doc.title || document.title;
                 history.pushState(null, '', url);
                 window.scrollTo({ top: 0, behavior: 'instant' });
+                runPageScripts(doc);
             } else {
                 window.location.href = url;
             }
@@ -432,14 +450,25 @@ function bootClassicEditor(selector, uploadUrl) {
         return;
     }
 
+    if (element.dataset.editorBooted === 'true') {
+        return;
+    }
+
+    element.dataset.editorBooted = 'true';
+
     ClassicEditor
         .create(element, { extraPlugins: [editorUploadPlugin(uploadUrl)] })
-        .catch(error => console.error(error));
+        .catch(function (error) {
+            element.dataset.editorBooted = 'false';
+            console.error(error);
+        });
 }
 
 bootClassicEditor('#short_description', @json(route('admin.posts.upload-editor')));
 bootClassicEditor('#product_details', @json(route('admin.products.upload-editor')));
 </script>
+<div id="adminPageScripts" hidden>
 @stack('scripts')
+</div>
 </body>
 </html>

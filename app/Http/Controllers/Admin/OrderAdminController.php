@@ -43,6 +43,7 @@ class OrderAdminController extends Controller
         'DELIVERING',
         'DELIVERED',
         'CANCELLED',
+        'DELIVERY_FAILED',
         'RETURN_PENDING',
         'RETURNED',
         'EXCHANGED',
@@ -60,11 +61,15 @@ class OrderAdminController extends Controller
         'EXCHANGED' => ['Đã đổi hàng', 'success', 'fa-exchange-alt'],
     ];
 
+    private const STATUS_UPDATE_LABELS = [
+        'DELIVERY_FAILED' => ['Giao thất bại', 'danger', 'fa-truck'],
+    ];
+
     private const STATUS_TRANSITIONS = [
         'PENDING' => ['CONFIRMED', 'CANCELLED'],
         'AWAITING_PAYMENT' => ['CONFIRMED', 'CANCELLED'],
         'CONFIRMED' => ['DELIVERING', 'CANCELLED'],
-        'DELIVERING' => ['DELIVERED'],
+        'DELIVERING' => ['DELIVERED', 'DELIVERY_FAILED'],
         'DELIVERED' => ['RETURN_PENDING'],
         'RETURN_PENDING' => ['RETURNED', 'EXCHANGED', 'DELIVERED'],
         'CANCELLED' => [],
@@ -142,6 +147,16 @@ class OrderAdminController extends Controller
             return $this->cancel($request, $order);
         }
 
+        if ($data['status'] === 'DELIVERY_FAILED') {
+            $result = $this->changeStatus($order, 'DELIVERY_FAILED', 'Giao thất bại');
+
+            if ($result !== true) {
+                return back()->withErrors(['status' => $result])->withInput();
+            }
+
+            return back()->with('success', 'Đã cập nhật đơn hàng là giao thất bại.');
+        }
+
         // Luong: Gan ket qua xu ly vao bien $result.
         $result = $this->changeStatus($order, $data['status'], $data['cancel_reason'] ?? null);
 
@@ -209,12 +224,13 @@ class OrderAdminController extends Controller
     {
         return DB::transaction(function () use ($order, $newStatus, $cancelReason) {
             $lockedOrder = Order::query()->lockForUpdate()->find($order->id);
+            $storedStatus = $newStatus === 'DELIVERY_FAILED' ? 'CANCELLED' : $newStatus;
 
             if (! $lockedOrder) {
                 return 'Không tìm thấy đơn hàng cần xử lý.';
             }
 
-            if ($lockedOrder->status === $newStatus) {
+            if ($lockedOrder->status === $storedStatus) {
                 return 'Vui lòng chọn trạng thái mới khác trạng thái hiện tại.';
             }
 
@@ -222,26 +238,32 @@ class OrderAdminController extends Controller
                 return 'Không thể chuyển đơn từ trạng thái hiện tại sang trạng thái đã chọn.';
             }
 
-            if ($newStatus === 'CANCELLED' && ! $this->canCancelOrder($lockedOrder)) {
+            if ($storedStatus === 'CANCELLED' && $newStatus !== 'DELIVERY_FAILED' && ! $this->canCancelOrder($lockedOrder)) {
                 return 'Không thể hủy đơn hàng ở trạng thái hiện tại.';
             }
 
             $lockedOrder->forceFill([
-                'status' => $newStatus,
-                'delivered_at' => $newStatus === 'DELIVERED'
+                'status' => $storedStatus,
+                'cancel_reason' => $storedStatus === 'CANCELLED'
+                    ? ($this->normalizeAdminCancelReason($cancelReason) ?: $lockedOrder->cancel_reason)
+                    : $lockedOrder->cancel_reason,
+                'cancel_requested_at' => $newStatus === 'DELIVERY_FAILED' ? now() : $lockedOrder->cancel_requested_at,
+                'cancel_confirmed_at' => $newStatus === 'DELIVERY_FAILED' ? now() : $lockedOrder->cancel_confirmed_at,
+                'cancel_confirmation_token_hash' => $newStatus === 'DELIVERY_FAILED' ? null : $lockedOrder->cancel_confirmation_token_hash,
+                'delivered_at' => $storedStatus === 'DELIVERED'
                     ? ($lockedOrder->delivered_at ?: now())
                     : $lockedOrder->delivered_at,
-                'note' => $newStatus === 'CANCELLED'
+                'note' => $storedStatus === 'CANCELLED'
                     ? $this->cancelNote($lockedOrder->note, $cancelReason)
                     : $lockedOrder->note,
             ])->save();
 
             // Admin hủy đơn trực tiếp thì cũng phải trả hàng đã giữ về kho.
-            if ($newStatus === 'CANCELLED') {
+            if ($storedStatus === 'CANCELLED') {
                 $this->inventory->releaseForOrder($lockedOrder);
             }
 
-            if ($newStatus === 'DELIVERING') {
+            if ($storedStatus === 'DELIVERING') {
                 $this->createSaleOutTransaction($lockedOrder);
             }
 
@@ -423,9 +445,16 @@ class OrderAdminController extends Controller
      */
     private function availableStatusOptions(Order $order): array
     {
-        return collect(self::STATUS_LABELS)
+        return collect(array_replace(self::STATUS_LABELS, self::STATUS_UPDATE_LABELS))
             ->only($this->nextStatuses($order))
             ->all();
+    }
+
+    private function normalizeAdminCancelReason(?string $cancelReason): ?string
+    {
+        $cancelReason = trim((string) $cancelReason);
+
+        return $cancelReason === '' ? null : $cancelReason;
     }
 
     /**

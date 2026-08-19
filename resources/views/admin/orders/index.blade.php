@@ -140,6 +140,9 @@
                 @forelse ($orders as $index => $order)
                     @php
                         $meta = $statusLabels[$order->status] ?? [$order->status, 'dark', 'fa-question-circle'];
+                        if ($order->status === 'CANCELLED' && trim((string) $order->cancel_reason) === 'Giao thất bại') {
+                            $meta = ['Giao thất bại', 'danger', 'fa-truck'];
+                        }
                         $payment = $paymentBadge($order->payment_method);
                     @endphp
                     <div class="ao-row">

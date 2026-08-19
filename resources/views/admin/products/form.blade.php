@@ -160,45 +160,6 @@
                         </div>
                     </div>
 
-                    <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const markup = {{ config('pricing.markup', 1.45) }};
-                        const roundTo = {{ config('pricing.round_to', 1000) }};
-                        const importEl = document.getElementById('import_price');
-                        const baseEl = document.getElementById('base_price');
-                        const marginHint = document.getElementById('margin_hint');
-
-                        function updateMarginHint() {
-                            const imp = parseFloat(importEl.value) || 0;
-                            const base = parseFloat(baseEl.value) || 0;
-                            if (imp > 0 && base > 0) {
-                                const profit = base - imp;
-                                const marginPct = ((profit / base) * 100).toFixed(1);
-                                marginHint.textContent = `Lợi nhuận gộp: ${profit.toLocaleString('vi-VN')}đ (${marginPct}%)`;
-                            } else {
-                                marginHint.textContent = 'Tự động gợi ý nếu để trống.';
-                            }
-                        }
-
-                        importEl?.addEventListener('input', function () {
-                            if (baseEl && baseEl.dataset.touched !== 'true') {
-                                const imp = parseFloat(importEl.value) || 0;
-                                if (imp > 0) {
-                                    baseEl.value = Math.ceil((imp * markup) / roundTo) * roundTo;
-                                }
-                            }
-                            updateMarginHint();
-                        });
-
-                        baseEl?.addEventListener('input', function () {
-                            baseEl.dataset.touched = 'true';
-                            updateMarginHint();
-                        });
-
-                        updateMarginHint();
-                    });
-                    </script>
-
                     <div class="pa-field">
                         <label class="pa-label">Mô tả sản phẩm</label>
                         <textarea class="pa-textarea" name="description" id="product_details">{{ $value('description') }}</textarea>
@@ -303,25 +264,77 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+window.initProductForm = function () {
+    const form = document.querySelector('.pa-page form');
+    if (!form || form.dataset.productFormReady === 'true') {
+        return;
+    }
+
+    form.dataset.productFormReady = 'true';
+
+    const markup = {{ config('pricing.markup', 1.45) }};
+    const roundTo = {{ config('pricing.round_to', 1000) }};
+    const importEl = form.querySelector('#import_price');
+    const baseEl = form.querySelector('#base_price');
+    const marginHint = form.querySelector('#margin_hint');
+
+    function updateMarginHint() {
+        if (!importEl || !baseEl || !marginHint) return;
+
+        const imp = parseFloat(importEl.value) || 0;
+        const base = parseFloat(baseEl.value) || 0;
+
+        if (imp > 0 && base > 0) {
+            const profit = base - imp;
+            const marginPct = ((profit / base) * 100).toFixed(1);
+            marginHint.textContent = `Lợi nhuận gộp: ${profit.toLocaleString('vi-VN')}đ (${marginPct}%)`;
+        } else {
+            marginHint.textContent = 'Tự động gợi ý nếu để trống.';
+        }
+    }
+
+    importEl?.addEventListener('input', function () {
+        if (baseEl && baseEl.dataset.touched !== 'true') {
+            const imp = parseFloat(importEl.value) || 0;
+            if (imp > 0) {
+                baseEl.value = Math.ceil((imp * markup) / roundTo) * roundTo;
+            }
+        }
+        updateMarginHint();
+    });
+
+    baseEl?.addEventListener('input', function () {
+        baseEl.dataset.touched = 'true';
+        updateMarginHint();
+    });
+
     const table = document.querySelector('#variantTable tbody');
+    if (!table) {
+        updateMarginHint();
+        return;
+    }
+
     const template = table.querySelector('tr').cloneNode(true);
 
     function refreshColorDot(select) {
+        if (!select) return;
+
         const option = select.options[select.selectedIndex];
         const dot = select.parentElement.querySelector('.pa-color-dot');
+        if (!dot) return;
+
         dot.style.background = option ? option.dataset.color || '#fff' : '#fff';
     }
 
     document.querySelectorAll('.color-select').forEach(refreshColorDot);
 
-    document.addEventListener('change', function (event) {
+    form.addEventListener('change', function (event) {
         if (event.target.classList.contains('color-select')) {
             refreshColorDot(event.target);
         }
     });
 
-    document.getElementById('addVariant').addEventListener('click', function () {
+    document.getElementById('addVariant')?.addEventListener('click', function () {
         const row = template.cloneNode(true);
         row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
         row.querySelectorAll('select').forEach(function (select) { select.selectedIndex = 0; });
@@ -330,16 +343,23 @@ document.addEventListener('DOMContentLoaded', function () {
         refreshColorDot(row.querySelector('.color-select'));
     });
 
-    document.addEventListener('click', function (event) {
+    form.addEventListener('click', function (event) {
         if (!event.target.closest('.remove-variant')) return;
         if (table.querySelectorAll('tr').length > 1) {
             event.target.closest('tr').remove();
         }
     });
-});
 
-function addGalleryImageInput() {
+    if (typeof bootClassicEditor === 'function') {
+        bootClassicEditor('#product_details', @json(route('admin.products.upload-editor')));
+    }
+
+    updateMarginHint();
+};
+
+window.addGalleryImageInput = function () {
     const list = document.getElementById('galleryImageList');
+    if (!list) return;
 
     const row = document.createElement('div');
     row.className = 'pa-gallery-input-row';
@@ -351,36 +371,46 @@ function addGalleryImageInput() {
     `;
 
     list.appendChild(row);
-}
+};
 
-function removeGalleryImageInput(button) {
+window.removeGalleryImageInput = function (button) {
     const row = button.closest('.pa-gallery-input-row');
     const list = document.getElementById('galleryImageList');
+    if (!row || !list) return;
 
     if (list.children.length > 1) {
         row.remove();
     } else {
         row.querySelector('input').value = '';
     }
-}
+};
 
-function addCategoryInput() {
+window.addCategoryInput = function () {
     const list = document.getElementById('categoryList');
+    if (!list) return;
+
     const row = list.querySelector('.pa-category-input-row').cloneNode(true);
 
     row.querySelector('select').value = '';
     list.appendChild(row);
-}
+};
 
-function removeCategoryInput(button) {
+window.removeCategoryInput = function (button) {
     const row = button.closest('.pa-category-input-row');
     const list = document.getElementById('categoryList');
+    if (!row || !list) return;
 
     if (list.children.length > 1) {
         row.remove();
     } else {
         row.querySelector('select').value = '';
     }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initProductForm, { once: true });
+} else {
+    window.initProductForm();
 }
 </script>
 @endpush

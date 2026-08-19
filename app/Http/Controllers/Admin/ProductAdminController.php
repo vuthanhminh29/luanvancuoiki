@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -461,6 +462,8 @@ class ProductAdminController extends Controller
             'base_price' => ['nullable', 'numeric', 'min:0', 'gte:import_price'],
             'sale_price' => ['nullable', 'numeric', 'min:0', 'lte:base_price'],
             'thumbnail_url' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+            'gallery_images' => ['nullable', 'array'],
+            'gallery_images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
             'image1' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
             'image2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
             'image3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
@@ -501,6 +504,18 @@ class ProductAdminController extends Controller
         } else {
             unset($data['thumbnail_url']);
         }
+
+        unset(
+            $data['gallery_images'],
+            $data['image1'],
+            $data['image2'],
+            $data['image3'],
+            $data['variant_color_id'],
+            $data['variant_id'],
+            $data['variant_lens_size_id'],
+            $data['variant_price'],
+            $data['variant_status']
+        );
 
         $data['import_price'] = (float) ($data['import_price'] ?? 0);
         
@@ -604,35 +619,49 @@ class ProductAdminController extends Controller
      */
     private function storeGalleryImages(Request $request, Product $product): void
     {
-    $nextSortOrder = max(2, (int) $product->images()->max('sort_order') + 1);
+        $nextSortOrder = max(2, (int) $product->images()->max('sort_order') + 1);
 
-    foreach ((array) $request->file('gallery_images', []) as $file) {
-        ProductImage::create([
-            'product_id' => $product->id,
-            'image_url' => $this->storeUploadedFile($file, 'anh_san_pham'),
-            'alt_text' => $product->name,
-            'sort_order' => $nextSortOrder++,
-            'is_thumbnail' => false,
-        ]);
-    }
+        foreach ((array) $request->file('gallery_images', []) as $file) {
+            if (! $file instanceof UploadedFile) {
+                continue;
+            }
+
+            ProductImage::create([
+                'product_id' => $product->id,
+                'image_url' => $this->storeUploadedFile($file, 'anh_san_pham'),
+                'alt_text' => $product->name,
+                'sort_order' => $nextSortOrder++,
+                'is_thumbnail' => false,
+            ]);
+        }
     }
 
     /**
      * Lưu file upload và trả về đường dẫn.
      */
-    private function storeUpload($file, string $folder): string
+    private function storeUpload(Request|UploadedFile $source, string $fieldOrFolder, ?string $folder = null): string
     {
-    $name = (string) Str::uuid() . '.' . $file->extension();
-    $path = public_path('upload/' . $folder);
+        $file = $source instanceof Request ? $source->file($fieldOrFolder) : $source;
+        $folder = $source instanceof Request ? (string) $folder : $fieldOrFolder;
 
-    if (! is_dir($path)) {
-        // 0755: chủ sở hữu ghi được, còn lại chỉ đọc/duyệt.
-        // 0777 cho phép mọi user trên máy chủ ghi vào thư mục upload.
-        mkdir($path, 0755, true);
+        if (! $file instanceof UploadedFile) {
+            throw new \InvalidArgumentException('Uploaded file is missing.');
+        }
+
+        $name = (string) Str::uuid() . '.' . $file->extension();
+        $path = public_path('upload/' . $folder);
+
+        if (! is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
+
+        $file->move($path, $name);
+
+        return $folder . '/' . $name;
     }
 
-    $file->move($path, $name);
-
-    return $folder . '/' . $name;
+    private function storeUploadedFile(UploadedFile $file, string $folder): string
+    {
+        return $this->storeUpload($file, $folder);
     }
 }

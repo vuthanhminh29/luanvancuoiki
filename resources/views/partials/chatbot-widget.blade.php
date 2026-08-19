@@ -33,7 +33,6 @@
             <span class="aoc-chat__avatar"><i class="fas fa-glasses" aria-hidden="true"></i></span>
             <span class="aoc-chat__title">
                 <strong>Trợ lý tư vấn</strong>
-                <span>Giá và tồn kho lấy trực tiếp từ hệ thống</span>
             </span>
             <button type="button" class="aoc-chat__icon-btn" data-chat-reset aria-label="Xoá hội thoại" title="Xoá hội thoại">
                 <i class="fas fa-rotate-left" aria-hidden="true"></i>

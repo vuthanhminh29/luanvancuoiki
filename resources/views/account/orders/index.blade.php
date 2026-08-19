@@ -112,6 +112,9 @@
                     @php
                         $latestReturn = $order->returnRequests->first();
                         [$label, $class, $icon] = $statusMeta($displayStatusForOrder($order));
+                        if ($order->status === 'CANCELLED' && trim((string) $order->cancel_reason) === 'Giao thất bại') {
+                            [$label, $class, $icon] = ['Giao thất bại', 'danger', 'fa-truck'];
+                        }
                         [$returnLabel, $returnClass, $returnIcon] = $latestReturn
                             ? $returnStatusMeta($latestReturn)
                             : [null, null, null];

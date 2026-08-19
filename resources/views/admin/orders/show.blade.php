@@ -22,6 +22,9 @@
         'REFUNDED' => 'Đã hoàn tiền',
     ];
     $currentStatus = $statusLabels[$order->status] ?? [$order->status, 'dark', 'fa-question-circle'];
+    if ($order->status === 'CANCELLED' && trim((string) $order->cancel_reason) === 'Giao thất bại') {
+        $currentStatus = ['Giao thất bại', 'danger', 'fa-truck'];
+    }
     $nextStatusOptions = $statusOptions ?? [];
     $statusUpdateOptions = collect($nextStatusOptions)->except('CANCELLED')->all();
     $viewErrors = $errors ?? new \Illuminate\Support\ViewErrorBag();

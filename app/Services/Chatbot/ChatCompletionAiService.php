@@ -56,6 +56,7 @@ class ChatCompletionAiService
         try {
             $response = Http::withToken((string) config('chatbot.api_key'))
                 ->timeout((int) config('chatbot.timeout', 20))
+                ->withOptions($this->httpOptions())
                 ->acceptJson()
                 ->post(config('chatbot.base_url') . '/chat/completions', [
                     'model' => (string) config('chatbot.model'),
@@ -88,6 +89,21 @@ class ChatCompletionAiService
         }
 
         return $reply;
+    }
+
+    private function httpOptions(): array
+    {
+        if (! (bool) config('chatbot.ssl_verify', true)) {
+            return ['verify' => false];
+        }
+
+        $caBundle = trim((string) config('chatbot.ca_bundle'));
+
+        if ($caBundle !== '' && is_file($caBundle)) {
+            return ['verify' => $caBundle];
+        }
+
+        return [];
     }
 
     /**

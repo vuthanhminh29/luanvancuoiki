@@ -40,6 +40,9 @@
     };
     $orderDisplayStatus = $displayStatusForOrder($order);
     [$statusLabel, $statusClass, $statusIcon] = $statusMeta($orderDisplayStatus);
+    if ($order->status === 'CANCELLED' && trim((string) $order->cancel_reason) === 'Giao thất bại') {
+        [$statusLabel, $statusClass, $statusIcon] = ['Giao thất bại', 'danger', 'fa-truck'];
+    }
     $progressSteps = [
         'AWAITING_PAYMENT' => ['Chờ thanh toán', 'fa-credit-card'],
         'PENDING' => ['Chờ xác nhận', 'fa-clock'],
