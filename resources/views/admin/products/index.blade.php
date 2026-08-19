@@ -27,7 +27,6 @@
             <p class="pa-subtitle">Quản lý sản phẩm, biến thể màu/size, giá bán và tồn kho khả dụng.</p>
         </div>
         <div class="pa-actions">
-            <a class="pa-btn" href="{{ route('admin.products.export-excel') }}"><i class="fas fa-file-excel"></i> Xuất Excel</a>
             <a class="pa-btn" href="{{ route('admin.products.recycle') }}"><i class="fas fa-archive"></i> Thùng lưu trữ ({{ $int($totalRecycle) }})</a>
             <a class="pa-btn primary" href="{{ route('admin.products.create') }}"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
         </div>
@@ -95,11 +94,13 @@
                             </td>
                             <td class="text-end">{{ $int($product->variants_count) }}</td>
                             <td class="text-end">
-                                <strong>{{ $int($product->quantity) }}</strong>
                                 @if ((int) $product->quantity <= 0)
-                                    <span class="pa-pill danger ms-1">Hết</span>
+                                    <span class="pa-pill danger">Hết</span>
                                 @elseif ((int) $product->quantity < 10)
+                                    <strong>{{ $int($product->quantity) }}</strong>
                                     <span class="pa-pill warning ms-1">Ít</span>
+                                @else
+                                    <strong>{{ $int($product->quantity) }}</strong>
                                 @endif
                             </td>
                             <td class="text-end">{{ $int($product->sold_quantity) }}</td>

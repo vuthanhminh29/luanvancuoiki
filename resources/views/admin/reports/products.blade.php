@@ -20,7 +20,6 @@
             <p class="report-subtitle">Theo dõi số sản phẩm, biến thể, tồn kho và doanh thu theo từng danh mục kính.</p>
         </div>
         <div class="report-actions">
-            <a class="report-btn" href="{{ route('admin.reports.orders', ['date_from' => $dateRange['from'], 'date_to' => $dateRange['to']]) }}"><i class="fas fa-receipt"></i> Báo cáo bán hàng</a>
             <a class="report-btn primary" href="{{ route('admin.reports.sales-chart', ['date_from' => $dateRange['from'], 'date_to' => $dateRange['to']]) }}"><i class="fas fa-chart-bar"></i> Xem biểu đồ</a>
         </div>
     </div>

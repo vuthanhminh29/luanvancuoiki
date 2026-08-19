@@ -100,6 +100,18 @@
     $canCreateReturnRequest = $order->hasReturnableStatus()
         && $isReturnWindowOpen
         && $remainingReturnQuantities->contains(fn ($quantity) => $quantity > 0);
+    $customerCancellationRequested = $order->status === 'CONFIRMED'
+        && $order->cancel_requested_at !== null
+        && str_contains((string) $order->note, '[Khách yêu cầu hủy đơn');
+    $adminCancellationRequested = $order->status !== 'CANCELLED'
+        && $order->cancel_requested_at !== null
+        && $order->cancel_confirmation_token_hash !== null;
+    $canCustomerCancel = in_array($order->status, ['PENDING', 'AWAITING_PAYMENT', 'CONFIRMED'], true)
+        && ! $adminCancellationRequested
+        && ! $customerCancellationRequested;
+    $cancelConfirmMessage = in_array($order->status, ['PENDING', 'AWAITING_PAYMENT'], true)
+        ? 'Hủy đơn hàng này? Đơn sẽ được hủy ngay.'
+        : 'Gửi yêu cầu hủy đơn này đến admin?';
 @endphp
 
 <div class="od-breadcrumb">
@@ -135,6 +147,19 @@
                         <i class="fas fa-envelope"></i> Gửi hóa đơn
                     </button>
                 </form>
+                @if ($canCustomerCancel)
+                    <form action="{{ route('account.orders.cancel', $order) }}" method="post" class="od-inline-form" onsubmit="return confirm(@json($cancelConfirmMessage));">
+                        @csrf
+                        <input type="hidden" name="cancel_reason" value="Khách hàng yêu cầu hủy đơn.">
+                        <button type="submit" class="od-btn danger">
+                            <i class="fas fa-times-circle"></i> Hủy đơn
+                        </button>
+                    </form>
+                @elseif ($customerCancellationRequested)
+                    <span class="od-badge warning"><i class="fas fa-clock"></i> Chờ admin xử lý hủy đơn</span>
+                @elseif ($adminCancellationRequested)
+                    <span class="od-badge warning"><i class="fas fa-envelope"></i> Kiểm tra email hủy đơn</span>
+                @endif
                 <a href="{{ route('account.orders.index') }}" class="od-btn light"><i class="fas fa-arrow-left"></i> Quay lại</a>
             </div>
         </div>
@@ -169,6 +194,19 @@
                     <div class="od-alert danger view-my-orderdetails-inline-8">
                         <i class="fas fa-times-circle"></i>
                         Đơn hàng này đã bị hủy.
+                    </div>
+                @endif
+
+                @if ($customerCancellationRequested)
+                    <div class="od-alert warning view-my-orderdetails-inline-8">
+                        <i class="fas fa-clock"></i>
+                        Yêu cầu hủy đơn của bạn đã được gửi đến admin và đang chờ xử lý.
+                    </div>
+                @endif
+                @if ($adminCancellationRequested)
+                    <div class="od-alert warning view-my-orderdetails-inline-8">
+                        <i class="fas fa-envelope"></i>
+                        Cửa hàng đã gửi yêu cầu xác nhận hủy đơn qua email. Vui lòng kiểm tra email để xác nhận.
                     </div>
                 @endif
             </div>

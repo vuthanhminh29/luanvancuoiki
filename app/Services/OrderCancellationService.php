@@ -2,16 +2,22 @@
 
 namespace App\Services;
 
+use App\Mail\CustomerOrderCancellationReceiptMail;
 use App\Models\Order;
 use App\Support\QueuedRawMail as Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail as LaravelMail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class OrderCancellationService
 {
     public const AUTO_CANCELLED = 'AUTO_CANCELLED';
+
+    public const CUSTOMER_REVIEW_REQUESTED = 'CUSTOMER_REVIEW_REQUESTED';
+
+    private const CUSTOMER_CANCEL_NOTE_PREFIX = '[Khách yêu cầu hủy đơn';
 
     // Chỉ các trạng thái này được phép bắt đầu luồng hủy.
     // Đơn đang giao/đã giao/hoàn đổi thì không gửi email hủy nữa để tránh sai quy trình.
@@ -64,6 +70,7 @@ class OrderCancellationService
             // Email lấy từ user của đơn hàng vì khách cần nhận link xác nhận hủy.
             // Luong: Gan ket qua xu ly vao bien $email.
             $email = $this->customerEmail($lockedOrder);
+            $effectiveReason = $reason ?? $this->normalizeReason($lockedOrder->cancel_reason);
 
             $requestCount = min((int) $lockedOrder->cancel_request_count + 1, self::MAX_CANCELLATION_REQUESTS);
 
@@ -71,11 +78,11 @@ class OrderCancellationService
                 $lockedOrder->forceFill([
                     'status' => 'CANCELLED',
                     'cancel_request_count' => $requestCount,
-                    'cancel_reason' => $reason,
+                    'cancel_reason' => $effectiveReason,
                     'cancel_requested_at' => now(),
                     'cancel_confirmed_at' => null,
                     'cancel_confirmation_token_hash' => null,
-                    'note' => $this->autoCancelNote($lockedOrder->note, $reason),
+                    'note' => $this->autoCancelNote($lockedOrder->note, $effectiveReason),
                 ])->save();
 
                 $this->inventory->releaseForOrder($lockedOrder);
@@ -99,7 +106,7 @@ class OrderCancellationService
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_confirmation_token_hash' => $tokenHash,
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
-                'cancel_reason' => $reason,
+                'cancel_reason' => $effectiveReason,
                 'cancel_request_count' => $requestCount,
                 // Luong: Khai bao gia tri cho mot khoa du lieu/cau hinh.
                 'cancel_requested_at' => now(),
@@ -286,6 +293,106 @@ class OrderCancellationService
         return in_array($order->status, self::CANCELLABLE_STATUSES, true);
     }
 
+    public function requestCancellationFromCustomer(Order $order, ?string $reason = null): true|string
+    {
+        $reason = $this->normalizeReason($reason) ?: 'Khách hàng yêu cầu hủy đơn.';
+
+        $result = DB::transaction(function () use ($order, $reason): array|string {
+            $lockedOrder = Order::query()
+                ->with(['user', 'items'])
+                ->lockForUpdate()
+                ->find($order->id);
+
+            if (! $lockedOrder) {
+                return 'Không tìm thấy đơn hàng cần hủy.';
+            }
+
+            if (in_array($lockedOrder->status, ['PENDING', 'AWAITING_PAYMENT'], true)) {
+                $lockedOrder->forceFill([
+                    'status' => 'CANCELLED',
+                    'cancel_reason' => $reason,
+                    'cancel_requested_at' => now(),
+                    'cancel_confirmed_at' => now(),
+                    'cancel_confirmation_token_hash' => null,
+                    'note' => $this->customerCancelNote($lockedOrder->note, $reason, true),
+                ])->save();
+
+                $this->inventory->releaseForOrder($lockedOrder);
+
+                return [
+                    'direct_cancelled' => true,
+                    'email' => $this->customerEmail($lockedOrder),
+                    'order' => $lockedOrder->fresh(['user', 'items']),
+                ];
+            }
+
+            if ($lockedOrder->status === 'CONFIRMED') {
+                if ($lockedOrder->cancel_requested_at !== null && $lockedOrder->cancel_confirmation_token_hash !== null) {
+                    return 'Đơn hàng này đang có yêu cầu hủy, vui lòng kiểm tra email xác nhận hủy.';
+                }
+
+                if ($this->hasCustomerCancellationRequest($lockedOrder)) {
+                    return 'Đơn hàng này đã gửi yêu cầu hủy và đang chờ admin xử lý.';
+                }
+
+                $lockedOrder->forceFill([
+                    'cancel_reason' => $reason,
+                    'cancel_requested_at' => now(),
+                    'cancel_confirmed_at' => null,
+                    'cancel_confirmation_token_hash' => null,
+                    'note' => $this->customerCancelNote($lockedOrder->note, $reason, false),
+                ])->save();
+
+                return [
+                    'customer_review_requested' => true,
+                    'email' => $this->customerEmail($lockedOrder),
+                    'order' => $lockedOrder->fresh(['user', 'items']),
+                ];
+            }
+
+            return 'Không thể hủy đơn hàng ở trạng thái hiện tại.';
+        });
+
+        if (is_string($result)) {
+            return $result;
+        }
+
+        if (($result['customer_review_requested'] ?? false) === true) {
+            $this->sendCustomerCancellationReceipt($result['order'] ?? null, $result['email'] ?? null, false);
+
+            return self::CUSTOMER_REVIEW_REQUESTED;
+        }
+
+        if (($result['direct_cancelled'] ?? false) === true) {
+            $this->sendCustomerCancellationReceipt($result['order'] ?? null, $result['email'] ?? null, true);
+        }
+
+        return true;
+    }
+
+    public function hasCustomerCancellationRequest(Order $order): bool
+    {
+        return $order->status === 'CONFIRMED'
+            && $order->cancel_requested_at !== null
+            && str_contains((string) $order->note, self::CUSTOMER_CANCEL_NOTE_PREFIX);
+    }
+
+    private function sendCustomerCancellationReceipt(?Order $order, ?string $email, bool $directCancelled): void
+    {
+        if (! $order || ! $email) {
+            return;
+        }
+
+        try {
+            LaravelMail::to($email)->send(new CustomerOrderCancellationReceiptMail($order, $directCancelled));
+        } catch (\Throwable $exception) {
+            Log::error('Customer cancellation receipt email could not be sent.', [
+                'order_id' => $order->id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
+    }
+
     private function customerEmail(Order $order): ?string
     {
         // Trim để tránh email toàn khoảng trắng vẫn bị xem là hợp lệ.
@@ -326,6 +433,15 @@ class OrderCancellationService
             $line .= ' Lý do: ' . $cancelReason;
         }
 
+        $currentNote = trim((string) $currentNote);
+
+        return $currentNote === '' ? $line : $currentNote . PHP_EOL . $line;
+    }
+
+    private function customerCancelNote(?string $currentNote, string $reason, bool $directCancelled): string
+    {
+        $action = $directCancelled ? 'đã tự hủy khi đơn chưa xác nhận' : 'đang chờ admin xử lý';
+        $line = self::CUSTOMER_CANCEL_NOTE_PREFIX . ' ' . now()->format('d/m/Y H:i') . '] ' . $action . '. Lý do: ' . $reason;
         $currentNote = trim((string) $currentNote);
 
         return $currentNote === '' ? $line : $currentNote . PHP_EOL . $line;

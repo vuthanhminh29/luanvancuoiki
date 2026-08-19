@@ -11,6 +11,8 @@ use Illuminate\View\View;
 
 class ReportAdminController extends Controller
 {
+    private const MAX_REPORT_RANGE_DAYS = 31;
+
     private array $excludedOrderStatuses = ['CANCELLED'];
 
     /**
@@ -170,7 +172,7 @@ class ReportAdminController extends Controller
                 JOIN order_items oi ON oi.id = rri.order_item_id
                 JOIN return_requests rr ON rr.id = rri.return_request_id
                 WHERE rr.status IN ('PENDING', 'APPROVED', 'RECEIVED', 'COMPLETED')
-                  {$this->orderDateCondition($dateRange, 'rr')}
+                  {$this->dateCondition($dateRange, 'rr', 'requested_at')}
                 GROUP BY oi.product_id
             ) ret ON ret.product_id = p.id
             WHERE p.status <> 'DISCONTINUED'
@@ -289,7 +291,7 @@ class ReportAdminController extends Controller
     {
         $limitDay = $this->resolveTop($request->integer('limit_day', 14), [7, 14, 30, 90, 365]);
         $chartType = in_array($request->query('type_chart'), ['bar', 'line'], true) ? $request->query('type_chart') : 'bar';
-        $dateRange = $this->resolveDateRange($request, $limitDay);
+        $dateRange = $this->resolveDateRange($request, $limitDay, max($limitDay, self::MAX_REPORT_RANGE_DAYS));
         $orderDateCondition = $this->orderDateCondition($dateRange);
 
         $dailySales = collect(DB::select("
@@ -343,21 +345,33 @@ class ReportAdminController extends Controller
         return max(1, (float) $rows->max(fn ($row) => (float) $row->{$field}));
     }
 
-    private function resolveDateRange(Request $request, int $defaultDays = 30): array
+    private function resolveDateRange(Request $request, int $defaultDays = 30, ?int $maxRangeDays = null): array
     {
         $today = CarbonImmutable::today();
-        $fallbackFrom = $today->subDays(max(1, $defaultDays) - 1);
+        $isManualDateFilter = $request->query('date_filter') === 'manual';
+        $maxRangeDays = $isManualDateFilter ? self::MAX_REPORT_RANGE_DAYS : $maxRangeDays;
+        $maxRangeDays = $maxRangeDays ?? self::MAX_REPORT_RANGE_DAYS;
+        $defaultDays = min(max(1, $defaultDays), $maxRangeDays);
+        $fallbackFrom = $today->subDays($defaultDays - 1);
 
         $from = $this->parseDate($request->query('date_from')) ?? $fallbackFrom;
         $to = $this->parseDate($request->query('date_to')) ?? $today;
 
-        if ($from->greaterThan($to)) {
+        if ($from->greaterThan($to) && $isManualDateFilter) {
+            $to = $from;
+        } elseif ($from->greaterThan($to)) {
             [$from, $to] = [$to, $from];
+        }
+
+        if ($from->diffInDays($to) >= $maxRangeDays) {
+            $to = $from->addDays($maxRangeDays - 1);
         }
 
         return [
             'from' => $from->toDateString(),
             'to' => $to->toDateString(),
+            'max_range_days' => $maxRangeDays,
+            'max_to' => $from->addDays($maxRangeDays - 1)->toDateString(),
             'from_datetime' => $from->startOfDay()->toDateTimeString(),
             'to_datetime' => $to->endOfDay()->toDateTimeString(),
             'label' => $from->format('d/m/Y') . ' - ' . $to->format('d/m/Y'),
@@ -379,9 +393,15 @@ class ReportAdminController extends Controller
 
     private function orderDateCondition(array $dateRange, string $alias = 'o'): string
     {
+        return $this->dateCondition($dateRange, $alias, 'created_at');
+    }
+
+    private function dateCondition(array $dateRange, string $alias, string $column): string
+    {
         return sprintf(
-            "AND %s.created_at BETWEEN '%s' AND '%s'",
+            "AND %s.%s BETWEEN '%s' AND '%s'",
             $alias,
+            $column,
             $dateRange['from_datetime'],
             $dateRange['to_datetime']
         );

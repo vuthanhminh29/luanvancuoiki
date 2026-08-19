@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\OrderCancellationService;
 use App\Services\OrderInvoiceEmailService;
 use App\Models\TryOnSnapshot;
 use App\Models\UserAddress;
@@ -164,6 +165,29 @@ class AccountController extends Controller
             ->route('account.orders.invoice', $order)
             // Luong: Gan them thong bao hoac du lieu flash cho lan hien thi tiep theo.
             ->with('invoice_email_sent', $invoiceEmail->send($order));
+    }
+
+    public function cancelOrder(Request $request, Order $order, OrderCancellationService $cancellations): RedirectResponse
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        $data = $request->validate([
+            'cancel_reason' => ['nullable', 'string', 'max:500'],
+        ], [
+            'cancel_reason.max' => 'Lý do hủy đơn tối đa 500 ký tự.',
+        ]);
+
+        $result = $cancellations->requestCancellationFromCustomer($order, $data['cancel_reason'] ?? null);
+
+        if ($result === OrderCancellationService::CUSTOMER_REVIEW_REQUESTED) {
+            return back()->with('success', 'Đã gửi yêu cầu hủy đơn đến admin. Cửa hàng sẽ kiểm tra và xử lý sớm.');
+        }
+
+        if ($result !== true) {
+            return back()->with('error', $result);
+        }
+
+        return back()->with('success', 'Đơn hàng đã được hủy và email thông báo đã được gửi cho bạn.');
     }
 
     /**

@@ -101,6 +101,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/tai-khoan/dia-chi/{address}', [AccountController::class, 'destroyAddress'])->middleware('throttle:user-actions')->name('account.addresses.destroy');
     Route::get('/tai-khoan/don-hang', [AccountController::class, 'orders'])->name('account.orders.index');
     Route::get('/tai-khoan/don-hang/{order}', [AccountController::class, 'showOrder'])->name('account.orders.show');
+    Route::post('/tai-khoan/don-hang/{order}/huy', [AccountController::class, 'cancelOrder'])->middleware('throttle:user-actions')->name('account.orders.cancel');
     Route::get('/tai-khoan/don-hang/{order}/hoa-don', [AccountController::class, 'invoice'])->name('account.orders.invoice');
     Route::post('/tai-khoan/don-hang/{order}/hoa-don/gui-email', [AccountController::class, 'emailInvoice'])->middleware('throttle:user-actions')->name('account.orders.invoice.email');
 

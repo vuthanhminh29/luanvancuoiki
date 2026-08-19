@@ -21,6 +21,7 @@
 .od-btn.primary { background:#111827; color:#fff; }
 .od-btn.light { background:#fff; color:#374151; border:1px solid #d1d5db; }
 .od-btn.danger { background:#dc2626; color:#fff; width:100%; }
+.od-actions .od-btn.danger { width:auto; }
 .od-card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden; }
 .od-card + .od-card { margin-top:14px; }
 .od-card-head { padding:15px 18px; border-bottom:1px solid #eef0f3; background:#fbfcfd; display:flex; align-items:center; justify-content:space-between; gap:12px; }

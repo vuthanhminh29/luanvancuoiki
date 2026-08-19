@@ -167,18 +167,12 @@
 
                         @if ($canCancelOrder)
                             <div class="aod-cancel-box">
-                                <button type="button" class="aod-btn danger" id="cancel-order-open" @if ($viewErrors->has('cancel_reason')) hidden @endif>
+                                <button type="button" class="aod-btn danger" id="cancel-order-open">
                                     <i class="fas fa-times-circle"></i> Hủy đơn
                                 </button>
-                                <form method="post" action="{{ route('admin.orders.cancel', $order) }}" class="aod-form aod-cancel-panel" id="cancel-order-form" @if (! $viewErrors->has('cancel_reason')) hidden @endif>
+                                <form method="post" action="{{ route('admin.orders.cancel', $order) }}" class="aod-form aod-cancel-panel" id="cancel-order-form" hidden>
                                     @csrf
                                     @method('PATCH')
-                                    <label for="cancel-reason">Lý do hủy đơn</label>
-                                    <input type="text" name="cancel_reason" class="aod-input" id="cancel-reason" placeholder="Lý do hủy" value="{{ old('cancel_reason') }}" maxlength="500">
-                                    <p class="aod-help">Đã gửi yêu cầu hủy {{ (int) $order->cancel_request_count }}/3 lần. Lần thứ 3 hệ thống sẽ tự hủy đơn nếu khách chưa xác nhận.</p>
-                                    @if ($viewErrors->has('cancel_reason'))
-                                        <div class="aod-error">{{ $viewErrors->first('cancel_reason') }}</div>
-                                    @endif
                                     <div class="aod-cancel-actions">
                                         <button type="submit" class="aod-btn success">
                                             <i class="fas fa-check"></i> Xác nhận
@@ -232,22 +226,17 @@
 document.addEventListener('DOMContentLoaded', function () {
     const cancelOpen = document.getElementById('cancel-order-open');
     const cancelForm = document.getElementById('cancel-order-form');
-    const cancelReason = document.getElementById('cancel-reason');
     const cancelReset = document.getElementById('cancel-status-reset');
 
     if (cancelOpen && cancelForm) {
         cancelOpen.addEventListener('click', function () {
             cancelOpen.hidden = true;
             cancelForm.hidden = false;
-            cancelReason?.focus();
         });
     }
 
     if (cancelReset && cancelOpen && cancelForm) {
         cancelReset.addEventListener('click', function () {
-            if (cancelReason) {
-                cancelReason.value = '';
-            }
             cancelForm.hidden = true;
             cancelOpen.hidden = false;
             cancelOpen.focus();

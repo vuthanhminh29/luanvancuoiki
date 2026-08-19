@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
@@ -493,6 +494,20 @@ class OrderAdminController extends Controller
             'statusLabels' => self::STATUS_LABELS,
             'statusOptions' => collect(self::STATUS_LABELS)->map(fn ($meta) => $meta[0])->all(),
             'cancellableStatuses' => self::CANCELLABLE_STATUSES,
+            'customerCancellationRequests' => $this->customerCancellationRequests(),
         ]);
+    }
+
+    private function customerCancellationRequests(): Collection
+    {
+        return Order::query()
+            ->with('user')
+            ->where('status', 'CONFIRMED')
+            ->whereNotNull('cancel_requested_at')
+            ->whereNull('cancel_confirmation_token_hash')
+            ->where('note', 'like', '%[Khách yêu cầu hủy đơn%')
+            ->latest('cancel_requested_at')
+            ->limit(5)
+            ->get();
     }
 }

@@ -48,6 +48,7 @@
 .ap-task-extra.is-hidden{display:none}.ap-more-wrap{padding:0 16px 16px}.ap-more-btn{align-items:center;background:#f8fafc;border:1px solid #d7e0eb;border-radius:8px;color:#2563eb;display:flex;font-size:13px;font-weight:900;gap:8px;justify-content:center;min-height:40px;width:100%}.ap-more-btn:hover{background:#eff6ff}
 .ap-task.is-hidden{display:none}.ap-agenda-filter{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr));padding:12px 16px 4px}.ap-filter-chip{align-items:center;background:#f8fafc;border:1px solid #d7e0eb;border-radius:8px;color:#475569;display:flex;font-size:12px;font-weight:900;gap:6px;justify-content:center;min-height:38px;padding:0 8px}.ap-filter-chip span{align-items:center;background:#e2e8f0;border-radius:999px;color:#334155;display:inline-flex;font-size:11px;height:20px;justify-content:center;min-width:20px;padding:0 6px}.ap-filter-chip.active{background:#111827;border-color:#111827;color:#fff}.ap-filter-chip.active span{background:#2563eb;color:#fff}.ap-filter-chip[data-agenda-status="CONFIRMED"].active{background:#2563eb;border-color:#2563eb}.ap-filter-chip[data-agenda-status="PENDING"].active{background:#f59e0b;border-color:#f59e0b;color:#111827}.ap-filter-chip[data-agenda-status="PENDING"].active span{background:#fff7df;color:#92400e}@media(max-width:420px){.ap-agenda-filter{grid-template-columns:1fr}.ap-filter-chip{justify-content:space-between}}
 .ap-filter-empty.is-hidden{display:none}
+.ap-cancel-form{margin-top:8px}.ap-cancel-form[hidden]{display:none}.ap-cancel-form:not([hidden]){display:grid;gap:8px;grid-template-columns:1fr}.ap-cancel-actions{display:flex;flex-wrap:wrap;gap:7px}.ap-cancel-actions .ap-btn{flex:1 1 120px}
 </style>
 @endpush
 
@@ -219,14 +220,21 @@
                                             <button class="ap-btn muted" type="submit"><i class="fa fa-user-times"></i> Không đến</button>
                                         </form>
                                     @endif
+
+                                    @if ($appointment->canCancel())
+                                        <button class="ap-btn danger" type="button" data-cancel-toggle><i class="fa fa-times"></i> Hủy</button>
+                                    @endif
                                 </div>
 
                                 @if ($appointment->canCancel())
-                                    <form class="ap-cancel-form" method="post" action="{{ route('admin.appointments.cancel', $appointment) }}" onsubmit="return confirm('Hủy lịch hẹn này?')">
+                                    <form class="ap-cancel-form" method="post" action="{{ route('admin.appointments.cancel', $appointment) }}" data-cancel-panel hidden>
                                         @csrf
                                         @method('patch')
-                                        <input class="ap-input" name="cancel_reason" maxlength="500" placeholder="Lý do hủy" required>
-                                        <button class="ap-btn danger" type="submit"><i class="fa fa-times"></i> Hủy</button>
+                                        <input class="ap-input" name="cancel_reason" maxlength="500" placeholder="Lý do hủy" required data-cancel-input>
+                                        <div class="ap-cancel-actions">
+                                            <button class="ap-btn danger" type="submit"><i class="fa fa-check"></i> Xác nhận</button>
+                                            <button class="ap-btn muted" type="button" data-cancel-dismiss>Hủy</button>
+                                        </div>
                                     </form>
                                 @endif
                             </div>
@@ -276,6 +284,36 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-cancel-toggle]').forEach(function (button) {
+        var task = button.closest('.ap-task');
+        var form = task ? task.querySelector('[data-cancel-panel]') : null;
+
+        if (!form) {
+            return;
+        }
+
+        var input = form.querySelector('[data-cancel-input]');
+        var dismiss = form.querySelector('[data-cancel-dismiss]');
+
+        button.addEventListener('click', function () {
+            form.hidden = false;
+            button.hidden = true;
+
+            if (input) {
+                input.focus();
+            }
+        });
+
+        if (dismiss) {
+            dismiss.addEventListener('click', function () {
+                form.reset();
+                form.hidden = true;
+                button.hidden = false;
+                button.focus();
+            });
+        }
+    });
+
     document.querySelectorAll('.ap-week-grid').forEach(function (grid) {
         var dragging = false;
         var moved = false;
