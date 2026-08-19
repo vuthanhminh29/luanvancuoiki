@@ -88,6 +88,12 @@ class AppServiceProvider extends ServiceProvider
         // Để rộng tay một chút vì VNPay có thể gọi lại IPN nhiều lần khi chưa nhận
         // được phản hồi thành công.
         RateLimiter::for('payment-callback', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
+
+        // Chatbot: mỗi lượt nhắn là một lần gọi nhà cung cấp AI có tính phí, nên
+        // đây là endpoint duy nhất của hệ thống mà việc bị spam gây tốn tiền
+        // thật chứ không chỉ tốn CPU. 15 tin/phút đủ cho hội thoại tư vấn bình
+        // thường (khách gõ nhanh nhất cũng chỉ vài tin mỗi phút).
+        RateLimiter::for('chatbot', fn (Request $request) => Limit::perMinute(15)->by($this->rateLimitKey($request, 'chatbot')));
     }
 
     private function headerProductLinks(): array

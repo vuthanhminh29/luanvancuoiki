@@ -36,6 +36,8 @@ Bộ tài liệu này mô tả **toàn bộ mã nguồn** của dự án: kiến
 | 12b | [Cập nhật tiến độ Plan 12](12b-cap-nhat-tien-do-plan-12.md) | **Báo cáo cập nhật tiến độ thực tế 100% các mục góp ý của thầy (Plan 12)** |
 | 13 | [Plan nâng cấp giao diện](13-plan-nang-cap-giao-dien.md) | **Hướng thiết kế, hệ token, signature element, lộ trình 7 giai đoạn** |
 | 14 | [Checklist chống "AI hóa" frontend](14-checklist-chong-ai-hoa.md) | **Kết quả quét giao diện thật: màu, radius, shadow, focus, alt, motion — kèm cách sửa** |
+| 15 | [Nghiệp vụ quản lý lịch đo mắt](15-nghiep-vu-quan-ly-lich-do-mat.md) | `AppointmentController`, `AppointmentAdminController`, tra cứu & đổi lịch |
+| 16 | [Module Chatbot AI](16-module-chatbot-ai.md) | `ChatbotController`, `ProductContextBuilder` (RAG), `ChatCompletionAiService`, widget tư vấn |
 
 ---
 

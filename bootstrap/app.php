@@ -33,8 +33,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Mặc định Laravel trả JSON cho mọi request có Accept: application/json.
+        // Dự án siết lại còn 'api/*' để form thường luôn được redirect kèm lỗi
+        // thay vì đổ JSON ra màn hình. Nhưng endpoint chatbot nằm trong nhóm
+        // web (cần session + CSRF) mà lại được gọi bằng fetch: nếu không mở
+        // ngoại lệ ở đây thì lỗi validate hoặc lỗi 429 trả về 302 -> fetch đi
+        // theo redirect, nhận HTML, rồi vỡ ở response.json().
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->routeIs('chatbot.*'),
         );
 
         $exceptions->render(function (InvalidSignatureException $exception, Request $request) {

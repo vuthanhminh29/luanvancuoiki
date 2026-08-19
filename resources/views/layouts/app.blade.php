@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="{{ asset('css/slicknav.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+    <link rel="stylesheet" href="{{ asset('css/views/chatbot.css') }}">
 
     <style>
         body, html, h1, h2, h3, h4, h5, h6, p, input, button, select, textarea { font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; }
@@ -336,9 +337,16 @@
         <a class="social-link yt" href="{{ $floatingSocialLinks['youtube'] }}" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"><i class="fab fa-youtube"></i></a>
     </div>
 
-    <button id="backToTopBtn" type="button" aria-label="Trở lại đầu trang" class="btn text-white position-fixed rounded-circle shadow-lg" style="bottom: 28px; right: 28px; width: 44px; height: 44px; background: #0a3d42; display: none; z-index: 1050; border: none; align-items: center; justify-content: center; transition: opacity 0.3s ease, transform 0.2s ease;">
+    {{-- Nút lên đầu trang nằm TRÊN nút mở khung tư vấn: chat là hành động chính
+         nên giữ chỗ dưới cùng, sát ngón tay nhất.
+         Vị trí (bottom/right) cố tình KHÔNG đặt inline mà nằm trong
+         css/views/chatbot.css: khi khung chat mở ra nó phải né sang trái, mà
+         style inline thì CSS không đè được nếu không dùng !important. --}}
+    <button id="backToTopBtn" type="button" aria-label="Trở lại đầu trang" class="btn text-white position-fixed rounded-circle" style="width: 44px; height: 44px; background: #0a3d42; display: none; z-index: 1050; border: none; align-items: center; justify-content: center; transition: opacity 0.3s ease, transform 0.2s ease;">
         <i class="fas fa-chevron-up"></i>
     </button>
+
+    @include('partials.chatbot-widget')
 
     <script src="{{ asset('js/jquery-3.3.1.min.js') }}"></script>
     <script src="{{ asset('js/bootstrap.min.js') }}"></script>
@@ -350,6 +358,7 @@
     <script src="{{ asset('js/owl.carousel.min.js') }}"></script>
     <script src="{{ asset('js/jquery.nicescroll.min.js') }}"></script>
     <script src="{{ asset('js/main.js') }}"></script>
+    <script src="{{ asset('js/chatbot-widget.js') }}" defer></script>
     <script>
         window.showToast = function (message, type, title) {
             type = type || 'success';
